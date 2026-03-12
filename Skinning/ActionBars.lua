@@ -515,6 +515,15 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
         end
     end
 
+    -- Reposition proc glow (SpellActivationAlert) to match button size
+    if button.SpellActivationAlert then
+        local alert = button.SpellActivationAlert
+        local glowOverflow = buttonSize * 0.2
+        alert:ClearAllPoints()
+        alert:SetPoint("TOPLEFT", button, "TOPLEFT", -glowOverflow, glowOverflow)
+        alert:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", glowOverflow, -glowOverflow)
+    end
+
     -- Icon zoom stuff bcs blizz border uggy
     NRSKNUI:ApplyZoom(button.icon, 0.6)
 
@@ -963,7 +972,35 @@ function ACB:OnEnable()
         -- Setup drag detection and rangeindicator hook
         self:SetupDragDetection()
         self:SetupRangeIndicatorHook()
+        self:SetupProcGlowHook()
     end)
+end
+
+-- Setup hook for proc glow to resize SpellActivationAlert to match button size
+function ACB:SetupProcGlowHook()
+    if self._procGlowHookSetup then return end
+    self._procGlowHookSetup = true
+
+    if ActionButtonSpellAlertManager and ActionButtonSpellAlertManager.ShowAlert then
+        hooksecurefunc(ActionButtonSpellAlertManager, "ShowAlert", function(_, button)
+            if not button or not button.SpellActivationAlert then return end
+            if not button.nrsknui_backdrop then return end -- Only for our skinned buttons
+
+            local alert = button.SpellActivationAlert
+
+            -- Hide the proc start animation texture (makes intro invisible)
+            if alert.ProcStartFlipbook then
+                alert.ProcStartFlipbook:SetAlpha(0)
+            end
+
+            -- Resize glow to match button size
+            local buttonSize = button:GetWidth()
+            local glowOverflow = buttonSize * 0.2
+            alert:ClearAllPoints()
+            alert:SetPoint("TOPLEFT", button, "TOPLEFT", -glowOverflow, glowOverflow)
+            alert:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", glowOverflow, -glowOverflow)
+        end)
+    end
 end
 
 -- Setup hook for range indicator to maintain white keybind color
@@ -1207,6 +1244,14 @@ function ACB:UpdateBarLayout(barKey)
                 if button.icon then button.icon:SetAllPoints(button) end
                 if button.cooldown then button.cooldown:SetAllPoints(button) end
                 if button.SpellHighlightTexture then button.SpellHighlightTexture:SetAllPoints(button) end
+
+                -- Update proc glow to match new size
+                if button.SpellActivationAlert then
+                    local glowOverflow = buttonSize * 0.2
+                    button.SpellActivationAlert:ClearAllPoints()
+                    button.SpellActivationAlert:SetPoint("TOPLEFT", button, "TOPLEFT", -glowOverflow, glowOverflow)
+                    button.SpellActivationAlert:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", glowOverflow, -glowOverflow)
+                end
 
                 -- Re-style text elements with new size
                 self:StyleButtonText(button, barKey)
