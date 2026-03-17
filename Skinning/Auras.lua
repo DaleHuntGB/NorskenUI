@@ -236,9 +236,6 @@ local function StyleExternalDefensives()
             DisableAuraPulse(aura)
         end
     end
-    ExternalDefensivesFrame:ClearAllPoints()
-    ExternalDefensivesFrame:SetPoint("CENTER", UIParent, "CENTER", 0.1, 300.1)
-    ExternalDefensivesFrame:SetFrameStrata("MEDIUM")
 end
 
 -- ApplySettings
