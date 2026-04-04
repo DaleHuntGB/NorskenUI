@@ -7,6 +7,7 @@ local addonName = select(1, ...)
 -- Localization
 local ipairs = ipairs
 local print = print
+local issecretvalue = issecretvalue
 local string_gsub = string.gsub
 local ReloadUI = ReloadUI
 local C_AddOns = C_AddOns
@@ -75,6 +76,62 @@ function NRSKNUI:Print(msg)
     print(self:ColorTextByTheme("Norsken") .. "UI:|r " .. msg)
 end
 
+-- Secret API utilities (based on oUF implementation by Simpy)
+-- These help safely handle Blizzard's secret/protected values
+
+-- Check if a unit's identity should be secret
+function NRSKNUI:IsSecretUnit(unit)
+    local ok, value = pcall(ShouldUnitIdentityBeSecret, unit)
+    if ok then
+        return value
+    end
+end
+
+function NRSKNUI:NotSecretUnit(unit)
+    return not self:IsSecretUnit(unit)
+end
+
+-- Check if a value is a secret value
+function NRSKNUI:IsSecretValue(value)
+    return issecretvalue and issecretvalue(value)
+end
+
+function NRSKNUI:NotSecretValue(value)
+    return not self:IsSecretValue(value)
+end
+
+-- Check if a table is a secret table
+function NRSKNUI:IsSecretTable(object)
+    return issecrettable and issecrettable(object)
+end
+
+function NRSKNUI:NotSecretTable(object)
+    return not self:IsSecretTable(object)
+end
+
+-- Check if a value can be accessed (not secret or accessible)
+function NRSKNUI:CanAccessValue(value)
+    return not canaccessvalue or canaccessvalue(value)
+end
+
+function NRSKNUI:CanNotAccessValue(value)
+    return not self:CanAccessValue(value)
+end
+
+-- Check if an object has secret values
+function NRSKNUI:HasSecretValues(object)
+    return object and object.HasSecretValues and object:HasSecretValues()
+end
+
+function NRSKNUI:NoSecretValues(object)
+    return not self:HasSecretValues(object)
+end
+
+-- Legacy alias for backwards compatibility
+function NRSKNUI:SecretCheck(value)
+    return self:IsSecretValue(value)
+end
+
 -- Setup slash commands
 local function SetupSlashCommands()
     SLASH_NRSKNUI1 = "/nui"
@@ -93,7 +150,11 @@ local function SetupSlashCommands()
             end
         end
     end
-    NRSKNUI:Print(NRSKNUI:ColorTextByTheme("/nui") .. " to open the configuration window.")
+
+    -- Show login message if enabled
+    if NRSKNUI.db and NRSKNUI.db.profile.Minimap.LoginMessage ~= false then
+        NRSKNUI:Print(NRSKNUI:ColorTextByTheme("/nui") .. " to open the configuration window.")
+    end
 
     -- TODO: Add these into gui so user can toggle
     -- /rl instead of /reload shortcut :)
