@@ -428,6 +428,8 @@ end
 
 function DBG:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
+
+    -- Main toggle disabled - hide everything
     if not self.db.Enabled then
         if self.backdropOne then
             self.backdropOne:Hide()
@@ -435,16 +437,34 @@ function DBG:ApplySettings()
         if self.backdropTwo then
             self.backdropTwo:Hide()
         end
-    else
+        return
+    end
+
+    -- Backdrop One: check individual toggle
+    if self.db.backDropOne.Enabled then
         if self.backdropOne then
             self:UpdateDetailsBackdropOne()
+            self.backdropOne:Show()
         else
             self:CreateBackdropOne()
         end
+    else
+        if self.backdropOne then
+            self.backdropOne:Hide()
+        end
+    end
+
+    -- Backdrop Two: check individual toggle
+    if self.db.backDropTwo.Enabled then
         if self.backdropTwo then
             self:UpdateDetailsBackdropTwo()
+            self.backdropTwo:Show()
         else
             self:CreateBackdropTwo()
+        end
+    else
+        if self.backdropTwo then
+            self.backdropTwo:Hide()
         end
     end
 end

@@ -91,7 +91,11 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     local function UpdateAllWidgetStates()
         local mainEnabled = db.Enabled ~= false
         local currentDB = GetCurrentBackdropDB()
+        local backdropEnabled = currentDB.Enabled ~= false
         local autoSizeEnabled = currentDB.autoSize
+
+        -- Combined enabled state: main toggle AND individual backdrop toggle
+        local fullyEnabled = mainEnabled and backdropEnabled
 
         -- First: Apply main enable state to ALL widgets
         for _, widget in ipairs(allWidgets) do
@@ -101,21 +105,21 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
         end
 
         if card3 and card3.SetAnchorsOnlyEnabled then
-            local shouldAnchorsWork = mainEnabled and (not autoSizeEnabled)
+            local shouldAnchorsWork = fullyEnabled and (not autoSizeEnabled)
             card3:SetAnchorsOnlyEnabled(shouldAnchorsWork)
         end
 
-        -- Second: Auto-size widgets only enabled when autoSize is ON
+        -- Second: Auto-size widgets only enabled when autoSize is ON and backdrop is enabled
         for _, widget in ipairs(autoSizeOnlyWidgets) do
             if widget.SetEnabled then
-                widget:SetEnabled(mainEnabled and autoSizeEnabled)
+                widget:SetEnabled(fullyEnabled and autoSizeEnabled)
             end
         end
 
-        -- Third: Manual size widgets only enabled when autoSize is OFF
+        -- Third: Manual size widgets only enabled when autoSize is OFF and backdrop is enabled
         for _, widget in ipairs(manualSizeWidgets) do
             if widget.SetEnabled then
-                widget:SetEnabled(mainEnabled and not autoSizeEnabled)
+                widget:SetEnabled(fullyEnabled and not autoSizeEnabled)
             end
         end
     end
@@ -125,8 +129,8 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card1 = GUIFrame:CreateCard(scrollChild, "Details Backdrop", yOffset)
 
-    -- Enable Checkbox
-    local row1 = GUIFrame:CreateRow(card1.content, 36)
+    -- Main Enable Checkbox
+    local row1 = GUIFrame:CreateRow(card1.content, 40)
     local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Details Backdrop", db.Enabled ~= false,
         function(checked)
             db.Enabled = checked
@@ -140,7 +144,7 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     )
     row1:AddWidget(enableCheck, 0.5)
 
-    -- Font Outline Dropdown
+    -- Select Backdrop Dropdown
     local editList = { ["bgOne"] = "Backdrop One", ["bgTwo"] = "Backdrop Two" }
     local editDropdown = GUIFrame:CreateDropdown(row1, "Select Backdrop To Edit", editList, curEdit, _,
         function(key)
@@ -151,7 +155,34 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     row1:AddWidget(editDropdown, 0.5)
     table_insert(allWidgets, editDropdown)
 
-    card1:AddRow(row1, 36)
+    card1:AddRow(row1, 40)
+
+    -- Individual backdrop enable toggles
+    local row1b = GUIFrame:CreateRow(card1.content, 36)
+
+    local enableBackdropOne = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop One", db.backDropOne.Enabled ~= false,
+        function(checked)
+            db.backDropOne.Enabled = checked
+            if DBG then
+                DBG:ApplySettings()
+            end
+            UpdateAllWidgetStates()
+        end)
+    row1b:AddWidget(enableBackdropOne, 0.5)
+    table_insert(allWidgets, enableBackdropOne)
+
+    local enableBackdropTwo = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop Two", db.backDropTwo.Enabled ~= false,
+        function(checked)
+            db.backDropTwo.Enabled = checked
+            if DBG then
+                DBG:ApplySettings()
+            end
+            UpdateAllWidgetStates()
+        end)
+    row1b:AddWidget(enableBackdropTwo, 0.5)
+    table_insert(allWidgets, enableBackdropTwo)
+
+    card1:AddRow(row1b, 36)
 
     yOffset = yOffset + card1:GetContentHeight() + Theme.paddingSmall
 
