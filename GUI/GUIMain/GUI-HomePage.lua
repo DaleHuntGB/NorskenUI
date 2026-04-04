@@ -122,26 +122,40 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
     yOffset = yOffset + ElvUIcard:GetContentHeight() + Theme.paddingSmall
 
     ----------------------------------------------------------------
-    -- Card MapIcon: Minimap Icon Card
+    -- Card General: General Settings Card
     ----------------------------------------------------------------
-    local MapIconcard = GUIFrame:CreateCard(scrollChild, "Minimap Icon", yOffset)
-    local MapIconDB = NRSKNUI.db.profile.Minimap
+    local GeneralCard = GUIFrame:CreateCard(scrollChild, "General", yOffset)
+    local MinimapDB = NRSKNUI.db.profile.Minimap
 
-    -- Enable Checkbox
-    local MapIconrow = GUIFrame:CreateRow(MapIconcard.content, 36)
-    local enableMapIcon = GUIFrame:CreateCheckbox(MapIconrow, "Hide Minimap Icon", MapIconDB.hide ~= false,
+    -- Hide Minimap Icon Checkbox
+    local mapIconRow = GUIFrame:CreateRow(GeneralCard.content, 36)
+    local enableMapIcon = GUIFrame:CreateCheckbox(mapIconRow, "Hide Minimap Icon", MinimapDB.hide ~= false,
         function(checked)
-            MapIconDB.hide = checked
+            MinimapDB.hide = checked
         end,
         true,
         "Hide Minimap Icon",
         "On",
         "Off"
     )
-    MapIconrow:AddWidget(enableMapIcon, 1)
-    MapIconcard:AddRow(MapIconrow, 36)
+    mapIconRow:AddWidget(enableMapIcon, 1)
+    GeneralCard:AddRow(mapIconRow, 36)
 
-    yOffset = yOffset + MapIconcard:GetContentHeight() + Theme.paddingSmall
+    -- Login Message Checkbox
+    local loginMsgRow = GUIFrame:CreateRow(GeneralCard.content, 36)
+    local enableLoginMsg = GUIFrame:CreateCheckbox(loginMsgRow, "Show Login Message", MinimapDB.LoginMessage ~= false,
+        function(checked)
+            MinimapDB.LoginMessage = checked
+        end,
+        true,
+        "Login Message",
+        "On",
+        "Off"
+    )
+    loginMsgRow:AddWidget(enableLoginMsg, 1)
+    GeneralCard:AddRow(loginMsgRow, 36)
+
+    yOffset = yOffset + GeneralCard:GetContentHeight() + Theme.paddingSmall
 
     ----------------------------------------------------------------
     -- Card 3: Current Profile
