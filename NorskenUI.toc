@@ -20,7 +20,7 @@ Utils/Utils.xml
 Combat/Combat.xml
 QoL/QoL.xml
 Skinning/Skinning.xml
-CustomBuffs/CustomBuffs.xml
+Dungeons/Dungeons.xml
 
 # Load GUI Framework (main window, tabs, shared widgets)
 GUI/GUI.xml

@@ -9,8 +9,6 @@
     <Script file="DetailsBackdrop.lua" />
     <Script file="ActionBars.lua" />
     <Script file="Auras.lua" />
-    <Script file="CDMOverlay.lua" />
-    <Script file="CDMGlow.lua" />
     <Script file="Chat.lua" />
     <Script file="UICleanup.lua" />
     <Script file="Battlenet.lua" />

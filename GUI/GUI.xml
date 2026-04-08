@@ -14,6 +14,7 @@
     <Script file="GUIWidgets\GUI-NUIButton.lua" />
     <Script file="GUIWidgets\GUI-NUIColorPicker.lua" />
     <Script file="GUIWidgets\GUI-NUIEditBox.lua" />
+    <Script file="GUIWidgets\GUI-NUIMultiLineEditBox.lua" />
     <Script file="GUIWidgets\GUI-NUISeparator.lua" />
     <Script file="GUIWidgets\GUI-Sidebar.lua" />
     <Script file="GUIWidgets\GUI-NUIText.lua" />
@@ -67,13 +68,8 @@
     <Script file="GUITabs\GUISkinning\GUI-UICleanup.lua" />
     <Script file="GUITabs\GUISkinning\GUI-BlizzardRaidmanager.lua" />
 
-    <!-- GUI Custom Buffs Tabs -->
-    <Script file="GUITabs\GUI-CustomBuffs\GUI-BuffBars.lua" />
-    <Script file="GUITabs\GUI-CustomBuffs\GUI-BuffIcons.lua" />
-
-    <!-- GUI CDM Tabs -->
-    <Script file="GUITabs\GUI-CDM\GUI-CDMGeneral.lua" />
-    <Script file="GUITabs\GUI-CDM\GUI-CDMGlow.lua" />
+    <!-- GUI Dungeons Tabs -->
+    <Script file="GUITabs\GUI-Dungeons\GUI-DungeonTimers.lua" />
 
     <Script file="GUIMain\GUI-MainFrame.lua" />
 </Ui>
