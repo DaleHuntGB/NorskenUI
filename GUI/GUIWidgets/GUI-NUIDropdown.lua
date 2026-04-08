@@ -26,6 +26,9 @@ local ARROW_SIZE = 16
 local ARROW_TEX = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\collapse.tga"
 local ENABLE_ANIMATIONS = true
 
+-- Font preview constants
+local FONT_PREVIEW_SIZE = 12
+
 -- Cached backdrop tables
 local DROPDOWN_BACKDROP = {
     bgFile = "Interface\\Buttons\\WHITE8X8",
@@ -41,6 +44,16 @@ local BORDER_ONLY_BACKDROP = {
     edgeFile = "Interface\\Buttons\\WHITE8X8",
     edgeSize = 1,
 }
+
+-- Safe font application helper for previews
+local function SafeApplyPreviewFont(fontString, fontPath, size)
+    if not fontString or not fontPath then return false end
+    local success = fontString:SetFont(fontPath, size or FONT_PREVIEW_SIZE, "")
+    if not success then
+        fontString:SetFontObject("GameFontHighlightSmall")
+    end
+    return success
+end
 
 local globalMouseChecker = CreateFrame("Frame", nil, UIParent)
 globalMouseChecker:Hide()
@@ -119,7 +132,7 @@ local function ReleaseItemButton(btn)
     table_insert(itemButtonPool, btn)
 end
 
-function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidth, callback)
+function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidth, callback, isFontPreview)
     local tooltip = nil
     local sorting = nil
     local customHeight = nil
@@ -488,6 +501,12 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             btn._index = i -- Store index directly on button
             btn._text:SetText(displayText or key)
 
+            -- Apply font preview styling (render font name in that font)
+            if isFontPreview then
+                local fontPath = NRSKNUI:GetFontPath(key)
+                SafeApplyPreviewFont(btn._text, fontPath, FONT_PREVIEW_SIZE)
+            end
+
             -- Update color function
             local function UpdateItemColor()
                 if currentValue == btn._itemValue then
@@ -502,6 +521,11 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             btn:SetScript("OnClick", function()
                 currentValue = btn._itemValue
                 selectedText:SetText(btn._itemText or btn._itemValue)
+                -- Apply font preview to selected text
+                if isFontPreview then
+                    local fontPath = NRSKNUI:GetFontPath(btn._itemValue)
+                    SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
+                end
 
                 for _, itemBtn in ipairs(itemButtons) do
                     if itemBtn._updateColor then
@@ -628,9 +652,19 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     if selected and normalizedOptions[selected] then
         selectedText:SetText(normalizedOptions[selected])
         currentValue = selected
+        -- Apply font preview to initial selection
+        if isFontPreview then
+            local fontPath = NRSKNUI:GetFontPath(selected)
+            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
+        end
     elseif selected ~= nil then
         selectedText:SetText(tostring(selected))
         currentValue = selected
+        -- Apply font preview to initial selection
+        if isFontPreview then
+            local fontPath = NRSKNUI:GetFontPath(selected)
+            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
+        end
     else
         selectedText:SetText("Select...")
         currentValue = nil
@@ -657,6 +691,12 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             selectedText:SetText(normalizedOptions[value])
         else
             selectedText:SetText(tostring(value))
+        end
+
+        -- Apply font preview when setting value
+        if isFontPreview then
+            local fontPath = NRSKNUI:GetFontPath(value)
+            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
         end
 
         -- Only update colors if items exist

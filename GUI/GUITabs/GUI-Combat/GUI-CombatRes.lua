@@ -274,7 +274,7 @@ local function RenderTextModeTab(scrollChild, yOffset, activeCards)
         function(key)
             tm.FontFace = key
             ApplySettings()
-        end)
+        end, true)
     row1:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 

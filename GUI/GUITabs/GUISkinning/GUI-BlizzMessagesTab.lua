@@ -187,7 +187,7 @@ GUIFrame:RegisterContent("messages", function(scrollChild, yOffset)
         function(key)
             db.Font = key
             ApplySettings()
-        end)
+        end, true)
     row2a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 

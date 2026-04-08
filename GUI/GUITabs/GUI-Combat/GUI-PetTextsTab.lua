@@ -159,7 +159,7 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
         function(key)
             db.FontFace = key
             ApplySettings()
-        end)
+        end, true)
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
