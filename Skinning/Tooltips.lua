@@ -1,10 +1,8 @@
 -- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
-local LSM = NRSKNUI.LSM
 
--- Check for addon object if available
-local error = error
+-- Check for addon object
 if not NorskenUI then
     error("Tooltips: Addon object not initialized. Check file load order!")
     return
@@ -16,41 +14,32 @@ local TT = NorskenUI:NewModule("Tooltips", "AceEvent-3.0")
 
 -- Localization
 local hooksecurefunc = hooksecurefunc
-local issecretvalue = issecretvalue
-local pcall = pcall
-local UnitIsPlayer = UnitIsPlayer
-local UnitClass = UnitClass
-local UnitIsConnected = UnitIsConnected
-local UnitIsTapDenied = UnitIsTapDenied
-local UnitIsDeadOrGhost = UnitIsDeadOrGhost
-local GetGuildInfo = GetGuildInfo
-local UnitRace = UnitRace
-local UnitLevel = UnitLevel
-local IsInInstance = IsInInstance
 local CreateFrame = CreateFrame
 local pairs = pairs
-local ipairs = ipairs
-local GetCoinTextureString = GetCoinTextureString
-local AddTooltipPostCall = TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall
-local STANDARD_TEXT_FONT = STANDARD_TEXT_FONT
-local FACTION_HORDE = FACTION_HORDE
-local FACTION_ALLIANCE = FACTION_ALLIANCE
+local unpack = unpack
+local GetActionInfo = GetActionInfo
+local GetMacroItem = GetMacroItem
+local tonumber = tonumber
 local _G = _G
-local TooltipDataType = Enum.TooltipDataType
+local GetCoinTextureString = GetCoinTextureString
+local issecretvalue = issecretvalue
+local UnitIsPlayer = UnitIsPlayer
+local UnitClass = UnitClass
+local UnitTreatAsPlayerForDisplay = UnitTreatAsPlayerForDisplay
+local GetPlayerInfoByGUID = GetPlayerInfoByGUID
+local UnitNameFromGUID = UnitNameFromGUID
+local C_ClassColor = C_ClassColor
+local WHITE_FONT_COLOR = WHITE_FONT_COLOR
+local IsShiftKeyDown = IsShiftKeyDown
+local GetServerTime = GetServerTime
+local UnitName = UnitName
+local InCombatLockdown = InCombatLockdown
 
--- Small fix for ToolTipMoney frame errors
--- Credit to MoneyFrameFix by FootTapper for this snippet
-function SetTooltipMoney(frame, money, type, prefixText, suffixText)
-    frame:AddLine((prefixText or "") .. "  " .. GetCoinTextureString(money) .. " " .. (suffixText or ""), 0, 1, 1)
-end
-
--- Module State tracking
+-- Module state
 local isInitialized = false
-local hookedTooltips = {}
 local tooltipBackdrops = {}
-local hookedStatusBars = {}
 
--- List of common tooltips to skin
+-- Tooltips to skin
 local TOOLTIPS_TO_SKIN = {
     "GameTooltip",
     "ItemRefTooltip",
@@ -68,261 +57,60 @@ local TOOLTIPS_TO_SKIN = {
     "SettingsTooltip",
 }
 
--- Spec icon table for spec and class matching
-local SPEC_ICONS = {
-    -- Death Knight
-    ["Blood Death Knight"]     = 135770,
-    ["Frost Death Knight"]     = 135773,
-    ["Unholy Death Knight"]    = 135775,
-    -- Demon Hunter
-    ["Havoc Demon Hunter"]     = 1247264,
-    ["Vengeance Demon Hunter"] = 1247265,
-    ["Devourer Demon Hunter"]  = 7455385,
-    -- Druid
-    ["Balance Druid"]          = 136096,
-    ["Feral Druid"]            = 132115,
-    ["Guardian Druid"]         = 132276,
-    ["Restoration Druid"]      = 136041,
-    -- Evoker
-    ["Devastation Evoker"]     = 451165,
-    ["Preservation Evoker"]    = 451164,
-    ["Augmentation Evoker"]    = 5198700,
-    -- Hunter
-    ["Beast Mastery Hunter"]   = 461112,
-    ["Marksmanship Hunter"]    = 236179,
-    ["Survival Hunter"]        = 461113,
-    -- Mage
-    ["Arcane Mage"]            = 135932,
-    ["Fire Mage"]              = 135810,
-    ["Frost Mage"]             = 135846,
-    -- Monk
-    ["Brewmaster Monk"]        = 608951,
-    ["Windwalker Monk"]        = 608953,
-    ["Mistweaver Monk"]        = 608952,
-    -- Paladin
-    ["Holy Paladin"]           = 135920,
-    ["Protection Paladin"]     = 236264,
-    ["Retribution Paladin"]    = 135873,
-    -- Priest
-    ["Discipline Priest"]      = 135940,
-    ["Holy Priest"]            = 135920,
-    ["Shadow Priest"]          = 136207,
-    -- Rogue
-    ["Assassination Rogue"]    = 236270,
-    ["Outlaw Rogue"]           = 236286,
-    ["Subtlety Rogue"]         = 132320,
-    -- Shaman
-    ["Elemental Shaman"]       = 136048,
-    ["Enhancement Shaman"]     = 136051,
-    ["Restoration Shaman"]     = 136052,
-    -- Warlock
-    ["Affliction Warlock"]     = 136145,
-    ["Demonology Warlock"]     = 136172,
-    ["Destruction Warlock"]    = 136186,
-    -- Warrior
-    ["Arms Warrior"]           = 132355,
-    ["Fury Warrior"]           = 132347,
-    ["Protection Warrior"]     = 132341,
+-- Simple backdrop config
+local BACKDROP = {
+    bgFile = "Interface\\Buttons\\WHITE8X8",
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
+    insets = { left = 0, right = 0, top = 0, bottom = 0 },
 }
 
--- Some for fun guild logo stuff
-local logo = "Interface\\AddOns\\NorskenUI\\Media\\ELp4.tga"
-local echoLogo = "|T" .. logo .. ":16:16:0:0:64:64:5:59:7:57|t"
-local logoPaja = "Interface\\AddOns\\NorskenUI\\Media\\Pajala_Logo_trans.png"
-local PajaLogo = "|T" .. logoPaja .. ":16:16:0:0:64:64:5:59:7:57|t"
-
--- Update db, used for profile changes
 function TT:UpdateDB()
     self.db = NRSKNUI.db.profile.Skinning.Tooltips
 end
 
--- Module init
 function TT:OnInitialize()
     self:UpdateDB()
     self:SetEnabledState(false)
 end
 
--- Apply backdrop visual config (bgFile, edgeFile, colors) to a frame
-local function ApplyBackdropConfig(backdrop, db)
-    backdrop:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
-        edgeFile = "Interface\\Buttons\\WHITE8X8",
-        edgeSize = db.BorderSize or 1,
-        insets = { left = 0, right = 0, top = 0, bottom = 0 },
-    })
-    local bgColor = db.BackgroundColor or { 0, 0, 0, 0.8 }
-    local borderColor = db.BorderColor or { 0, 0, 0, 1 }
-    backdrop:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4] or 0.8)
-    backdrop:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
-end
+-- Cached color for status bar
+local cachedColor
 
--- Get or create custom backdrop for a tooltip
-function TT:GetOrCreateBackdrop(tooltip)
+-- Get or create backdrop for tooltip
+local function GetOrCreateBackdrop(tooltip)
+    if not tooltip or tooltip:IsForbidden() then return end
+
     if tooltipBackdrops[tooltip] then
         return tooltipBackdrops[tooltip]
     end
-    -- Create a new backdrop frame
+
     local backdrop = CreateFrame("Frame", nil, tooltip, "BackdropTemplate")
     local level = tooltip:GetFrameLevel()
-    backdrop:SetFrameLevel(level > 0 and level - 1 or 0)
-
-    -- Apply backdrop BEFORE SetAllPoints so dimensions are 0x0 (safe).
-    -- WHITE8X8 is a solid pixel so UV coordinates don't matter visually.
-    if self.db then
-        ApplyBackdropConfig(backdrop, self.db)
+    -- Check if frame level is a secret before comparing
+    if issecretvalue and issecretvalue(level) then
+        backdrop:SetFrameLevel(0)
+    else
+        backdrop:SetFrameLevel(level > 0 and level - 1 or 0)
     end
-
+    backdrop:SetBackdrop(BACKDROP)
+    backdrop:SetBackdropColor(0, 0, 0, 0.8)
+    backdrop:SetBackdropBorderColor(0, 0, 0, 1)
     backdrop:SetAllPoints(tooltip)
+
     tooltipBackdrops[tooltip] = backdrop
     return backdrop
 end
 
--- Update backdrop settings
-function TT:UpdateBackdrop(backdrop)
-    if not self.db then return end
+-- Hide default NineSlice border
+local function HideNineSlice(tooltip)
+    if not tooltip or tooltip:IsForbidden() then return end
 
-    -- Secret-value safety check on the parent tooltip's width
-    -- Setting the backdrop triggers math on width/height which crashes on tainted/secret values
-    local parent = backdrop:GetParent()
-    if parent and issecretvalue and issecretvalue(parent:GetWidth()) then
-        return
-    end
-
-    ApplyBackdropConfig(backdrop, self.db)
-end
-
--- Fetch color info from unit if unit is a player
--- Since Safe/Unsafe unit handling is done in processor
--- pcall might not be needed but kept anyway
-function TT:FetchUnitColour(unit)
-    local success, _ = pcall(UnitIsPlayer, unit)
-    if not success then return end
-    if not unit then return 1, 1, 1, 1 end
-    if success then
-        local online = UnitIsConnected(unit)
-        local tapDenied = UnitIsTapDenied(unit)
-        local deadOrGhost = UnitIsDeadOrGhost(unit)
-        if tapDenied then return 0.5, 0.5, 0.5, 1 end
-        if not online then return 0.5, 0.5, 0.5, 1 end
-        if deadOrGhost then return 0.5, 0.5, 0.5, 1 end
-        local _, class = UnitClass(unit)
-        if class then
-            local classColor = RAID_CLASS_COLORS[class]
-            if classColor then
-                return classColor.r, classColor.g, classColor.b, 1
-            end
-        end
-    end
-    return 1, 1, 1, 1
-end
-
--- Fetch guild info from unit if unit is a player
--- Since Safe/Unsafe unit handling is done in processor
--- pcall might not be needed but kept anyway
-function TT:FetchUnitGuild(unit)
-    local success, _ = pcall(UnitIsPlayer, unit)
-    if not success then return end
-    if not unit then return end
-    if success then
-        local guildName, guildRank = GetGuildInfo(unit)
-        local playerGuildName = GetGuildInfo("player")
-        if not guildName then return end
-        if guildName == "Echo" then
-            guildName = guildName
-            guildRank = "|cffe51039" .. guildRank .. "|r"
-        elseif guildName == "Pajala Sunrise" then
-            guildName = guildName
-            guildRank = "|cffffad00" .. guildRank .. "|r"
-        elseif guildName == playerGuildName then
-            guildName = "|cffe51039" .. guildName .. "|r"
-            guildRank = "|cffe51039" .. guildRank .. "|r"
-        else
-            guildName = "|cff41ff00" .. guildName .. "|r"
-            guildRank = "|cff41ff00" .. guildRank .. "|r"
-        end
-        return guildName, guildRank
-    end
-end
-
--- Fetch units level and race type
-function TT:FetchUnitLevelRace(unit)
-    if not unit then return end
-    local race = UnitRace(unit)
-    local level = UnitLevel(unit)
-    if race then
-        race = "|cffFFFFFF" .. race .. "|r"
-    end
-    local levelOut
-    if level then
-        levelOut = "|cffffad00" .. level .. "|r"
-    end
-    return race, levelOut
-end
-
--- Fetch units classname only if its from a player
-function TT:FetchUnitClassInfo(unit)
-    if not unit then return end
-    local unitIsPlayer = UnitIsPlayer(unit)
-    if unitIsPlayer then
-        local className = UnitClass(unit)
-        if not className then return end
-        return className
-    end
-end
-
--- Check Class and Spec string, match it to correct icon, return it
-function TT:fetchUnitSpecInfoMan(text)
-    if not text then return text, nil end
-    local matchedSpec
-    local matchedIcon
-
-    -- Check all keys in SPEC_ICONS
-    for specName, icon in pairs(SPEC_ICONS) do
-        if text:find(specName) then
-            matchedSpec = specName
-            matchedIcon = icon
-            break
-        end
-    end
-
-    -- Return the original text for display, plus matched icon if any
-    return matchedSpec, matchedIcon
-end
-
--- Hide the default Blizzard NineSlice border
-function TT:HideNineSlice(tooltip)
-    -- Try to hide NineSlice pieces completely
     if tooltip.NineSlice then
         tooltip.NineSlice:SetAlpha(0)
         tooltip.NineSlice:Hide()
     end
 
-    -- Also try these common backdrop elements
-    local elements = {
-        "BottomEdge",
-        "BottomLeftCorner",
-        "BottomRightCorner",
-        "Center",
-        "LeftEdge",
-        "RightEdge",
-        "TopEdge",
-        "TopLeftCorner",
-        "TopRightCorner",
-    }
-
-    -- Iterate through elements and hide them
-    for _, element in ipairs(elements) do
-        if tooltip[element] then
-            if tooltip[element].SetAlpha then
-                tooltip[element]:SetAlpha(0)
-            end
-            if tooltip[element].Hide then
-                tooltip[element]:Hide()
-            end
-        end
-    end
-
-    -- Also try to clear any backdrop the tooltip itself might have
     if tooltip.SetBackdrop then
         tooltip:SetBackdrop(nil)
     end
@@ -334,273 +122,359 @@ function TT:HideNineSlice(tooltip)
     end
 end
 
--- Permanently hide a status bar by hooking its Show method
-function TT:PermanentlyHideStatusBar(statusBar)
-    if not statusBar then return end
-    if hookedStatusBars[statusBar] then return end
+-- Hide status bar
+local hookedStatusBars = {}
+local function HideStatusBar(statusBar)
+    if not statusBar or hookedStatusBars[statusBar] then return end
+
     statusBar:Hide()
     statusBar:SetAlpha(0)
-    -- Hook Show to immediately hide it again
     hooksecurefunc(statusBar, "Show", function(self)
         self:Hide()
     end)
     hookedStatusBars[statusBar] = true
 end
 
--- Perma hide health bars for a tooltip
-function TT:HideHealthBars(tooltip)
-    if not self.db.HideHealthBar then return end
+-- Style a tooltip
+local function StyleTooltip(tooltip)
+    if not tooltip or tooltip:IsForbidden() then return end
 
-    -- GameTooltip uses GameTooltipStatusBar
+    HideNineSlice(tooltip)
+    GetOrCreateBackdrop(tooltip)
+
+    -- Hide status bar
     if tooltip.StatusBar then
-        TT:PermanentlyHideStatusBar(tooltip.StatusBar)
-    end
-
-    -- Also check for the named global
-    local statusBarName = tooltip:GetName() and (tooltip:GetName() .. "StatusBar")
-    if statusBarName and _G[statusBarName] then
-        TT:PermanentlyHideStatusBar(_G[statusBarName])
+        HideStatusBar(tooltip.StatusBar)
     end
 end
 
--- Tooltip Styling
-function TT:StyleTooltip(tooltip, unit)
-    if not self.db.Enabled then return end
-    if not tooltip then return end
+-- Hook tooltip OnShow
+local hookedTooltips = {}
+local function HookTooltip(tooltip)
+    if not tooltip or tooltip:IsForbidden() or hookedTooltips[tooltip] then return end
 
-    -- Hide default NineSlice
-    TT:HideNineSlice(tooltip)
-
-    -- Secret-value safety check
-    -- If secret value exists and returns true for this tooltip width, skip styling, info source ElvUI
-    -- Blizzard_SharedXML/Backdrop.lua: secrets cause backdrop system to crash out
-    -- Blizzard_MoneyFrame/Mainline/MoneyFrame.lua: secrets cause `MoneyFrame_Update` to crash out via `GameTooltip:SetLootItem(id)`
-    -- Blizzard_SharedXML/Tooltip/TooltipComparisonManager.lua: secrets cause comparison system to crash out.  use `alwaysCompareItems 0`
-    local safeToStyle = true
-    if issecretvalue then
-        if issecretvalue(tooltip:GetWidth()) then
-            safeToStyle = false
-        end
-    end
-    if safeToStyle then
-        -- Get or create our custom backdrop
-        local backdrop = TT:GetOrCreateBackdrop(tooltip)
-        -- Update backdrop with current settings
-        TT:UpdateBackdrop(backdrop)
-        -- Apply unit-based coloring if unit is provided
-        if unit then
-            local r, g, b, a = TT:FetchUnitColour(unit)
-            -- Name line
-            local nameLine = _G["GameTooltipTextLeft1"]
-            if nameLine then
-                nameLine:SetTextColor(r, g, b, a)
-            end
-        else
-            -- Reset name line to white for items/spells
-            local nameLine = _G["GameTooltipTextLeft1"]
-            if nameLine then
-                nameLine:SetTextColor(1, 1, 1, 1)
-            end
-        end
-    end
-    -- Permanently hide health bars if enabled
-    TT:HideHealthBars(tooltip)
-end
-
--- Helper function to apply coloring
-function TT:ColorText(text, r, g, b)
-    return string.format("|cff%02x%02x%02x%s|r", r * 255, g * 255, b * 255, text)
-end
-
--- Add tooltip processor for unit tooltips
-local tooltipProcessorRegistered = false
-function TT:InitializeTooltipProcessor()
-    if tooltipProcessorRegistered then return end
-    tooltipProcessorRegistered = true
-    AddTooltipPostCall(TooltipDataType.Unit, function(tooltip)
-        local db = TT.db
-        if not db or not db.Enabled then return end
-        local NameFontSize = db.NameFontSize
-        local GuildFontSize = db.GuildFontSize
-        local RaceLevelFontSize = db.RaceLevelFontSize
-        local SpecFontSize = db.SpecFontSize
-        local FactionFontSize = db.FactionFontSize
-        local fontPath = LSM:Fetch("font", db.Font)
-        if not fontPath or fontPath == "" then -- Backup if LSM fails
-            fontPath = STANDARD_TEXT_FONT
-        end
-        local outline = db.FontOutline
-        local _, unit = tooltip:GetUnit()
-        local success, _ = pcall(UnitIsPlayer, unit)
-        local inInstance, instanceType = IsInInstance()
-
-        -- Kinda scuffed way of getting secret/non secret environment, prob better ones exist
-        local secretEnv = success and unit ~= "mouseover" and inInstance == true and instanceType ~= "none" and
-            instanceType ~= "nil"
-        local nonSecretEnv = success and inInstance ~= true
-
-        -- In secretEnv, mouseover on nameplates triggers secret errors, but its fine to check mouseover unit in non secretEnv
-        if (secretEnv and not nonSecretEnv) or (not secretEnv and nonSecretEnv) then
-            local r, g, b, a = TT:FetchUnitColour(unit)
-
-            -- Name skin
-            local className = TT:FetchUnitClassInfo(unit)
-            if className then
-                local nameLine = _G["GameTooltipTextLeft1"]
-                if nameLine then
-                    nameLine:SetFont(fontPath, NameFontSize, outline)
-                    nameLine:SetTextColor(r, g, b, a)
-                    nameLine:SetShadowColor(0, 0, 0, 0)
-                end
-            end
-
-            -- Guild skin
-            local guildName, guildRank = TT:FetchUnitGuild(unit)
-            local guildLine = _G["GameTooltipTextLeft2"]
-            if guildLine then
-                if guildName then
-                    if guildName == "Echo" then
-                        guildLine:SetFont(fontPath, GuildFontSize, outline)
-                        guildLine:SetText(echoLogo ..
-                            " <" .. "|cffe51039" .. guildName .. "|r" .. ">" .. " " .. "[" .. guildRank .. "]")
-                        guildLine:SetShadowColor(0, 0, 0, 0)
-                    elseif guildName == "Pajala Sunrise" then
-                        guildLine:SetFont(fontPath, GuildFontSize, outline)
-                        guildLine:SetText(PajaLogo ..
-                            " <" .. "|cffffad00" .. guildName .. "|r" .. ">" .. " " .. "[" .. guildRank .. "]")
-                        guildLine:SetShadowColor(0, 0, 0, 0)
-                    else
-                        guildLine:SetFont(fontPath, GuildFontSize, outline)
-                        guildLine:SetText("<" .. guildName .. "|r" .. ">" .. " " .. "[" .. guildRank .. "]")
-                        guildLine:SetShadowColor(0, 0, 0, 0)
-                    end
-                end
-            end
-
-            -- Race and Level skin
-            local lineOffset = guildName and 0 or -1
-            local race, level = TT:FetchUnitLevelRace(unit)
-            local raceLevelLine = _G["GameTooltipTextLeft" .. (3 + lineOffset)]
-            if raceLevelLine then
-                raceLevelLine:SetFont(fontPath, RaceLevelFontSize, outline)
-                raceLevelLine:SetShadowColor(0, 0, 0, 0)
-                if race and not level then
-                    raceLevelLine:SetText(race)
-                end
-                if race and level then
-                    raceLevelLine:SetText(level .. " " .. race)
-                end
-                if level and not race then
-                    raceLevelLine:SetText(level)
-                end
-                if not level and not race then return end
-            end
-
-            -- Spec and Class skin
-            if className then
-                local classLine = _G["GameTooltipTextLeft" .. (4 + lineOffset)]
-                if classLine then
-                    local specText = classLine:GetText()
-                    local spec, iconID = TT:fetchUnitSpecInfoMan(specText)
-                    classLine:SetFont(fontPath, SpecFontSize, outline)
-                    classLine:SetShadowColor(0, 0, 0, 0)
-                    -- Build the text based on what's available
-                    local text = ""
-                    if iconID then
-                        local iconExport = "|T" .. iconID .. ":16:16:0:0:64:64:5:59:7:57|t"
-                        text = text .. iconExport .. " "
-                    end
-                    if spec then
-                        local specHex = TT:ColorText(spec, r, g, b)
-                        text = text .. specHex .. " "
-                    end
-                    text = text
-                    classLine:SetText(text)
-                end
-            end
-
-            -- Faction Skin
-            for i = 2, tooltip:NumLines() do
-                local line = _G["GameTooltipTextLeft" .. i]
-                if line then
-                    local text = line:GetText()
-                    if text == FACTION_HORDE then
-                        line:SetTextColor(1, 0, 0)
-                        line:SetFont(fontPath, FactionFontSize, outline)
-                        line:SetShadowColor(0, 0, 0, 0)
-                    elseif text == FACTION_ALLIANCE then
-                        line:SetTextColor(0, 0.5, 1)
-                        line:SetFont(fontPath, FactionFontSize, outline)
-                        line:SetShadowColor(0, 0, 0, 0)
-                    end
-                end
-            end
-        end
-    end)
-end
-
--- Hook a tooltip to apply styling
-function TT:HookTooltip(tooltip)
-    if not tooltip then return end
-    if hookedTooltips[tooltip] then return end
-    if not self.db.Enabled then return end
-    -- Hook OnShow for backdrop setup
-    -- No explicit Show/Hide needed: backdrop is a child frame and automatically
-    -- follows parent visibility without firing OnShow (avoiding SetupTextureCoordinates crash)
     tooltip:HookScript("OnShow", function(self)
-        TT:HideNineSlice(self)
-        TT:HideHealthBars(self)
-        local backdrop = TT:GetOrCreateBackdrop(self)
-        TT:UpdateBackdrop(backdrop)
+        if self:IsForbidden() then return end
+        HideNineSlice(self)
+        GetOrCreateBackdrop(self)
     end)
+
     hookedTooltips[tooltip] = true
 end
 
--- Refresh styling on all hooked tooltips
-function TT:Refresh()
-    TT:InitializeTooltipProcessor()
+-- Register line processors for unit tooltips
+local function RegisterTooltipProcessors()
+    local NAME_REALM_FORMAT = "%s |cff777777(%s)|r"
 
-    -- Hook main tooltips
-    for _, tooltipName in ipairs(TOOLTIPS_TO_SKIN) do
-        local tooltip = _G[tooltipName]
-        if tooltip then
-            TT:HookTooltip(tooltip)
+    -- Safe helper to get color - avoids secret values
+    local function GetSafeColor(color)
+        if not color or (issecretvalue and issecretvalue(color)) then
+            return WHITE_FONT_COLOR
         end
+        return color
     end
 
-    -- Force refresh styling on visible tooltips
-    for tooltip in pairs(hookedTooltips) do
-        if tooltip:IsShown() then
-            TT:StyleTooltip(tooltip)
+    -- Unit name line - class color and realm handling
+    TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.UnitName, function(tooltip, data)
+        if tooltip:IsForbidden() or not tooltip:IsTooltipType(Enum.TooltipDataType.Unit) then
+            return
         end
-        -- Also update hidden tooltips backdrops so they are ready
-        local backdrop = tooltipBackdrops[tooltip]
-        if backdrop then
-            TT:UpdateBackdrop(backdrop)
+
+        local _, unit, guid = tooltip:GetUnit()
+        if not guid then
+            return
+        end
+
+        local name, realm
+
+        if issecretvalue and issecretvalue(unit) then
+            -- Secret unit - use GUID-based lookups
+            local _, classToken = GetPlayerInfoByGUID(guid)
+            name, realm = UnitNameFromGUID(guid)
+
+            if classToken then
+                cachedColor = C_ClassColor.GetClassColor(classToken)
+            else
+                cachedColor = GetSafeColor(data.leftColor)
+            end
+        elseif unit then
+            -- Normal unit
+            if UnitIsPlayer(unit) or UnitTreatAsPlayerForDisplay(unit) then
+                local _, classToken = UnitClass(unit)
+                cachedColor = C_ClassColor.GetClassColor(classToken)
+                name, realm = UnitNameFromGUID(guid)
+            else
+                cachedColor = GetSafeColor(data.leftColor)
+            end
+        end
+
+        -- Add the name line with proper color
+        local color = cachedColor or WHITE_FONT_COLOR
+        if realm then
+            tooltip:AddLine(NAME_REALM_FORMAT:format(name, realm), color:GetRGB())
+        elseif name then
+            tooltip:AddLine(name, color:GetRGB())
+        else
+            tooltip:AddLine(data.leftText, (cachedColor or WHITE_FONT_COLOR):GetRGB())
+        end
+
+        return true -- Replace the original line
+    end)
+
+    -- Unit owner line - grey color
+    TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.UnitOwner, function(tooltip, data)
+        if tooltip:IsForbidden() or not tooltip:IsTooltipType(Enum.TooltipDataType.Unit) then
+            return
+        end
+
+        tooltip:AddLine(data.leftText, 0.5, 0.5, 0.5)
+        return true
+    end)
+
+    -- Remove threat line
+    TooltipDataProcessor.AddLinePreCall(Enum.TooltipDataLineType.UnitThreat, function(tooltip)
+        if not tooltip:IsForbidden() then
+            return true -- Suppress the line
+        end
+    end)
+end
+
+-- Set custom fonts
+local function SetTooltipFonts()
+    local font = NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF"
+
+    for _, fontStringName in pairs({
+        "GameTooltipHeaderText",
+        "GameTooltipText",
+        "GameTooltipTextSmall",
+    }) do
+        local fontString = _G[fontStringName]
+        if fontString then
+            fontString:SetShadowOffset(0, 0)
+
+            if fontStringName ~= "GameTooltipHeaderText" then
+                fontString:SetFont(font, 13, "OUTLINE")
+            else
+                fontString:SetFont(font, 16, "OUTLINE")
+            end
         end
     end
 end
 
--- ApplySettings
-function TT:ApplySettings()
-    if NRSKNUI:ShouldNotLoadModule() then return end
-    self:Refresh()
+-- Tooltip IDs (shown when holding shift)
+local PREFIXES = {
+    item = ENCOUNTER_JOURNAL_ITEM,
+    spell = STAT_CATEGORY_SPELL,
+    currency = CURRENCY,
+    mount = MOUNT,
+    macro = MACRO,
+    npc = PROF_CRAFTING_ORDER_TYPE_NPC:upper(),
+    age = "Age",
+    quest = TRANSMOG_SOURCE_2,
+    caster = SPELL_TARGET_CENTER_CASTER:gsub("^%l", string.upper),
+}
+
+local SUFFIXES = {
+    item = ID,
+    spell = ID,
+    currency = ID,
+    mount = ID,
+    macro = NAME,
+    npc = ID,
+    quest = ID,
+}
+
+local LINE_FORMAT = "%s: |cff93ccea%s|r"
+
+-- Simple time formatter
+local function FormatTime(seconds)
+    if seconds < 60 then
+        return string.format("%ds", seconds)
+    elseif seconds < 3600 then
+        return string.format("%dm %ds", math.floor(seconds / 60), seconds % 60)
+    else
+        local hours = math.floor(seconds / 3600)
+        local mins = math.floor((seconds % 3600) / 60)
+        return string.format("%dh %dm", hours, mins)
+    end
 end
 
--- Create our own anchor frame that we later use to anchor tooltip to
+local function addTooltipLine(tooltip, kind, value, forced)
+    if tooltip:IsForbidden() or not (forced or IsShiftKeyDown()) then
+        return
+    end
+
+    local prefix = PREFIXES[kind] or ID
+    local suffix = SUFFIXES[kind]
+    if suffix then
+        tooltip:AddLine(LINE_FORMAT:format(prefix .. " " .. suffix, value or UNKNOWN))
+    else
+        tooltip:AddLine(LINE_FORMAT:format(prefix, value or UNKNOWN))
+    end
+
+    return true
+end
+
+local dataTypeHandlers = {}
+
+function dataTypeHandlers:Item(data)
+    addTooltipLine(self, "item", data.id)
+end
+
+function dataTypeHandlers:Spell(data)
+    addTooltipLine(self, "spell", data.id)
+end
+
+function dataTypeHandlers:Unit(data)
+    if data.guid and not issecretvalue(data.guid) and not C_PlayerInfo.GUIDIsPlayer(data.guid) then
+        if addTooltipLine(self, "npc", C_CreatureInfo.GetCreatureID(data.guid)) then
+            -- show spawn time
+            local _, _, _, _, _, spawnUID = string.split("-", data.guid)
+            if spawnUID then
+                local serverTime = GetServerTime()
+                local spawnEpoch = serverTime - (serverTime % 2 ^ 23)
+                local spawnEpochOffset = bit.band(tonumber(spawnUID, 16), 0x7fffff)
+                local spawnTime = spawnEpoch + spawnEpochOffset
+
+                if spawnTime > serverTime then
+                    spawnTime = spawnTime - ((2 ^ 23) - 1)
+                end
+
+                addTooltipLine(self, "age", FormatTime(serverTime - spawnTime))
+            end
+        end
+    end
+end
+
+function dataTypeHandlers:Currency(data)
+    addTooltipLine(self, "currency", data.id)
+end
+
+function dataTypeHandlers:Mount(data)
+    if data.id then
+        local _, spellID = C_MountJournal.GetMountInfoByID(data.id)
+        if spellID then
+            addTooltipLine(self, "mount", data.id)
+            addTooltipLine(self, "spell", spellID)
+        end
+    end
+end
+
+function dataTypeHandlers:PetAction(data)
+    for _, line in pairs(data.lines) do
+        if line.tooltipID then
+            addTooltipLine(self, "spell", line.tooltipID)
+            break
+        end
+    end
+end
+
+function dataTypeHandlers:Macro()
+    if self.processingInfo and self.processingInfo.getterName == "GetAction" then
+        local actionID = unpack(self.processingInfo.getterArgs)
+        local actionText = C_ActionBar.GetActionText(actionID)
+        addTooltipLine(self, "macro", actionText)
+
+        local _, macroActionID, macroActionType = GetActionInfo(actionID)
+        if macroActionType == "spell" then
+            addTooltipLine(self, macroActionType, macroActionID)
+        elseif macroActionType == "" then
+            if C_Macro.GetMacroName(macroActionID) == actionText then
+                local _, itemLink = GetMacroItem(macroActionID)
+                if itemLink then
+                    addTooltipLine(self, "item", C_Item.GetItemIDForItemInfo(itemLink))
+                end
+            end
+        end
+    end
+end
+
+dataTypeHandlers.Corpse = dataTypeHandlers.Unit
+dataTypeHandlers.Toy = dataTypeHandlers.Item
+
+do
+    local getters = {
+        GetUnitAura = C_UnitAuras.GetAuraDataByIndex,
+        GetUnitAuraByAuraInstanceID = C_UnitAuras.GetAuraDataByAuraInstanceID,
+        GetUnitBuff = C_UnitAuras.GetBuffDataByIndex,
+        GetUnitBuffByAuraInstanceID = C_UnitAuras.GetAuraDataByAuraInstanceID,
+        GetUnitDebuff = C_UnitAuras.GetDebuffDataByIndex,
+        GetUnitDebuffByAuraInstanceID = C_UnitAuras.GetAuraDataByAuraInstanceID,
+    }
+
+    function dataTypeHandlers:UnitAura(data)
+        if data.id then
+            local getter = getters[self.processingInfo.getterName]
+            if getter then
+                local auraInfo = getter(unpack(self.processingInfo.getterArgs))
+                if auraInfo and auraInfo.sourceUnit then
+                    local name = UnitName(auraInfo.sourceUnit)
+
+                    if not issecretvalue(auraInfo.sourceUnit) then
+                        local _, classToken = UnitClass(auraInfo.sourceUnit)
+                        if classToken then
+                            name = C_ClassColor.GetClassColor(classToken):WrapTextInColorCode(name)
+                        end
+                    end
+
+                    self:AddLine(" ")
+                    addTooltipLine(self, "caster", name, true)
+                end
+            end
+
+            addTooltipLine(self, "spell", data.id)
+        end
+    end
+end
+
+local function RegisterIDProcessors()
+    for dataType, key in pairs(Enum.TooltipDataType) do
+        if dataTypeHandlers[dataType] then
+            TooltipDataProcessor.AddTooltipPostCall(key, dataTypeHandlers[dataType])
+        end
+    end
+end
+
+-- Shift key handler to refresh tooltip
+local function OnModifierStateChanged(_, key)
+    if InCombatLockdown() then return end
+    if key ~= "LSHIFT" and key ~= "RSHIFT" then return end
+
+    if GameTooltip:IsShown() and not GameTooltip:IsForbidden() then
+        local _, unit = GameTooltip:GetUnit()
+        if not unit or not issecretvalue(unit) then
+            GameTooltip:RefreshData()
+        end
+    end
+end
+
+-- Create anchor frame
 function TT:CreateTooltipAnchorFrame()
     local TTAnchor = CreateFrame("Frame", "NRSKNUI_ToolTipAnchorFrame", UIParent)
     TTAnchor:SetSize(170, 60)
     TTAnchor:ClearAllPoints()
-    TTAnchor:SetPoint(self.db.Position.AnchorFrom, UIParent, self.db.Position.AnchorTo, self.db.Position.XOffset,
-        self.db.Position.YOffset)
+    TTAnchor:SetPoint(
+        self.db.Position.AnchorFrom,
+        UIParent,
+        self.db.Position.AnchorTo,
+        self.db.Position.XOffset,
+        self.db.Position.YOffset
+    )
     TTAnchor:SetClampedToScreen(true)
 
     self.TTAnchor = TTAnchor
     return TTAnchor
 end
 
--- Remove tooltip anchoring Edit Mode UI since we do position changes in our my custom Edit mode
+-- Anchor tooltip to our frame
+function TT:AnchorTooltip(tooltip)
+    if not tooltip or tooltip:IsForbidden() then return end
+    tooltip:ClearAllPoints()
+    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+    tooltip:SetPoint("BOTTOMRIGHT", self.TTAnchor, "BOTTOMRIGHT", 0, 0)
+end
+
+-- Disable edit mode for tooltips
 local function DisableTooltipEditMode()
     if GameTooltipDefaultContainer then
         GameTooltipDefaultContainer.SetIsInEditMode = nop
@@ -609,27 +483,11 @@ local function DisableTooltipEditMode()
         GameTooltipDefaultContainer.HasActiveChanges = nop
         GameTooltipDefaultContainer.HighlightSystem = nop
         GameTooltipDefaultContainer.SelectSystem = nop
-        -- Unregister from Edit Mode system
         GameTooltipDefaultContainer.system = nil
     end
 end
 
-function TT:AnchorTooltip(tooltip)
-    if not tooltip or tooltip:IsForbidden() then return end
-    tooltip:ClearAllPoints()
-    tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-    tooltip:SetPoint("BOTTOMRIGHT", self.TTAnchor, "BOTTOMRIGHT", 0, 0)
-end
-
-local function tooltipAnchorReg()
-    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(self)
-        TT:AnchorTooltip(self)
-    end)
-end
-
--- Skin QueueStatusFrame, tooltip that is shown when you hover LFG eye on the minimap
--- Has a unique structure where the backdrop is actually a child frame with textures
--- so we have to hide those and apply our own backdrop to the main frame
+-- Skin QueueStatusFrame
 local function SkinQueueStatus()
     local frame = QueueStatusFrame
     if not frame then return end
@@ -637,61 +495,74 @@ local function SkinQueueStatus()
     local children = { frame:GetChildren() }
     local borderFrame = children[1]
 
-    -- Hide all the default border textures
     if borderFrame then
-        for _, region in ipairs({ borderFrame:GetRegions() }) do
+        for _, region in pairs({ borderFrame:GetRegions() }) do
             region:SetAlpha(0)
             region:Hide()
         end
-        -- Prevent them from showing again
         hooksecurefunc(borderFrame, "Show", function(self)
-            for _, region in ipairs({ self:GetRegions() }) do
+            for _, region in pairs({ self:GetRegions() }) do
                 region:SetAlpha(0)
                 region:Hide()
             end
         end)
     end
 
-    -- Apply our backdrop to QueueStatusFrame itself
-    local backdrop = TT:GetOrCreateBackdrop(frame)
-    TT:UpdateBackdrop(backdrop)
+    GetOrCreateBackdrop(frame)
 
-    -- Re-apply on every show since Blizzard may reset things
     frame:HookScript("OnShow", function(self)
         if borderFrame then
-            for _, region in ipairs({ borderFrame:GetRegions() }) do
+            for _, region in pairs({ borderFrame:GetRegions() }) do
                 region:SetAlpha(0)
                 region:Hide()
             end
         end
-        local bd = TT:GetOrCreateBackdrop(self)
-        TT:UpdateBackdrop(bd)
-        bd:Show()
-    end)
-
-    frame:HookScript("OnHide", function(self)
-        local bd = tooltipBackdrops[self]
-        if bd then bd:Hide() end
+        GetOrCreateBackdrop(self)
     end)
 end
 
--- Initialize tooltip skinning
+function TT:Refresh()
+    for _, tooltipName in pairs(TOOLTIPS_TO_SKIN) do
+        local tooltip = _G[tooltipName]
+        if tooltip then
+            HookTooltip(tooltip)
+            StyleTooltip(tooltip)
+        end
+    end
+end
+
+function TT:ApplySettings()
+    if NRSKNUI:ShouldNotLoadModule() then return end
+    self:Refresh()
+end
+
 function TT:OnEnable()
-    if NRSKNUI:ShouldNotLoadModule() then return end -- Skip if ElvUI is loaded, to avoid conflicts
+    if NRSKNUI:ShouldNotLoadModule() then return end
     if not self.db.Enabled then return end
     if isInitialized then return end
+
+    -- Override SetTooltipMoney to fix frame errors (only when module is enabled)
+    function SetTooltipMoney(frame, money, type, prefixText, suffixText)
+        frame:AddLine((prefixText or "") .. "  " .. GetCoinTextureString(money) .. " " .. (suffixText or ""), 0, 1, 1)
+    end
+
     TT:CreateTooltipAnchorFrame()
     TT:Refresh()
     SkinQueueStatus()
+    RegisterTooltipProcessors()
+    RegisterIDProcessors()
+    SetTooltipFonts()
 
-    isInitialized = true
-    tooltipAnchorReg()
+    -- Register shift key handler
+    self:RegisterEvent("MODIFIER_STATE_CHANGED", OnModifierStateChanged)
 
-    C_Timer.After(0.5, function()
-        DisableTooltipEditMode()
+    hooksecurefunc("GameTooltip_SetDefaultAnchor", function(tooltip)
+        TT:AnchorTooltip(tooltip)
     end)
 
-    -- Register with my custom edit mode
+    C_Timer.After(0.5, DisableTooltipEditMode)
+
+    -- Register with edit mode
     local config = {
         key = "TooltipModule",
         displayName = "Tooltip Anchor",
@@ -714,4 +585,6 @@ function TT:OnEnable()
         guiPath = "tooltips",
     }
     NRSKNUI.EditMode:RegisterElement(config)
+
+    isInitialized = true
 end

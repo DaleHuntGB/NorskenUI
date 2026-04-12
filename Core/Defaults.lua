@@ -1295,13 +1295,6 @@ local Defaults = {
                 },
 
                 -- MiniMap Elements
-                ExpansionButton = {        -- Expansion button
-                    Hide = false,          -- Hide expansion button
-                    Scale = 0.6,           -- Scale of button
-                    Anchor = "TOPRIGHT",   -- Anchor point
-                    X = -2,                -- X offset
-                    Y = -2,                -- Y offset
-                },
                 Mail = {                   -- Mail icon
                     Scale = 1.0,           -- Scale of mail icon
                     Anchor = "TOPRIGHT",   -- Anchor point
@@ -1422,26 +1415,12 @@ local Defaults = {
 
             -- Tooltip Skinning
             Tooltips = {
-                Enabled = true,                     -- Master toggle for tooltip skinning
-                BackgroundColor = { 0, 0, 0, 0.8 }, -- nil = use Theme.bgDark
-                BorderColor = { 0, 0, 0, 1 },       -- Black border
-                BorderSize = 1,                     -- Border thickness
-                HideHealthBar = true,               -- Hide health bar on unit tooltips
-                Font = "Expressway",                -- Font face
-                FontOutline = "OUTLINE",            -- Font outline
-                NameFontSize = 17,                  -- Name Font size
-                GuildFontSize = 14,                 -- Guild Font size
-                RaceLevelFontSize = 14,             -- RaceLevel Font size
-                SpecFontSize = 14,                  -- Spec Fontsize
-                FactionFontSize = 14,               -- Faction Font size
-                -- Position Settings
-                anchorFrameType = "UIPARENT",       -- Anchor frame type
-                ParentFrame = "UIParent",           -- Parent frame name
-                Position = {                        -- Position settings
-                    AnchorFrom = "BOTTOMRIGHT",     -- Anchor point from
-                    AnchorTo = "BOTTOMRIGHT",       -- Anchor point to
-                    XOffset = -1,                   -- X offset
-                    YOffset = 350,                  -- Y offset
+                Enabled = true,
+                Position = {
+                    AnchorFrom = "BOTTOMRIGHT",
+                    AnchorTo = "BOTTOMRIGHT",
+                    XOffset = -1,
+                    YOffset = 350,
                 },
             },
 
@@ -1546,6 +1525,180 @@ local Defaults = {
                     CountdownSize = 18,
                     BorderColor = { 0, 0, 0, 1 },
                 },
+            },
+        },
+
+        -- Dungeon Timers (BigWigs Integration)
+        DungeonTimers = {
+            Enabled = false,
+
+            -- Global display settings for Bars
+            BarDisplay = {
+                barWidth = 200,
+                barHeight = 20,
+                barTexture = "NorskenUI",  -- LSM statusbar texture key
+                fontFace = "Expressway",
+                fontSize = 12,
+                fontOutline = "OUTLINE",   -- NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE
+                iconEnabled = true,
+            },
+
+            -- Global display settings for Texts
+            TextDisplay = {
+                fontFace = "Expressway",
+                fontSize = 14,
+                fontOutline = "SOFTOUTLINE",  -- NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE
+                textAlign = "LEFT",  -- LEFT, CENTER, RIGHT
+            },
+
+            -- Global group settings (applies to all dungeons)
+            BarGroup = {
+                Position = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 100,
+                },
+                GrowthDirection = "DOWN",
+                Spacing = 2,
+            },
+            TextGroup = {
+                Position = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = -100,
+                },
+                GrowthDirection = "DOWN",
+                Spacing = 2,
+            },
+
+            -- Per-dungeon triggers (instanceId maps to BigWigs/LittleWigs boss modules)
+            Dungeons = {
+                MagistersTerrace   = { Enabled = true, instanceId = 2811, Triggers = {} },
+                MaisaraCaverns     = { Enabled = true, instanceId = 2874, Triggers = {} },
+                NexusPointXenas    = { Enabled = true, instanceId = 2915, Triggers = {} },
+                WindrunnerSpire    = { Enabled = true, instanceId = 2805, Triggers = {} },
+                AlgetharAcademy    = { Enabled = true, instanceId = 2526, Triggers = {} },
+                PitOfSaron         = { Enabled = true, instanceId = 658, Triggers = {} },
+                SeatOfTriumvirate  = { Enabled = true, instanceId = 1753, Triggers = {} },
+                Skyreach           = { Enabled = true, instanceId = 1209, Triggers = {} },
+            },
+
+            -- Default values for new triggers (template)
+            -- Per-trigger defaults (text content, colors)
+            TriggerDefaults = {
+                enabled = true,
+                triggerType = "timer",
+                spellId = "",
+                message = "",
+                messageOperator = "find",
+                remainingEnabled = true,
+                remainingOperator = "<=",
+                remainingValue = 5,
+                countEnabled = false,
+                countOperator = "==",
+                countValue = 1,
+                extendTimer = 0,
+                displayType = "bar",
+                -- Colors
+                useBigWigsColors = true,
+                barColor = { 0.772, 0.168, 0.168, 1 },
+                backgroundColor = { 0.1, 0.1, 0.1, 0.8 },
+                textColor = { 1, 1, 1, 1 },
+                -- Bar text settings
+                barText1Format = "Tank Hit",
+                barText1Justify = "LEFT",
+                barText1XOffset = 3,
+                barText1YOffset = 0,
+                barText2Format = "%p",
+                barText2Justify = "RIGHT",
+                barText2XOffset = -3,
+                barText2YOffset = 0,
+                -- Text mode settings
+                textFormat = "%n » %p",
+                textJustify = "LEFT",
+                showDecimals = true,
+                decimalThreshold = 1,
+                -- Custom text (Lua code for %c placeholder)
+                -- Function signature: function(expirationTime, duration, remaining, name, icon, stacks)
+                customText = "",
+                -- Load conditions
+                loadRoleEnabled = false,
+                loadRoleTank = true,
+                loadRoleHealer = true,
+                loadRoleDPS = true,
+                -- Actions
+                actionOnShowSound = "None",
+                actionOnHideSound = "None",
+            },
+        },
+
+        -- Dungeon Casts (Enemy Nameplate Casting Monitor)
+        DungeonCasts = {
+            Enabled = false,
+
+            -- Frame settings
+            Frame = {
+                MaxBars = 5,
+                Width = 220,
+                Height = 24,
+                Spacing = 2,
+                GrowthDirection = "DOWN", -- UP or DOWN
+                Strata = "HIGH",
+                anchorFrameType = "UIPARENT",
+                ParentFrame = "UIParent",
+                Position = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 200,
+                },
+            },
+
+            -- Bar appearance
+            BarDisplay = {
+                StatusBarTexture = "NorskenUI",
+                FontFace = "Expressway",
+                FontSize = 12,
+                FontOutline = "OUTLINE",
+                SparkEnabled = true,
+            },
+
+            -- Icon settings
+            Icon = {
+                Enabled = true,
+                Size = 24,
+                Zoom = 0.1,
+            },
+
+            -- Colors
+            CastingColor = { 0.8, 0.6, 0.0, 1 },
+            ChannelingColor = { 0.0, 0.7, 1.0, 1 },
+            NotInterruptibleColor = { 0.6, 0.6, 0.6, 1 },
+            BackgroundColor = { 0, 0, 0, 0.8 },
+            BorderColor = { 0, 0, 0, 1 },
+
+            -- Raid target icon
+            RaidIcon = {
+                Enabled = true,
+                Size = 20,
+            },
+
+            -- Text settings
+            Text = {
+                NameAlign = "LEFT",
+                TimeAlign = "RIGHT",
+                ShowTime = true,
+                TextColor = { 1, 1, 1, 1 },
+            },
+
+            -- Target display settings
+            Target = {
+                Enabled = true,
+                ShowClassColor = true,
+                Position = "RIGHT", -- LEFT or RIGHT
+                Separator = "»",    -- Separator between spell name and target
             },
         },
 
