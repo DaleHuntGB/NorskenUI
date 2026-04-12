@@ -17,7 +17,6 @@ local CreateFrame = CreateFrame
 local UnitExists = UnitExists
 local UnitClass = UnitClass
 local UnitIsBossMob = UnitIsBossMob
-local InCombatLockdown = InCombatLockdown
 local IsInInstance = IsInInstance
 local next = next
 local wipe = wipe
@@ -30,7 +29,15 @@ local isHunter = playerClass == "HUNTER"
 -- Module locals
 local SPELL_ID = 257284 -- Hunter's Mark
 local markedUnits = {}
-local inEncounter = false
+
+-- Get safe unit token from nameplate
+local function GetSafeUnitToken(namePlate)
+    if not namePlate then return nil end
+    local unit = namePlate.unitToken
+    if not NRSKNUI:IsSafeValue(unit) then return nil end
+    if type(unit) ~= "string" then return nil end
+    return unit
+end
 
 -- Update db, used for profile changes
 function HUNTMARK:UpdateDB()
@@ -82,8 +89,9 @@ function HUNTMARK:UpdateWarningDisplay()
     if self.isPreview then return end
     if not self.frame then return end
 
-    -- Never show during combat or encounters
-    if inEncounter or InCombatLockdown() then
+    -- During full restriction: hide and stop tracking entirely
+    if NRSKNUI:IsFullyRestricted() then
+        wipe(markedUnits)
         self.frame:Hide()
         return
     end
@@ -110,18 +118,38 @@ end
 -- We dont care about other hunters marks
 function HUNTMARK:CheckUnitForMark(unit)
     if not isHunter then return end
-    if inEncounter or InCombatLockdown() then return end
-    if not unit or not UnitExists(unit) or not UnitIsBossMob(unit) then return end
+    if NRSKNUI:IsFullyRestricted() then return end
+
+    -- Validate unit is safe to use
+    if not NRSKNUI:IsSafeValue(unit) then return end
+    if type(unit) ~= "string" then return end
+    if not UnitExists(unit) or not UnitIsBossMob(unit) then return end
 
     local hasMarkNow = false
+    local hitSecret = false
+
     AuraUtil.ForEachAura(unit, "HARMFUL", nil, function(auraInfo)
-        if auraInfo and not issecretvalue(auraInfo.spellId) and auraInfo.spellId == SPELL_ID and auraInfo.sourceUnit == "player" then
+        if not auraInfo then return end
+
+        -- If any aura field is secret, flag it and skip this aura
+        if NRSKNUI:IsSecretValue(auraInfo.spellId) or NRSKNUI:IsSecretValue(auraInfo.sourceUnit) then
+            hitSecret = true
+            return
+        end
+
+        if auraInfo.spellId == SPELL_ID and auraInfo.sourceUnit == "player" then
             hasMarkNow = true
             return true
         end
     end, true)
 
-    markedUnits[unit] = hasMarkNow
+    -- If we hit secrets, assume mark is present (avoid false warnings)
+    if hitSecret then
+        markedUnits[unit] = true
+    else
+        markedUnits[unit] = hasMarkNow
+    end
+
     self:UpdateWarningDisplay()
 end
 
@@ -149,7 +177,6 @@ function HUNTMARK:SetScanningActive(active)
         self.scannerFrame:UnregisterEvent("ENCOUNTER_END")
         self.scannerFrame:UnregisterEvent("UNIT_AURA")
         wipe(markedUnits)
-        inEncounter = false
         self.frame:Hide()
     end
 end
@@ -173,42 +200,33 @@ function HUNTMARK:StartScanning()
             return
         end
 
-        -- Only process other events when in a raid
+        -- Only process other events when in a raid instance
         if not IsInRaid() then return end
 
-        if event == "ENCOUNTER_START" then
-            inEncounter = true
+        -- Combat/encounter events: restriction system handles state, just hide and wipe
+        if event == "ENCOUNTER_START" or event == "PLAYER_REGEN_DISABLED" then
             wipe(markedUnits)
             self.frame:Hide()
             return
         end
 
-        if event == "ENCOUNTER_END" then
-            inEncounter = false
-            return
-        end
-
-        if event == "PLAYER_REGEN_DISABLED" then
-            wipe(markedUnits)
-            self.frame:Hide()
-            return
-        end
-
-        if event == "PLAYER_REGEN_ENABLED" then
-            -- Only rescan if not in an encounter
-            if inEncounter then return end
+        -- When restrictions release, rescan all nameplates
+        if event == "ENCOUNTER_END" or event == "PLAYER_REGEN_ENABLED" then
+            if NRSKNUI:IsFullyRestricted() then return end
             wipe(markedUnits)
             for _, namePlate in next, C_NamePlate.GetNamePlates() do
-                if namePlate.unitToken then
-                    self:CheckUnitForMark(namePlate.unitToken)
+                local safeUnit = GetSafeUnitToken(namePlate)
+                if safeUnit then
+                    self:CheckUnitForMark(safeUnit)
                 end
             end
             return
         end
 
-        if InCombatLockdown() or inEncounter then return end
+        if NRSKNUI:IsFullyRestricted() then return end
 
-        -- Validate unit is a string before processing
+        -- Validate unit is safe before processing
+        if not NRSKNUI:IsSafeValue(unit) then return end
         if type(unit) ~= "string" then return end
 
         if event == "NAME_PLATE_UNIT_REMOVED" then
@@ -221,7 +239,7 @@ function HUNTMARK:StartScanning()
 
     self.scannerFrame = scanner
 
-    -- Initial check if already in raid
+    -- Initial check if already in raid instance
     if IsInRaid() then
         self:SetScanningActive(true)
     end
@@ -298,7 +316,6 @@ function HUNTMARK:OnDisable()
         self.frame = nil
     end
     wipe(markedUnits)
-    inEncounter = false
     self.isPreview = false
 end
 
@@ -332,9 +349,9 @@ function HUNTMARK:HidePreview()
         -- Rescan all visible nameplates to restore real tracking state
         wipe(markedUnits)
         for _, namePlate in next, C_NamePlate.GetNamePlates() do
-            local unit = namePlate.unitToken
-            if unit then
-                self:CheckUnitForMark(unit)
+            local safeUnit = GetSafeUnitToken(namePlate)
+            if safeUnit then
+                self:CheckUnitForMark(safeUnit)
             end
         end
     end
