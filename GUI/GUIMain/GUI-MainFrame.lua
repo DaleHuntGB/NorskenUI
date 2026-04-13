@@ -89,7 +89,6 @@ GUIFrame.SidebarConfig = {
             elvUIDisabled = true,
             items = {
                 { id = "UICleanup",         text = "General UI Cleanup" },
-                { id = "Auras",             text = "Buffs, Debuffs & Externals" },
                 { id = "Chat",              text = "Chat" },
                 { id = "ActionBars",        text = "Action Bars" },
                 { id = "Minimap",           text = "Minimap" },
@@ -117,6 +116,18 @@ GUIFrame.SidebarConfig = {
                 { id = "Dungeon_PitOfSaron",          text = "Pit of Saron" },
                 { id = "Dungeon_SeatOfTriumvirate",   text = "Seat of the Triumvirate" },
                 { id = "Dungeon_Skyreach",            text = "Skyreach" },
+            }
+        },
+        {
+            id = "customskin_section",
+            type = "header",
+            text = "• Custom Skin",
+            defaultExpanded = false,
+            elvUIDisabled = true,
+            items = {
+                { id = "CustomSkin_Buffs",      text = "Buffs" },
+                { id = "CustomSkin_Debuffs",    text = "Debuffs" },
+                { id = "CustomSkin_Externals",  text = "External Buffs" },
             }
         },
     },

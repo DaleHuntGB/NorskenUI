@@ -1257,27 +1257,6 @@ local Defaults = {
                 },
             },
 
-            -- Standard Buff/Debuff Frame Skinning
-            BuffDebuffFrames = {
-                Enabled = true,          -- Master toggle for buff/debuff frame skinning
-                disableFlashing = true,  -- Disable flashing on low duration icons
-                FontFace = "Expressway", -- Font face
-                FontOutline = "OUTLINE", -- Font outline
-                FontColor = { 1, 1, 1, 1 },
-
-                -- Buffs
-                buffSize = 36,
-                buffBorderColor = { 0, 0, 0, 1 },
-
-                -- Debuffs
-                debuffSize = 40,
-                debuffBorderColor = { 0.8, 0, 0, 1 },
-
-                -- External Defensives
-                defSize = 42,
-                defBorderColor = { 0, 0, 0, 1 },
-            },
-
             -- Minimap Skinning
             Minimap = {
                 Enabled = true,              -- Master toggle for minimap skinning
@@ -1424,6 +1403,156 @@ local Defaults = {
                 },
             },
 
+            -- BuffTracking (SecureAuraHeader based buff display)
+            BuffTracking = {
+                Enabled = true,
+
+                -- Icon settings
+                IconSize = 36,
+                IconSpacing = 1,
+                IconsPerRow = 12,
+                MaxRows = 5,
+                IconZoom = 0.32,
+
+                -- Visual settings
+                BorderColor = { 0, 0, 0, 1 },
+                BackgroundColor = { 0, 0, 0, 0.3 },
+                EnchantBorderColor = { 0.6, 0, 1, 1 }, -- Purple for weapon enchants
+
+                -- Font settings
+                FontFace = "Expressway",
+                FontSize = 12,
+                FontOutline = "OUTLINE",
+                TimerFontSize = 14,
+
+                -- Timer text position (relative to icon)
+                TimerPosition = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 0,
+                },
+
+                -- Position
+                Strata = "MEDIUM",
+                anchorFrameType = "SELECTFRAME",
+                ParentFrame = "Minimap",
+                Position = {
+                    AnchorFrom = "TOPRIGHT",
+                    AnchorTo = "TOPLEFT",
+                    XOffset = -2,
+                    YOffset = 0,
+                },
+
+                -- Filtering
+                Filter = "HELPFUL",
+                IncludeWeaponEnchants = true,
+                SortMethod = "TIME",
+                SortDirection = "-",
+            },
+
+            -- DebuffTracking (SecureAuraHeader based debuff display)
+            DebuffTracking = {
+                Enabled = true,
+
+                -- Icon settings
+                IconSize = 60,
+                IconSpacing = 1,
+                IconsPerRow = 12,
+                MaxRows = 2,
+                IconZoom = 0.32,
+
+                -- Visual settings
+                BorderColor = { 0.8, 0, 0, 1 },
+                BackgroundColor = { 0, 0, 0, 0.3 },
+
+                -- Font settings
+                FontFace = "Expressway",
+                FontSize = 16,
+                FontOutline = "OUTLINE",
+                TimerFontSize = 20,
+
+                -- Timer text position (relative to icon)
+                TimerPosition = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 0,
+                },
+
+                -- Position
+                Strata = "MEDIUM",
+                anchorFrameType = "SELECTFRAME",
+                ParentFrame = "Minimap",
+                Position = {
+                    AnchorFrom = "TOPRIGHT",
+                    AnchorTo = "BOTTOMLEFT",
+                    XOffset = -2,
+                    YOffset = -2,
+                },
+
+                -- Filtering
+                SortMethod = "TIME",
+                SortDirection = "-",
+
+                -- Blacklist (spellId = true to hide)
+                -- Uses proper secret value checking before comparing
+                Blacklist = {
+                    [57723] = true,  -- Exhaustion (Bloodlust)
+                    [57724] = true,  -- Sated (Heroism)
+                    [80354] = true,  -- Temporal Displacement (Time Warp)
+                    [264689] = true, -- Fatigued (Primal Rage - Hunter pet)
+                    [390435] = true, -- Exhaustion (Fury of the Aspects
+                    [95809] = true,  -- Insanity
+                    [160455] = true, -- Fatigued
+                },
+            },
+
+            -- ExternalBuffTracking (External defensive buffs like Pain Suppression, Ironbark, etc.)
+            ExternalBuffTracking = {
+                Enabled = false,
+
+                -- Icon settings
+                IconSize = 50,
+                IconSpacing = 2,
+                IconsPerRow = 6,
+                MaxRows = 1,
+                IconZoom = 0.32,
+
+                -- Visual settings
+                BorderColor = { 0.2, 0.8, 0.2, 1 }, -- Green for externals
+                BackgroundColor = { 0, 0, 0, 0.3 },
+
+                -- Font settings
+                FontFace = "Expressway",
+                FontSize = 14,
+                FontOutline = "OUTLINE",
+                TimerFontSize = 16,
+
+                -- Timer text position (relative to icon)
+                TimerPosition = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 0,
+                },
+
+                -- Position
+                Strata = "MEDIUM",
+                anchorFrameType = "UIPARENT",
+                ParentFrame = "UIParent",
+                Position = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = 200,
+                },
+
+                -- Sorting
+                SortMethod = "TIME",
+                SortDirection = "-",
+            },
+
             -- Details Backdrop Settings
             DetailsBackdrop = {
                 Enabled = true,
@@ -1468,64 +1597,6 @@ local Defaults = {
                     },
                 },
             }
-        },
-
-        -- Custom Buff Trackers
-        CustomBuffs = {
-            -- Buff Bars (StatusBar style trackers)
-            Bars = {
-                Enabled = true,
-                GrowthDirection = "DOWN", -- DOWN, UP, LEFT, RIGHT
-                Spacing = 1,
-                -- Position settings
-                anchorFrameType = "SCREEN",
-                Position = {
-                    AnchorFrom = "CENTER",
-                    AnchorTo = "CENTER",
-                    XOffset = 0.1,
-                    YOffset = 100.1,
-                },
-                -- Trackers stored by index, each has SpellID + Duration + optional overrides
-                Trackers = {},
-                -- Default settings for new bars (used as template)
-                Defaults = {
-                    BarWidth = 200,
-                    BarHeight = 20,
-                    IconSize = 20,
-                    ShowIcon = true,
-                    ShowTimeText = true,
-                    ShowSpellText = true,
-                    FontSize = 12,
-                    BarColor = { 0.65, 0.65, 0.65, 1 },
-                    BackgroundColor = { 0, 0, 0, 0.8 },
-                    BorderColor = { 0, 0, 0, 1 },
-                    Reverse = false,
-                    StatusBarTexture = "NorskenUI", -- LSM statusbar texture name
-                },
-            },
-
-            -- Buff Icons (Icon with cooldown style trackers)
-            Icons = {
-                Enabled = true,
-                GrowthDirection = "RIGHT", -- LEFT, RIGHT, UP, DOWN
-                Spacing = 1,
-                -- Position settings
-                anchorFrameType = "SCREEN",
-                Position = {
-                    AnchorFrom = "CENTER",
-                    AnchorTo = "CENTER",
-                    XOffset = 0.1,
-                    YOffset = 150.1,
-                },
-                Trackers = {},
-                -- Default settings for new icons
-                Defaults = {
-                    IconSize = 40,
-                    ShowCooldownText = true,
-                    CountdownSize = 18,
-                    BorderColor = { 0, 0, 0, 1 },
-                },
-            },
         },
 
         -- Dungeon Timers (BigWigs Integration)

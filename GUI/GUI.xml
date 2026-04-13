@@ -62,11 +62,11 @@
     <Script file="GUITabs\GUISkinning\GUI-MicroMenuTab.lua" />
     <Script file="GUITabs\GUISkinning\GUI-MinimapTab.lua" />
     <Script file="GUITabs\GUISkinning\GUI-DetailsBackdrop.lua" />
-    <Script file="GUITabs\GUISkinning\GUI-Auras.lua" />
     <Script file="GUITabs\GUISkinning\GUI-Chat.lua" />
     <Script file="GUITabs\GUISkinning\GUI-ActionBarsTab.lua" />
     <Script file="GUITabs\GUISkinning\GUI-UICleanup.lua" />
     <Script file="GUITabs\GUISkinning\GUI-BlizzardRaidmanager.lua" />
+    <Include file="GUITabs\GUISkinning\CustomSkin\CustomSkin.xml" />
 
     <!-- GUI Dungeons Tabs -->
     <Script file="GUITabs\GUI-Dungeons\GUI-DungeonTimers.lua" />

@@ -8,9 +8,11 @@
     <Script file="Minimap.lua" />
     <Script file="DetailsBackdrop.lua" />
     <Script file="ActionBars.lua" />
-    <Script file="Auras.lua" />
     <Script file="Chat.lua" />
     <Script file="UICleanup.lua" />
     <Script file="Battlenet.lua" />
     <Script file="BlizzardRaidmanager.lua" />
+    <Script file="AuraBuffs.lua" />
+    <Script file="AuraDebuffs.lua" />
+    <Script file="AuraExternals.lua" />
 </Ui>
