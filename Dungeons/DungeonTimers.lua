@@ -64,7 +64,6 @@ local BIGWIGS_EVENTS = {
     "BigWigs_PauseBar",
     "BigWigs_ResumeBar",
     "BigWigs_OnBossDisable",
-    "BigWigs_Message_echo",
 }
 
 -- Get current player role
@@ -1276,9 +1275,6 @@ function DT:EventCallback(event, ...)
         local addon, duration, _, text, icon = ...
         local barData = self:CreateBarData(addon, -2, duration, text or "Pull", 0, icon or 136116, event)
         self:ProcessTimerTriggers(barData)
-    elseif event == "BigWigs_Message_echo" then
-        local addon, spellId, text, _, icon = ...
-        self:ProcessAnnounceTriggers(addon, spellId, text, icon)
     elseif event == "BigWigs_StopBar" then
         local _, text = ...
         self:StopBar(text)

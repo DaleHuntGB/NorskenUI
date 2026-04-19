@@ -246,6 +246,7 @@ function BUFFS:CreateBuffFrame()
     -- Sorting
     self.buffs:SetAttribute("sortMethod", self.db.SortMethod)
     self.buffs:SetAttribute("sortDirection", self.db.SortDirection)
+    self.buffs:SetAttribute("separateOwn", 1)
 
     -- Position and size for aura buttons
     self.buffs:SetAttribute("point", "TOPRIGHT")
