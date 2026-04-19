@@ -29,6 +29,7 @@ local isHunter = playerClass == "HUNTER"
 -- Module locals
 local SPELL_ID = 257284 -- Hunter's Mark
 local markedUnits = {}
+local pendingUnitUpdates = {} -- Coalescing table for UNIT_AURA events
 
 -- Get safe unit token from nameplate
 local function GetSafeUnitToken(namePlate)
@@ -231,9 +232,19 @@ function HUNTMARK:StartScanning()
 
         if event == "NAME_PLATE_UNIT_REMOVED" then
             markedUnits[unit] = nil
+            pendingUnitUpdates[unit] = nil -- Cancel any pending update for removed unit
             self:UpdateWarningDisplay()
-        elseif event == "NAME_PLATE_UNIT_ADDED" or event == "UNIT_AURA" then
+        elseif event == "NAME_PLATE_UNIT_ADDED" then
             self:CheckUnitForMark(unit)
+        elseif event == "UNIT_AURA" then
+            -- Coalesce UNIT_AURA events per-unit to prevent redundant scans
+            if pendingUnitUpdates[unit] then return end
+            pendingUnitUpdates[unit] = true
+            C_Timer.After(0, function()
+                pendingUnitUpdates[unit] = nil
+                if NRSKNUI:IsFullyRestricted() then return end
+                self:CheckUnitForMark(unit)
+            end)
         end
     end)
 

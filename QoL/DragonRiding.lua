@@ -511,7 +511,7 @@ function DR:OnShowHandler()
     self.secondWindFrame:RegisterEvent('SPELL_UPDATE_CHARGES')
     self.secondWindFrame:SetScript('OnEvent', function() C_Timer.After(0, function() UpdateSecondWind(self) end) end)
 
-    self.speedTicker = C_Timer.NewTicker(0.05, function() UpdateSpeed(self) end)
+    self.speedTicker = C_Timer.NewTicker(0.2, function() UpdateSpeed(self) end)
 
     UpdateVigor(self)
     UpdateVigorColor(self)
