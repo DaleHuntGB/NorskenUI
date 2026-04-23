@@ -64,8 +64,6 @@ end
 -- Create a single aura button
 local function CreateAuraButton(parent, index)
     local db = EXTERNALS.db
-    local fontPath = NRSKNUI:GetFontPath(db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(db.FontOutline)
     local iconSize = db.IconSize
 
     local button = CreateFrame("Button", nil, parent)
@@ -90,9 +88,9 @@ local function CreateAuraButton(parent, index)
 
     -- Count text (bottom right)
     button.Count = button:CreateFontString(nil, "OVERLAY")
-    button.Count:SetFont(fontPath, db.FontSize, fontOutline)
     button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
     button.Count:SetJustifyH("RIGHT")
+    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     -- Cooldown frame
@@ -102,13 +100,13 @@ local function CreateAuraButton(parent, index)
     button.Cooldown:SetDrawSwipe(false)
     button.Cooldown:SetHideCountdownNumbers(false)
 
-    -- Apply timer font size, position, and remove shadow from cooldown timer text
+    -- Apply timer font size and position
     local timerFontSize = db.TimerFontSize or 14
     local timerPos = db.TimerPosition or {}
     local cooldownText = button.Cooldown:GetRegions()
     if cooldownText and cooldownText.SetFont then
-        cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
-        cooldownText:SetShadowOffset(0, 0)
+        NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+        if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
         cooldownText:ClearAllPoints()
         cooldownText:SetPoint(
             timerPos.AnchorFrom or "CENTER",
@@ -237,17 +235,21 @@ function EXTERNALS:UpdateAuras()
 end
 
 -- Apply visual settings to a single button
-local function applyButtonSettings(button, db, fontPath, fontOutline)
+local function applyButtonSettings(button, db)
     button:SetSize(db.IconSize, db.IconSize)
     if button.bg then button.bg:SetColorTexture(unpack(db.BackgroundColor)) end
     if button.SetBorderColor then button:SetBorderColor(unpack(db.BorderColor)) end
-    if button.Count then button.Count:SetFont(fontPath, db.FontSize, fontOutline) end
+    if button.Count then
+        NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+        button.Count:SetShadowOffset(0, 0)
+    end
     if button.Cooldown then
         local timerFontSize = db.TimerFontSize or 14
         local timerPos = db.TimerPosition or {}
         local cooldownText = button.Cooldown:GetRegions()
         if cooldownText and cooldownText.SetFont then
-            cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
+            NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+            if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
             cooldownText:ClearAllPoints()
             cooldownText:SetPoint(
                 timerPos.AnchorFrom or "CENTER",
@@ -265,10 +267,7 @@ end
 function EXTERNALS:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
 
-    local fontPath = NRSKNUI:GetFontPath(self.db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(self.db.FontOutline)
-
-    for button in pairs(self.buttons) do applyButtonSettings(button, self.db, fontPath, fontOutline) end
+    for button in pairs(self.buttons) do applyButtonSettings(button, self.db) end
     if self.frame then PositionButtons(self) end
     if self.previewActive then self:ShowPreview() end
 end
@@ -401,9 +400,6 @@ local PREVIEW_ICONS = {
 
 -- Create a single preview button
 local function CreatePreviewButton(parent, index, db)
-    local fontPath = NRSKNUI:GetFontPath(db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(db.FontOutline)
-
     local button = CreateFrame("Frame", nil, parent)
     button:SetSize(db.IconSize, db.IconSize)
 
@@ -424,9 +420,9 @@ local function CreatePreviewButton(parent, index, db)
 
     -- Count text
     button.Count = button:CreateFontString(nil, "OVERLAY")
-    button.Count:SetFont(fontPath, db.FontSize, fontOutline)
     button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
     button.Count:SetJustifyH("RIGHT")
+    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     -- Cooldown frame
@@ -441,8 +437,8 @@ local function CreatePreviewButton(parent, index, db)
     local timerPos = db.TimerPosition or {}
     local cooldownText = button.Cooldown:GetRegions()
     if cooldownText and cooldownText.SetFont then
-        cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
-        cooldownText:SetShadowOffset(0, 0)
+        NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+        if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
         cooldownText:ClearAllPoints()
         cooldownText:SetPoint(
             timerPos.AnchorFrom or "CENTER",

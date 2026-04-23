@@ -131,27 +131,31 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
 
     -- Main Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Details Backdrop", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Details Backdrop", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyDetailsBackdropState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Details Backdrop",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Details Backdrop",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
 
     -- Select Backdrop Dropdown
     local editList = { ["bgOne"] = "Backdrop One", ["bgTwo"] = "Backdrop Two" }
-    local editDropdown = GUIFrame:CreateDropdown(row1, "Select Backdrop To Edit", editList, curEdit, _,
-        function(key)
+    local editDropdown = GUIFrame:CreateDropdown(row1, "Select Backdrop To Edit", {
+        options = editList,
+        value = curEdit,
+        callback = function(key)
             curEdit = key
             db.currentEdit = key
             GUIFrame:RefreshContent()
-        end)
+        end
+    })
     row1:AddWidget(editDropdown, 0.5)
     table_insert(allWidgets, editDropdown)
 
@@ -160,25 +164,29 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     -- Individual backdrop enable toggles
     local row1b = GUIFrame:CreateRow(card1.content, 36)
 
-    local enableBackdropOne = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop One", db.backDropOne.Enabled ~= false,
-        function(checked)
+    local enableBackdropOne = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop One", {
+        value = db.backDropOne.Enabled ~= false,
+        callback = function(checked)
             db.backDropOne.Enabled = checked
             if DBG then
                 DBG:ApplySettings()
             end
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row1b:AddWidget(enableBackdropOne, 0.5)
     table_insert(allWidgets, enableBackdropOne)
 
-    local enableBackdropTwo = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop Two", db.backDropTwo.Enabled ~= false,
-        function(checked)
+    local enableBackdropTwo = GUIFrame:CreateCheckbox(row1b, "Enable Backdrop Two", {
+        value = db.backDropTwo.Enabled ~= false,
+        callback = function(checked)
             db.backDropTwo.Enabled = checked
             if DBG then
                 DBG:ApplySettings()
             end
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row1b:AddWidget(enableBackdropTwo, 0.5)
     table_insert(allWidgets, enableBackdropTwo)
 
@@ -193,10 +201,9 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     local currentDB = GetCurrentBackdropDB()
 
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local autoSizeCheck = GUIFrame:CreateCheckbox(row2, "Auto Size to Parent Frame",
-        currentDB.autoSize,
-        function(checked, revert)
-
+    local autoSizeCheck = GUIFrame:CreateCheckbox(row2, "Auto Size to Parent Frame", {
+        value = currentDB.autoSize,
+        callback = function(checked, revert)
             -- If already enabled, dont show promt
             if not checked then
                 GetCurrentBackdropDB().autoSize = checked
@@ -222,53 +229,69 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
                 "Cancel"
             )
         end
-    )
+    })
     row2:AddWidget(autoSizeCheck, 1)
     table_insert(allWidgets, autoSizeCheck)
     card2:AddRow(row2, 40)
 
     -- Details Bars (per-backdrop)
     local row2b = GUIFrame:CreateRow(card2.content, 40)
-    local detailsBars = GUIFrame:CreateSlider(row2b, "Amount of bars to show", 1, 25, 1,
-        currentDB.detailsBars or db.detailsBars or 7, _,
-        function(val)
+    local detailsBars = GUIFrame:CreateSlider(row2b, "Amount of bars to show", {
+        min = 1,
+        max = 25,
+        step = 1,
+        value = currentDB.detailsBars or db.detailsBars or 7,
+        callback = function(val)
             GetCurrentBackdropDB().detailsBars = val
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(detailsBars, 0.5)
     table_insert(allWidgets, detailsBars)
     table_insert(autoSizeOnlyWidgets, detailsBars)
 
     -- Bar Height
-    local detailsBarH = GUIFrame:CreateSlider(row2b, "Your current Details bar height", 1, 50, 1,
-        db.detailsBarH, _,
-        function(val)
+    local detailsBarH = GUIFrame:CreateSlider(row2b, "Your current Details bar height", {
+        min = 1,
+        max = 50,
+        step = 1,
+        value = db.detailsBarH,
+        callback = function(val)
             db.detailsBarH = val
             ApplyAll()
-        end)
+        end
+    })
     row2b:AddWidget(detailsBarH, 0.5)
     table_insert(allWidgets, detailsBarH)
     table_insert(autoSizeOnlyWidgets, detailsBarH)
     card2:AddRow(row2b, 40)
 
     local row2c = GUIFrame:CreateRow(card2.content, 40)
-    local detailsTitelH = GUIFrame:CreateSlider(row2c, "Your current Details titlebar height", 1, 25, 1,
-        db.detailsTitelH, _,
-        function(val)
+    local detailsTitelH = GUIFrame:CreateSlider(row2c, "Your current Details titlebar height", {
+        min = 1,
+        max = 25,
+        step = 1,
+        value = db.detailsTitelH,
+        callback = function(val)
             db.detailsTitelH = val
             ApplyAll()
-        end)
+        end
+    })
     row2c:AddWidget(detailsTitelH, 0.5)
     table_insert(allWidgets, detailsTitelH)
     table_insert(autoSizeOnlyWidgets, detailsTitelH)
 
     -- Spacing
-    local detailsSpacing = GUIFrame:CreateSlider(row2c, "Your current Details spacing", 1, 50, 1,
-        db.detailsSpacing, _,
-        function(val)
+    local detailsSpacing = GUIFrame:CreateSlider(row2c, "Your current Details spacing", {
+        min = 1,
+        max = 50,
+        step = 1,
+        value = db.detailsSpacing,
+        callback = function(val)
             db.detailsSpacing = val
             ApplyAll()
-        end)
+        end
+    })
     row2c:AddWidget(detailsSpacing, 0.5)
     table_insert(allWidgets, detailsSpacing)
     table_insert(autoSizeOnlyWidgets, detailsSpacing)
@@ -276,12 +299,16 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
 
     -- Width
     local row2d = GUIFrame:CreateRow(card2.content, 36)
-    local detailsWidth = GUIFrame:CreateSlider(row2d, "Details Width", 50, 1000, 1,
-        db.detailsWidth, _,
-        function(val)
+    local detailsWidth = GUIFrame:CreateSlider(row2d, "Details Width", {
+        min = 50,
+        max = 1000,
+        step = 1,
+        value = db.detailsWidth,
+        callback = function(val)
             db.detailsWidth = val
             ApplyAll()
-        end)
+        end
+    })
     row2d:AddWidget(detailsWidth, 1)
     table_insert(allWidgets, detailsWidth)
     table_insert(autoSizeOnlyWidgets, detailsWidth)
@@ -297,24 +324,26 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
 
     -- Backdrop coloring
     local row4 = GUIFrame:CreateRow(card5.content, 40)
-    local BackdropColor = GUIFrame:CreateColorPicker(row4, "Backdrop Color",
-        GetCurrentBackdropDB().BackgroundColor,
-        function(r, g, b, a)
+    local BackdropColor = GUIFrame:CreateColorPicker(row4, "Backdrop Color", {
+        color = GetCurrentBackdropDB().BackgroundColor,
+        callback = function(r, g, b, a)
             GetCurrentBackdropDB().BackgroundColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(BackdropColor, 1)
     table_insert(allWidgets, BackdropColor)
     card5:AddRow(row4, 40)
 
     -- Backdrop Border coloring
     local row5 = GUIFrame:CreateRow(card5.content, 34)
-    local BorderColor = GUIFrame:CreateColorPicker(row5, "Backdrop Border Color",
-        GetCurrentBackdropDB().BorderColor,
-        function(r, g, b, a)
+    local BorderColor = GUIFrame:CreateColorPicker(row5, "Backdrop Border Color", {
+        color = GetCurrentBackdropDB().BorderColor,
+        callback = function(r, g, b, a)
             GetCurrentBackdropDB().BorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(BorderColor, 1)
     table_insert(allWidgets, BorderColor)
     card5:AddRow(row5, 34)
@@ -327,15 +356,6 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     local newOffset
     card3, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = GetCurrentBackdropDB(),
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         anchorToggleKey = true,
         showAnchorFrameType = false,
         showStrata = true,
@@ -370,23 +390,31 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
 
     -- Backdrop Width
     local row3 = GUIFrame:CreateRow(card4.content, 36)
-    local BackdropWidth = GUIFrame:CreateSlider(card4.content, "Backdrop Width", 10, 1000, 1,
-        GetCurrentBackdropDB().width, _,
-        function(val)
+    local BackdropWidth = GUIFrame:CreateSlider(card4.content, "Backdrop Width", {
+        min = 10,
+        max = 1000,
+        step = 1,
+        value = GetCurrentBackdropDB().width,
+        callback = function(val)
             GetCurrentBackdropDB().width = val
             ApplySettings()
-        end)
+        end
+    })
     row3:AddWidget(BackdropWidth, 0.5)
     table_insert(allWidgets, BackdropWidth)
     table_insert(manualSizeWidgets, BackdropWidth)
 
     -- Backdrop Height
-    local BackdropHeight = GUIFrame:CreateSlider(card4.content, "Backdrop Height", 10, 1000, 1,
-        GetCurrentBackdropDB().height, _,
-        function(val)
+    local BackdropHeight = GUIFrame:CreateSlider(card4.content, "Backdrop Height", {
+        min = 10,
+        max = 1000,
+        step = 1,
+        value = GetCurrentBackdropDB().height,
+        callback = function(val)
             GetCurrentBackdropDB().height = val
             ApplySettings()
-        end)
+        end
+    })
     row3:AddWidget(BackdropHeight, 0.5)
     table_insert(allWidgets, BackdropHeight)
     table_insert(manualSizeWidgets, BackdropHeight)

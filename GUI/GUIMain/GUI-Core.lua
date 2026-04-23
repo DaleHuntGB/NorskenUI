@@ -1,7 +1,7 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 NRSKNUI.GUIFrame = NRSKNUI.GUIFrame or {}
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
@@ -22,7 +22,8 @@ GUIFrame.ContentBuilders = {}
 GUIFrame.PanelBuilders = {}
 GUIFrame.contentCleanupCallbacks = {}
 
--- RegisterContent: Registers a content builder function for a given sidebar item ID
+---@param itemId string
+---@param builderFunc fun(scrollChild: Frame, yOffset: number): number
 function GUIFrame:RegisterContent(itemId, builderFunc)
     if type(builderFunc) ~= "function" then
         error("RegisterContent: builderFunc must be a function for item: " .. tostring(itemId))
@@ -97,7 +98,135 @@ function GUIFrame:FireOnCloseCallbacks()
     end
 end
 
--- Card widget system
+function GUIFrame:ShowDBError(scrollChild, yOffset)
+    local errorCard = self:CreateCard(scrollChild, "Error", yOffset)
+    errorCard:AddLabel("Database not available")
+    return errorCard:GetNextOffset()
+end
+
+---@class NUICardMixin : Frame
+---@field content Frame
+---@field header? Frame
+---@field titleText? FontString
+---@field headerHeight number
+---@field contentHeight number
+---@field rows table
+---@field currentY number
+---@field _yOffset number
+local NUICardMixin = {}
+
+---@param widget Frame
+---@param height? number
+---@param spacing? number
+---@return Frame
+function NUICardMixin:AddRow(widget, height, spacing)
+    height = height or widget:GetHeight() or 24
+    spacing = spacing or Theme.paddingSmall
+
+    widget:SetParent(self.content)
+    widget:ClearAllPoints()
+    widget:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY)
+    widget:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY)
+
+    self.currentY = self.currentY + height + spacing
+    table_insert(self.rows, widget)
+
+    self.content:SetHeight(self.currentY)
+    self:UpdateHeight()
+
+    return widget
+end
+
+---@param text string
+---@param fontObject? string
+---@return FontString
+function NUICardMixin:AddLabel(text, fontObject)
+    local label = self.content:CreateFontString(nil, "OVERLAY")
+    label:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY)
+    label:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY)
+    label:SetJustifyH("LEFT")
+    NRSKNUI:ApplyThemeFont(label, fontObject or "normal")
+    label:SetText(text)
+    label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+
+    local height = label:GetStringHeight() or 14
+    self.currentY = self.currentY + height + Theme.paddingSmall
+    self.content:SetHeight(self.currentY)
+    self:UpdateHeight()
+
+    return label
+end
+
+---@return Texture
+function NUICardMixin:AddSeparator()
+    local sep = self.content:CreateTexture(nil, "ARTWORK")
+    sep:SetHeight(Theme.borderSize)
+    sep:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY - Theme.paddingSmall)
+    sep:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY - Theme.paddingSmall)
+    sep:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 0.5)
+
+    self.currentY = self.currentY + Theme.borderSize + Theme.paddingSmall * 2
+    self.content:SetHeight(self.currentY)
+    self:UpdateHeight()
+
+    return sep
+end
+
+---@param amount? number
+function NUICardMixin:AddSpacing(amount)
+    amount = amount or Theme.paddingMedium
+    self.currentY = self.currentY + amount
+    self.content:SetHeight(self.currentY)
+    self:UpdateHeight()
+end
+
+function NUICardMixin:UpdateHeight()
+    local totalHeight = self.headerHeight + self.currentY + Theme.paddingSmall * 2
+    self:SetHeight(totalHeight)
+    self.contentHeight = totalHeight
+end
+
+---@return number
+function NUICardMixin:GetContentHeight()
+    return self.contentHeight
+end
+
+function NUICardMixin:Reset()
+    for _, row in ipairs(self.rows) do
+        if row.Hide then row:Hide() end
+        if row.SetParent then row:SetParent(nil) end
+    end
+    wipe(self.rows)
+    self.currentY = 0
+    self.contentHeight = 0
+    self.content:SetHeight(1)
+    self:SetHeight(self.headerHeight + Theme.paddingMedium * 2)
+end
+
+---@param enabled boolean
+function NUICardMixin:SetEnabled(enabled)
+    if enabled then
+        self:SetAlpha(1)
+        if self.header then self.header:SetAlpha(1) end
+        if self.titleText then self.titleText:SetAlpha(1) end
+    else
+        self:SetAlpha(0.5)
+        if self.header then self.header:SetAlpha(0.5) end
+        if self.titleText then self.titleText:SetAlpha(0.5) end
+    end
+end
+
+---@return number
+function NUICardMixin:GetNextOffset()
+    return self._yOffset + self:GetContentHeight() + Theme.paddingSmall
+end
+
+---Container with optional header. Call GetNextOffset() after adding rows
+---@param parent Frame
+---@param title string
+---@param yOffset number
+---@param width? number
+---@return NUICard
 function GUIFrame:CreateCard(parent, title, yOffset, width)
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:EnableMouse(false)
@@ -105,10 +234,9 @@ function GUIFrame:CreateCard(parent, title, yOffset, width)
     -- Use anchor-based width so cards auto-resize when parent (scrollChild) resizes
     if width then
         card:SetWidth(width)
-        card:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.paddingSmall, -(yOffset or 0) + Theme.paddingSmall)
+        card:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.paddingSmall, -(yOffset or 0))
     else
-        -- Anchor both left and right to parent for dynamic width
-        card:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.paddingSmall, -(yOffset or 0) + Theme.paddingSmall)
+        card:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.paddingSmall, -(yOffset or 0))
         card:SetPoint("RIGHT", parent, "RIGHT", -Theme.paddingSmall, 0)
     end
 
@@ -120,8 +248,10 @@ function GUIFrame:CreateCard(parent, title, yOffset, width)
     card:SetBackdropColor(Theme.bgLight[1], Theme.bgLight[2], Theme.bgLight[3], Theme.bgLight[4])
     card:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], Theme.border[4])
 
+    -- Initialize card properties
     card.contentHeight = 0
     card.rows = {}
+    card._yOffset = yOffset or 0
 
     -- Header
     local headerHeight = 0
@@ -152,109 +282,58 @@ function GUIFrame:CreateCard(parent, title, yOffset, width)
 
     -- Content container
     local content = CreateFrame("Frame", nil, card)
-    content:SetPoint("TOPLEFT", card, "TOPLEFT", Theme.paddingMedium, -headerHeight - Theme.paddingMedium)
-    content:SetPoint("TOPRIGHT", card, "TOPRIGHT", -Theme.paddingMedium, -headerHeight - Theme.paddingMedium)
+    content:SetPoint("TOPLEFT", card, "TOPLEFT", Theme.paddingMedium, -headerHeight - Theme.paddingSmall)
+    content:SetPoint("TOPRIGHT", card, "TOPRIGHT", -Theme.paddingMedium, -headerHeight - Theme.paddingSmall)
     content:SetHeight(1)
     content:EnableMouse(false)
     card.content = content
     card.currentY = 0
 
-    -- Card Methods
-    function card:AddRow(widget, height, spacing)
-        height = height or widget:GetHeight() or 24
-        spacing = spacing or Theme.paddingSmall
-
-        widget:SetParent(self.content)
-        widget:ClearAllPoints()
-        widget:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY)
-        widget:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY)
-
-        self.currentY = self.currentY + height + spacing
-        table_insert(self.rows, widget)
-
-        self.content:SetHeight(self.currentY)
-        self:UpdateHeight()
-
-        return widget
-    end
-
-    function card:AddLabel(text, fontObject)
-        local label = self.content:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY)
-        label:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY)
-        label:SetJustifyH("LEFT")
-        NRSKNUI:ApplyThemeFont(label, "normal")
-        label:SetText(text)
-        label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-
-        local height = label:GetStringHeight() or 14
-        self.currentY = self.currentY + height + Theme.paddingSmall
-        self.content:SetHeight(self.currentY)
-        self:UpdateHeight()
-
-        return label
-    end
-
-    function card:AddSeparator()
-        local sep = self.content:CreateTexture(nil, "ARTWORK")
-        sep:SetHeight(Theme.borderSize)
-        sep:SetPoint("TOPLEFT", self.content, "TOPLEFT", 0, -self.currentY - Theme.paddingSmall)
-        sep:SetPoint("TOPRIGHT", self.content, "TOPRIGHT", 0, -self.currentY - Theme.paddingSmall)
-        sep:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 0.5)
-
-        self.currentY = self.currentY + Theme.borderSize + Theme.paddingSmall * 2
-        self.content:SetHeight(self.currentY)
-        self:UpdateHeight()
-
-        return sep
-    end
-
-    function card:AddSpacing(amount)
-        amount = amount or Theme.paddingMedium
-        self.currentY = self.currentY + amount
-        self.content:SetHeight(self.currentY)
-        self:UpdateHeight()
-    end
-
-    function card:UpdateHeight()
-        local totalHeight = self.headerHeight + self.currentY + Theme.paddingMedium * 2
-        self:SetHeight(totalHeight)
-        self.contentHeight = totalHeight
-    end
-
-    function card:GetContentHeight()
-        return self.contentHeight
-    end
-
-    function card:Reset()
-        for _, row in ipairs(self.rows) do
-            if row.Hide then row:Hide() end
-            if row.SetParent then row:SetParent(nil) end
-        end
-        wipe(self.rows)
-        self.currentY = 0
-        self.contentHeight = 0
-        self.content:SetHeight(1)
-        self:SetHeight(self.headerHeight + Theme.paddingMedium * 2)
-    end
-
-    function card:SetEnabled(enabled)
-        if enabled then
-            card:SetAlpha(1)
-            card.header:SetAlpha(1)
-            card.titleText:SetAlpha(1)
-        else
-            card:SetAlpha(0.5)
-            card.header:SetAlpha(0.5)
-            card.titleText:SetAlpha(0.5)
-        end
-    end
+    -- Apply mixin methods
+    Mixin(card, NUICardMixin)
 
     card:UpdateHeight()
+
     return card
 end
 
--- Row widget system
+---@class NUIRowMixin : Frame
+---@field widgets table
+---@field nextX number
+---@field _rowHeight number
+local NUIRowMixin = {}
+
+---@param widget Frame
+---@param widthPct? number
+---@param spacing? number
+---@param xOffset? number
+---@param yOffset? number
+function NUIRowMixin:AddWidget(widget, widthPct, spacing, xOffset, yOffset)
+    widthPct = widthPct or 0.5
+    spacing = spacing or Theme.paddingSmall
+    xOffset = xOffset or 0
+    yOffset = yOffset or 0
+
+    widget:SetParent(self)
+    widget:ClearAllPoints()
+    widget:SetPoint("TOPLEFT", self, "TOPLEFT", self.nextX + xOffset, yOffset)
+
+    if not widget.explicitHeight then
+        widget:SetHeight(self._rowHeight)
+    end
+
+    widget._widthPct = widthPct
+    widget._spacing = spacing
+    widget._xOffset = xOffset
+    widget._yOffset = yOffset
+    table_insert(self.widgets, widget)
+    self.nextX = self.nextX + 10
+end
+
+---Horizontal layout container, total width values should sum to 1.0
+---@param parent Frame
+---@param height? number
+---@return NUIRow
 function GUIFrame:CreateRow(parent, height)
     height = height or 24
     local row = CreateFrame("Frame", nil, parent)
@@ -262,64 +341,23 @@ function GUIFrame:CreateRow(parent, height)
     row:EnableMouse(false)
     row.widgets = {}
     row.nextX = 0
+    row._rowHeight = height
 
-    -- Usage: row:AddWidget(widget, 0.5, nil, 5, -2) for 5px right, 2px down offset
-    -- If widget has .explicitHeight set, that height is preserved instead of using row height
-    function row:AddWidget(widget, widthPct, spacing, xOffset, yOffset)
-        widthPct = widthPct or 0.5
-        spacing = spacing or Theme.paddingSmall
-        xOffset = xOffset or 0
-        yOffset = yOffset or 0
-
-        widget:SetParent(self)
-        widget:ClearAllPoints()
-        widget:SetPoint("TOPLEFT", self, "TOPLEFT", self.nextX + xOffset, yOffset)
-        -- Respect explicit height if set, otherwise use row height
-        if not widget.explicitHeight then
-            widget:SetHeight(height)
-        end
-
-        widget._widthPct = widthPct
-        widget._spacing = spacing
-        widget._xOffset = xOffset
-        widget._yOffset = yOffset
-        table_insert(self.widgets, widget)
-        self.nextX = self.nextX + 10
-    end
+    Mixin(row, NUIRowMixin)
 
     row:SetScript("OnSizeChanged", function(self, width)
         local x = 0
+        local count = #self.widgets
         for i, widget in ipairs(self.widgets) do
-            local widgetWidth = width * widget._widthPct - (widget._spacing or 0)
+            local isLast = (i == count)
+            local spacing = isLast and 0 or (widget._spacing or Theme.paddingSmall)
+            local widgetWidth = width * widget._widthPct - spacing
             widget:ClearAllPoints()
             widget:SetPoint("TOPLEFT", self, "TOPLEFT", x + (widget._xOffset or 0), widget._yOffset or 0)
             widget:SetWidth(widgetWidth)
-            x = x + widgetWidth + (widget._spacing or Theme.paddingSmall)
+            x = x + widgetWidth + spacing
         end
     end)
 
     return row
-end
-
-function GUIFrame:CreateLabeledRow(card, labelText, controlWidth)
-    controlWidth = controlWidth or 200
-    local rowHeight = 24
-
-    local row = CreateFrame("Frame", nil, card.content)
-    row:SetHeight(rowHeight)
-
-    local label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    label:SetPoint("LEFT", row, "LEFT", 0, 0)
-    label:SetPoint("RIGHT", row, "RIGHT", -controlWidth - Theme.paddingSmall, 0)
-    label:SetJustifyH("LEFT")
-    label:SetText(labelText)
-    label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    row.label = label
-
-    local control = CreateFrame("Frame", nil, row)
-    control:SetSize(controlWidth, rowHeight)
-    control:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-    row.control = control
-
-    return row, label, control
 end

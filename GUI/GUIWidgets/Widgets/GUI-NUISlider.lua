@@ -1,36 +1,46 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
-local tonumber = tonumber
 local tostring = tostring
 local CreateFrame = CreateFrame
 local C_Timer = C_Timer
 local math_floor, math_max, math_min = math.floor, math.max, math.min
 local GetTime = GetTime
 
--- Slider widget
-function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWidth, callback)
-    local tooltip = nil
-    local customHeight = nil
-    local isPercent = nil
-    local stepperTexture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\collapse.tga"
+local STEPPER_TEXTURE = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\collapse.tga"
 
-    -- Ensure min/max are valid numbers
-    min = tonumber(min) or 0
-    max = tonumber(max) or 100
-    step = tonumber(step) or 1
-    value = tonumber(value) or min
+---Slider with value input and stepper buttons
+---```lua
+---config = {
+---    min = number,          -- Minimum value
+---    max = number,          -- Maximum value
+---    step = number,         -- Step increment
+---    value = number,        -- Initial value
+---    labelWidth = number,   -- Label width (optional)
+---    callback = function,   -- Called when value changes
+---}
+---```
+---@param parent Frame
+---@param labelText string
+---@param config NUISliderConfig
+---@return NUISlider
+function GUIFrame:CreateSlider(parent, labelText, config)
+    config = config or {}
+    local min = config.min or 0
+    local max = config.max or 100
+    local step = config.step or 1
+    local value = config.value or min
+    local labelWidth = config.labelWidth
+    local callback = config.callback
+    local tooltip = config.tooltip
 
-    -- Row
-    local rowHeight = customHeight or 36
+    local rowHeight = 36
     local row = CreateFrame("Frame", nil, parent)
     row:SetHeight(rowHeight)
 
-    -- Label
     local label = row:CreateFontString(nil, "OVERLAY")
     label:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 1)
     label:SetJustifyH("LEFT")
@@ -52,19 +62,17 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     sliderBG:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
     sliderBG:EnableMouse(false)
 
-    -- Slider
     local slider = CreateFrame("Slider", nil, row, "BackdropTemplate")
     slider:SetHeight(8)
     slider:SetPoint("TOPLEFT", row, "TOPLEFT", 77, -22)
-    slider:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -22) -- Make room for steppers + editbox
+    slider:SetPoint("TOPRIGHT", row, "TOPRIGHT", -27, -22)
     slider:SetOrientation("HORIZONTAL")
-    slider:SetMinMaxValues(min or 0, max or 100)
-    slider:SetValueStep(step or 1)
+    slider:SetMinMaxValues(min, max)
+    slider:SetValueStep(step)
     slider:SetObeyStepOnDrag(true)
-    slider:SetValue(value or min or 0)
+    slider:SetValue(value)
     slider:SetHitRectInsets(-9, -9, -5, -5)
 
-    -- Slider styling
     slider:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\Buttons\\WHITE8X8",
@@ -73,7 +81,6 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     slider:SetBackdropColor(0, 0, 0, 0)
     slider:SetBackdropBorderColor(0, 0, 0, 0)
 
-    -- Fill texture
     local fill = slider:CreateTexture(nil, "ARTWORK")
     fill:SetHeight(6)
     fill:SetPoint("LEFT", sliderBG, "LEFT", 1, 0)
@@ -81,7 +88,6 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     fill:SetTexelSnappingBias(0)
     fill:SetSnapToPixelGrid(false)
 
-    -- Thumb background frame (solid background layer)
     local thumbFrameBG = CreateFrame("Frame", nil, slider, "BackdropTemplate")
     thumbFrameBG:SetSize(19, 12)
     thumbFrameBG:SetBackdrop({
@@ -92,7 +98,6 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     thumbFrameBG:SetBackdropColor(Theme.bgLight[1], Theme.bgLight[2], Theme.bgLight[3], 1)
     thumbFrameBG:SetBackdropBorderColor(0, 0, 0, 1)
 
-    -- Thumb container frame (animated color layer)
     local thumbFrame = CreateFrame("Frame", nil, slider, "BackdropTemplate")
     thumbFrame:SetSize(19, 12)
     thumbFrame:SetBackdrop({
@@ -101,14 +106,12 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         edgeSize = 1,
     })
     thumbFrame:SetBackdropColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
-    thumbFrame:SetBackdropBorderColor(0, 0, 0, 1) -- Black border
+    thumbFrame:SetBackdropBorderColor(0, 0, 0, 1)
 
-    -- Use a transparent texture for the actual thumb
     local thumb = slider:CreateTexture(nil, "ARTWORK")
-    thumb:SetColorTexture(0, 0, 0, 0) -- Fully transparent
+    thumb:SetColorTexture(0, 0, 0, 0)
     slider:SetThumbTexture(thumb)
 
-    -- Function to update thumb frame positions (called only when needed)
     local function UpdateThumbPosition()
         thumbFrameBG:ClearAllPoints()
         thumbFrameBG:SetPoint("CENTER", thumb, "CENTER", 0, 0)
@@ -116,43 +119,34 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         thumbFrame:SetPoint("CENTER", thumb, "CENTER", 0, 0)
     end
 
-    -- Initial thumb position
     C_Timer.After(0, UpdateThumbPosition)
 
-    -- Hover fade animation for thumb color
     local hoverAnimGroup = slider:CreateAnimationGroup()
     local hoverAnim = hoverAnimGroup:CreateAnimation("Animation")
-    hoverAnim:SetDuration(0.18)
+    hoverAnim:SetDuration(Theme.animDuration)
 
     local borderColorFrom = {}
     local borderColorTo = {}
-
-    -- Track current thumb color (including alpha)
     local thumbR, thumbG, thumbB, thumbA = Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6
 
     local function AnimateThumbColor(toHover, toDrag)
         hoverAnimGroup:Stop()
-
-        -- Use tracked color
         borderColorFrom.r = thumbR
         borderColorFrom.g = thumbG
         borderColorFrom.b = thumbB
         borderColorFrom.a = thumbA
 
         if toDrag then
-            -- Dragging = accent color with alpha 1
             borderColorTo.r = Theme.accent[1]
             borderColorTo.g = Theme.accent[2]
             borderColorTo.b = Theme.accent[3]
             borderColorTo.a = 1
         elseif toHover then
-            -- Hover = textSecondary with alpha 1
             borderColorTo.r = Theme.textSecondary[1]
             borderColorTo.g = Theme.textSecondary[2]
             borderColorTo.b = Theme.textSecondary[3]
             borderColorTo.a = 1
         else
-            -- Normal = textSecondary with alpha 0.6
             borderColorTo.r = Theme.textSecondary[1]
             borderColorTo.g = Theme.textSecondary[2]
             borderColorTo.b = Theme.textSecondary[3]
@@ -169,35 +163,29 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         local b = borderColorFrom.b + (borderColorTo.b - borderColorFrom.b) * progress
         local a = borderColorFrom.a + (borderColorTo.a - borderColorFrom.a) * progress
         thumbFrame:SetBackdropColor(r, g, b, a)
-        -- Update tracked color
         thumbR, thumbG, thumbB, thumbA = r, g, b, a
     end)
 
     hoverAnimGroup:SetScript("OnFinished", function()
         thumbFrame:SetBackdropColor(borderColorTo.r, borderColorTo.g, borderColorTo.b, borderColorTo.a)
-        -- Update tracked color to final value
         thumbR, thumbG, thumbB, thumbA = borderColorTo.r, borderColorTo.g, borderColorTo.b, borderColorTo.a
     end)
 
-    -- Stepper buttons (left/right arrows)
     local stepperSize = 20
 
-    -- Left stepper (decrement) - arrow points left (rotated 90° clockwise)
     local leftStepper = CreateFrame("Button", nil, row)
     leftStepper:SetSize(stepperSize, stepperSize)
     leftStepper:SetPoint("RIGHT", sliderBG, "LEFT", 0, 0)
 
-    -- Left arrow icon
     local leftIcon = leftStepper:CreateTexture(nil, "ARTWORK")
     leftIcon:SetAllPoints()
-    leftIcon:SetTexture(stepperTexture)
+    leftIcon:SetTexture(STEPPER_TEXTURE)
     leftIcon:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    leftIcon:SetRotation(math.rad(-90)) -- Rotate to point left
+    leftIcon:SetRotation(math.rad(-90))
     leftIcon:SetTexelSnappingBias(0)
     leftIcon:SetSnapToPixelGrid(false)
     leftStepper.icon = leftIcon
 
-    -- Click handler
     leftStepper:SetScript("OnClick", function()
         local currentVal = slider:GetValue()
         local minVal = slider:GetMinMaxValues()
@@ -205,10 +193,9 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         slider:SetValue(newVal)
     end)
 
-    -- Left stepper hover animation
     local leftAnimGroup = leftStepper:CreateAnimationGroup()
     local leftAnim = leftAnimGroup:CreateAnimation("Animation")
-    leftAnim:SetDuration(0.18)
+    leftAnim:SetDuration(Theme.animDuration)
 
     local leftColorFrom = {}
     local leftColorTo = {}
@@ -246,32 +233,27 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         leftR, leftG, leftB = leftColorTo.r, leftColorTo.g, leftColorTo.b
     end)
 
-    -- Hover effects
-    leftStepper:SetScript("OnEnter", function(self)
+    leftStepper:SetScript("OnEnter", function()
         AnimateLeftStepperColor(true)
     end)
 
-    -- Leave effects
-    leftStepper:SetScript("OnLeave", function(self)
+    leftStepper:SetScript("OnLeave", function()
         AnimateLeftStepperColor(false)
     end)
 
-    -- Right stepper (increment) - arrow points right (rotated 90° counter-clockwise)
     local rightStepper = CreateFrame("Button", nil, row)
     rightStepper:SetSize(stepperSize, stepperSize)
     rightStepper:SetPoint("LEFT", sliderBG, "RIGHT", 0, 0)
 
-    -- Right arrow icon
     local rightIcon = rightStepper:CreateTexture(nil, "ARTWORK")
     rightIcon:SetAllPoints()
-    rightIcon:SetTexture(stepperTexture)
+    rightIcon:SetTexture(STEPPER_TEXTURE)
     rightIcon:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    rightIcon:SetRotation(math.rad(90)) -- Rotate to point right
+    rightIcon:SetRotation(math.rad(90))
     rightIcon:SetTexelSnappingBias(0)
     rightIcon:SetSnapToPixelGrid(false)
     rightStepper.icon = rightIcon
 
-    -- Click handler
     rightStepper:SetScript("OnClick", function()
         local currentVal = slider:GetValue()
         local _, maxVal = slider:GetMinMaxValues()
@@ -279,10 +261,9 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         slider:SetValue(newVal)
     end)
 
-    -- Right stepper hover animation
     local rightAnimGroup = rightStepper:CreateAnimationGroup()
     local rightAnim = rightAnimGroup:CreateAnimation("Animation")
-    rightAnim:SetDuration(0.18)
+    rightAnim:SetDuration(Theme.animDuration)
 
     local rightColorFrom = {}
     local rightColorTo = {}
@@ -320,21 +301,16 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         rightR, rightG, rightB = rightColorTo.r, rightColorTo.g, rightColorTo.b
     end)
 
-    -- Hover effects
-    rightStepper:SetScript("OnEnter", function(self)
+    rightStepper:SetScript("OnEnter", function()
         AnimateRightStepperColor(true)
     end)
 
-    -- Leave effects
-    rightStepper:SetScript("OnLeave", function(self)
+    rightStepper:SetScript("OnLeave", function()
         AnimateRightStepperColor(false)
     end)
 
-    -- Store references
     row.leftStepper = leftStepper
     row.rightStepper = rightStepper
-
-    -- Value editbox
     local valueContainer = CreateFrame("Frame", nil, slider, "BackdropTemplate")
     valueContainer:SetSize(48, 24)
     valueContainer:SetPoint("RIGHT", leftStepper, "LEFT", 0, 0)
@@ -346,10 +322,9 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     valueContainer:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
     valueContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
-    -- EditBox border hover animation
     local editBoxAnimGroup = valueContainer:CreateAnimationGroup()
     local editBoxAnim = editBoxAnimGroup:CreateAnimation("Animation")
-    editBoxAnim:SetDuration(0.18)
+    editBoxAnim:SetDuration(Theme.animDuration)
 
     local editBoxColorFrom = {}
     local editBoxColorTo = {}
@@ -387,7 +362,6 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         editBoxR, editBoxG, editBoxB = editBoxColorTo.r, editBoxColorTo.g, editBoxColorTo.b
     end)
 
-    -- Editable text box
     local valueEdit = CreateFrame("EditBox", nil, valueContainer)
     valueEdit:SetPoint("TOPLEFT", 0, 0)
     valueEdit:SetPoint("BOTTOMRIGHT", 0, 0)
@@ -395,12 +369,11 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     valueEdit:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     valueEdit:SetJustifyH("CENTER")
     valueEdit:SetAutoFocus(false)
-    valueEdit:SetText(tostring(value or min))
+    valueEdit:SetText(tostring(value))
     row.valueEdit = valueEdit
 
     local isUpdating = false
 
-    -- Function to update fill width and editbox text
     local function UpdateFill()
         local val = slider:GetValue()
         local minVal, maxVal = slider:GetMinMaxValues()
@@ -410,17 +383,12 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         fill:SetWidth(width)
         if not isUpdating then
             isUpdating = true
-            if isPercent then
-                -- Display as percentage
-                valueEdit:SetText(math_floor(val * 1000 + 0.5) / 10 .. "%")
-            else
-                valueEdit:SetText(tostring(math_floor(val * 100 + 0.5) / 100))
-            end
+            valueEdit:SetText(tostring(math_floor(val * 100 + 0.5) / 100))
             isUpdating = false
         end
     end
 
-    local throttleDelay = 0.1 -- 100ms between updates
+    local throttleDelay = 0.1
     local lastUpdate = 0
     slider:SetScript("OnValueChanged", function(self, val)
         UpdateFill()
@@ -445,32 +413,15 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
 
     valueEdit:SetScript("OnEnterPressed", function(self)
         self:ClearFocus()
-        local text = self:GetText()
-        -- Handle percentage input (strip % and divide by 100)
-        if isPercent then
-            text = text:gsub("%%", "")
-            local num = tonumber(text)
-            if num then
-                num = num / 100
-                local minVal, maxVal = slider:GetMinMaxValues()
-                num = math_max(minVal, math_min(maxVal, num))
-                isUpdating = true
-                slider:SetValue(num)
-                isUpdating = false
-            else
-                UpdateFill()
-            end
+        local num = tonumber(self:GetText())
+        if num then
+            local minVal, maxVal = slider:GetMinMaxValues()
+            num = math_max(minVal, math_min(maxVal, num))
+            isUpdating = true
+            slider:SetValue(num)
+            isUpdating = false
         else
-            local num = tonumber(text)
-            if num then
-                local minVal, maxVal = slider:GetMinMaxValues()
-                num = math_max(minVal, math_min(maxVal, num))
-                isUpdating = true
-                slider:SetValue(num)
-                isUpdating = false
-            else
-                UpdateFill()
-            end
+            UpdateFill()
         end
     end)
 
@@ -486,43 +437,25 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
         valueContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
         editBoxR, editBoxG, editBoxB = Theme.border[1], Theme.border[2], Theme.border[3]
         self:HighlightText(0, 0)
-        local text = self:GetText()
-        -- Handle percentage input (strip % and divide by 100)
-        if isPercent then
-            text = text:gsub("%%", "")
-            local num = tonumber(text)
-            if num then
-                num = num / 100
-                local minVal, maxVal = slider:GetMinMaxValues()
-                num = math_max(minVal, math_min(maxVal, num))
-                isUpdating = true
-                slider:SetValue(num)
-                isUpdating = false
-            else
-                UpdateFill()
-            end
+        local num = tonumber(self:GetText())
+        if num then
+            local minVal, maxVal = slider:GetMinMaxValues()
+            num = math_max(minVal, math_min(maxVal, num))
+            isUpdating = true
+            slider:SetValue(num)
+            isUpdating = false
         else
-            local num = tonumber(text)
-            if num then
-                local minVal, maxVal = slider:GetMinMaxValues()
-                num = math_max(minVal, math_min(maxVal, num))
-                isUpdating = true
-                slider:SetValue(num)
-                isUpdating = false
-            else
-                UpdateFill()
-            end
+            UpdateFill()
         end
     end)
 
-    -- Add hover animation for editbox
-    valueEdit:SetScript("OnEnter", function(self)
+    valueEdit:SetScript("OnEnter", function()
         if not valueEdit:HasFocus() then
             AnimateEditBoxBorder(true)
         end
     end)
 
-    valueEdit:SetScript("OnLeave", function(self)
+    valueEdit:SetScript("OnLeave", function()
         if not valueEdit:HasFocus() then
             AnimateEditBoxBorder(false)
         end
@@ -530,7 +463,6 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
 
     local curDrag = false
 
-    -- Mouse interaction scripts
     slider:SetScript("OnMouseDown", function(_, button)
         if button == "LeftButton" then
             hoverAnimGroup:Stop()
@@ -543,35 +475,24 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     slider:SetScript("OnMouseUp", function(self, button)
         if button == "LeftButton" then
             curDrag = false
-            -- Check if mouse is still over the slider
             if self:IsMouseOver() then
-                -- Still hovering, animate to hover state (textSecondary alpha 1)
                 AnimateThumbColor(true, false)
             else
-                -- Not hovering, animate to normal state (textSecondary alpha 0.6)
                 AnimateThumbColor(false, false)
             end
         end
     end)
 
-    slider:SetScript("OnEnter", function(self)
+    slider:SetScript("OnEnter", function()
         if not curDrag then
-            -- Hover state (textSecondary alpha 1)
             AnimateThumbColor(true, false)
-        end
-        if tooltip then
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(tooltip, 1, 1, 1, 1, true)
-            GameTooltip:Show()
         end
     end)
 
-    slider:SetScript("OnLeave", function(self)
+    slider:SetScript("OnLeave", function()
         if not curDrag then
-            -- Normal state (textSecondary alpha 0.6)
             AnimateThumbColor(false, false)
         end
-        GameTooltip:Hide()
     end)
 
     C_Timer.After(0, UpdateFill)
@@ -604,5 +525,37 @@ function GUIFrame:CreateSlider(parent, labelText, min, max, step, value, labelWi
     end
 
     row.slider = slider
+
+    -- Tooltip support
+    if tooltip then
+        local tooltipText = type(tooltip) == "table" and tooltip.text or tooltip
+        local tooltipDefault = type(tooltip) == "table" and tooltip.default
+
+        local function SetupTooltip(frame)
+            local oldEnter = frame:GetScript("OnEnter")
+            local oldLeave = frame:GetScript("OnLeave")
+            frame:SetScript("OnEnter", function(self, ...)
+                if oldEnter then oldEnter(self, ...) end
+                GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+                GameTooltip:SetText(labelText or "", Theme.accent[1], Theme.accent[2], Theme.accent[3])
+                GameTooltip:AddLine(tooltipText, Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], true)
+                if tooltipDefault ~= nil then
+                    local defaultStr = type(tooltipDefault) == "boolean" and (tooltipDefault and "On" or "Off") or tostring(tooltipDefault)
+                    GameTooltip:AddLine("Default: " .. defaultStr, Theme.success[1], Theme.success[2], Theme.success[3])
+                end
+                GameTooltip:Show()
+            end)
+            frame:SetScript("OnLeave", function(self, ...)
+                if oldLeave then oldLeave(self, ...) end
+                GameTooltip:Hide()
+            end)
+        end
+        SetupTooltip(slider)
+        SetupTooltip(valueEdit)
+        SetupTooltip(valueContainer)
+        SetupTooltip(leftStepper)
+        SetupTooltip(rightStepper)
+    end
+
     return row
 end

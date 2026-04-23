@@ -1,46 +1,31 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
--- Check for addon object
 if not NorskenUI then
     error("CombatTimer: Addon object not initialized. Check file load order!")
     return
 end
 
--- Create module
 ---@class CombatTimer: AceModule, AceEvent-3.0
 local CT = NorskenUI:NewModule("CombatTimer", "AceEvent-3.0")
 
--- Localization
 local CreateFrame = CreateFrame
 local GetTime = GetTime
-local math_floor, math_max, math_min = math.floor, math.max, math.min
+local IsEncounterInProgress = IsEncounterInProgress
+local math_floor, math_max = math.floor, math.max
 local string_format = string.format
 
--- Module state
-CT.frame = nil
-CT.text = nil
-CT.startTime = 0
-CT.running = false
-CT.lastDisplayedText = ""
-CT.isPreview = false
-
--- Store last combat duration
 NRSKNUI.lastCombatDuration = 0
 
--- Update db, used for profile changes
 function CT:UpdateDB()
     self.db = NRSKNUI.db.profile.CombatTimer
 end
 
--- Module init
 function CT:OnInitialize()
     self:UpdateDB()
     self:SetEnabledState(false)
 end
 
--- Format time based on settings
 local function FormatTime(total_seconds, format)
     local mins = math_floor(total_seconds / 60)
     local secs = math_floor(total_seconds % 60)
@@ -54,123 +39,88 @@ local function FormatTime(total_seconds, format)
     return string_format("%02d:%02d", mins, secs)
 end
 
--- Get refresh rate based on format
-local function GetRefreshRate(format)
-    return (format == "MM:SS:MS") and 0.1 or 0.25
-end
-
--- Create timer frame
 function CT:CreateFrame()
     if self.frame then return end
 
     local frame = CreateFrame("Frame", "NRSKNUI_CombatTimerFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate")
     frame:SetSize(100, 25)
-    NRSKNUI:ApplyFramePosition(frame, self.db.Position, self.db)
     frame:SetFrameLevel(100)
     frame:EnableMouse(false)
     frame:SetMouseClickEnabled(false)
     frame:Hide()
 
-    -- Create font string
     local text = frame:CreateFontString("NRSKNUI_CombatTimerText", "OVERLAY")
-    text:SetPoint("CENTER", frame, "CENTER", 0, 0)
+    text:SetPoint("CENTER")
     text:SetFont(NRSKNUI.FONT, 14, "")
     text:SetText("00:00")
-    text:SetJustifyH("CENTER")
-    text:SetJustifyV("MIDDLE")
 
     self.frame = frame
-    frame.text = text
     self.text = text
 end
 
--- Update frame size based on text
 function CT:UpdateFrameSize()
     if not self.frame or not self.text then return end
 
-    local backdrop = self.db.Backdrop or {}
-    local bgWidth = backdrop.bgWidth or 100
-    local bgHeight = backdrop.bgHeight or 10
+    local currentText = self.text:GetText()
+    local refText = (self.db.Format == "MM:SS:MS") and "00:00:0" or "00:00"
+    self.text:SetText(refText)
 
-    local w = math_floor((self.text:GetStringWidth() or 0) + bgWidth)
-    local h = math_floor((self.text:GetStringHeight() or 0) + bgHeight)
+    local backdrop = self.db.Backdrop
+    local w = math_floor(self.text:GetStringWidth() + backdrop.bgWidth)
+    local h = math_floor(self.text:GetStringHeight() + backdrop.bgHeight)
 
-    w = math_max(w, 40)
-    h = math_max(h, 20)
-
-    self.frame:SetSize(w, h)
+    self.text:SetText(currentText or refText)
+    self.frame:SetSize(math_max(w, 40), math_max(h, 20))
 end
 
--- Update timer text display
 function CT:UpdateText()
     if not self.text then return end
 
-    local total_time
-    if self.running then
-        total_time = self.startTime > 0 and (GetTime() - self.startTime) or 0
-    else
-        total_time = NRSKNUI.lastCombatDuration or 0
-    end
-
+    local total_time = self.running and (GetTime() - self.startTime) or NRSKNUI.lastCombatDuration
     local status = FormatTime(total_time, self.db.Format)
+
     if status ~= self.lastDisplayedText then
         self.text:SetText(status)
         self.lastDisplayedText = status
-        self:UpdateFrameSize()
     end
 end
 
--- Apply all settings from DB
 function CT:ApplySettings()
-    if not self.text then return end
+    if not self.frame or not self.text then return end
 
-    -- Apply font settings
+    self.refreshRate = (self.db.Format == "MM:SS:MS") and 0.1 or 0.25
     NRSKNUI:ApplyFontToText(self.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, {})
 
-    -- Apply text alignment based on anchor
-    local justify = NRSKNUI:GetTextJustifyFromAnchor(self.db.Position.AnchorFrom)
     local point = NRSKNUI:GetTextPointFromAnchor(self.db.Position.AnchorFrom)
     self.text:ClearAllPoints()
-    self.text:SetJustifyH(justify)
+    self.text:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(self.db.Position.AnchorFrom))
 
     if point == "LEFT" then
         self.text:SetPoint("LEFT", self.frame, "LEFT", 4, 0)
     elseif point == "RIGHT" then
         self.text:SetPoint("RIGHT", self.frame, "RIGHT", -4, 0)
     else
-        self.text:SetPoint("CENTER", self.frame, "CENTER", 0, 0)
+        self.text:SetPoint("CENTER")
     end
 
-    -- Apply text color based on combat state
-    local textColor = self.running and self.db.ColorInCombat or self.db.ColorOutOfCombat
-    if textColor then
-        self.text:SetTextColor(textColor[1] or 1, textColor[2] or 1, textColor[3] or 1, textColor[4] or 1)
+    local textColor = (self.running or self.db.CombatOnly) and self.db.ColorInCombat or self.db.ColorOutOfCombat
+    self.text:SetTextColor(textColor[1], textColor[2], textColor[3], textColor[4])
+
+    local backdrop = self.db.Backdrop
+    if backdrop.Enabled then
+        self.frame:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8X8",
+            edgeFile = "Interface\\Buttons\\WHITE8X8",
+            tile = false,
+            tileSize = 0,
+            edgeSize = backdrop.BorderSize,
+            insets = { left = 0, right = 0, top = 0, bottom = 0 }
+        })
+        self.frame:SetBackdropColor(backdrop.Color[1], backdrop.Color[2], backdrop.Color[3], backdrop.Color[4])
+        self.frame:SetBackdropBorderColor(backdrop.BorderColor[1], backdrop.BorderColor[2], backdrop.BorderColor[3],
+            backdrop.BorderColor[4])
     else
-        self.text:SetTextColor(1, 1, 1, 1)
-    end
-
-    -- Apply frame strata
-    if self.frame then
-        -- Apply backdrop
-        local backdrop = self.db.Backdrop
-        if backdrop and backdrop.Enabled then
-            local borderSize = backdrop.BorderSize or 1
-            self.frame:SetBackdrop({
-                bgFile = "Interface\\Buttons\\WHITE8X8",
-                edgeFile = "Interface\\Buttons\\WHITE8X8",
-                tile = false,
-                tileSize = 0,
-                edgeSize = borderSize,
-                insets = { left = 0, right = 0, top = 0, bottom = 0 }
-            })
-
-            local bgColor = backdrop.Color or { 0, 0, 0, 0.6 }
-            local borderColor = backdrop.BorderColor or { 1, 1, 1, 0.8 }
-            self.frame:SetBackdropColor(bgColor[1], bgColor[2], bgColor[3], bgColor[4] or 0.6)
-            self.frame:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 0.8)
-        else
-            self.frame:SetBackdrop(nil)
-        end
+        self.frame:SetBackdrop(nil)
     end
 
     self:UpdateFrameSize()
@@ -178,101 +128,88 @@ function CT:ApplySettings()
     self:ApplyPosition()
 end
 
--- OnUpdate handler for timer updates
 function CT:OnUpdate(elapsed)
-    if not self.running and not self.isPreview then return end
-
-    -- Throttle updates
-    self.elapsed = (self.elapsed or 0) + elapsed
-    local refresh = GetRefreshRate(self.db.Format)
-    if self.elapsed < refresh then return end
-    self.elapsed = self.elapsed - refresh
+    self.elapsed = self.elapsed + elapsed
+    if self.elapsed < self.refreshRate then return end
+    self.elapsed = self.elapsed - self.refreshRate
 
     self:UpdateText()
 end
 
--- Combat event handlers
-function CT:OnEnterCombat()
-    if self.running or not self.db.Enabled then return end
+function CT:StartTimer(isEncounterEvent)
+    if not self.running then
+        self.startTime = GetTime()
+        self.running = true
+        self.isEncounter = isEncounterEvent
+        self.elapsed = 0
+        NRSKNUI.lastCombatDuration = 0
+        self.lastDisplayedText = ""
 
-    self.startTime = GetTime()
-    self.running = true
-    NRSKNUI.lastCombatDuration = 0
-    self.lastDisplayedText = ""
-
-    if self.frame then
+        self.frame:SetScript("OnUpdate", function(_, elapsed) self:OnUpdate(elapsed) end)
         self.frame:Show()
+        self:ApplySettings()
+    elseif isEncounterEvent then
+        self.isEncounter = true
     end
-
-    self:ApplySettings()
-    self:UpdateText()
 end
 
-function CT:OnExitCombat()
+function CT:StopTimer(isEncounterEvent)
     if not self.running then return end
+
+    local shouldStop = (self.isEncounter == isEncounterEvent) or (self.isEncounter and not IsEncounterInProgress())
+    if not shouldStop then return end
 
     NRSKNUI.lastCombatDuration = GetTime() - self.startTime
     self.running = false
+    self.isEncounter = false
     self.startTime = 0
+    self.frame:SetScript("OnUpdate", nil)
 
-    -- Print duration to chat
+    if self.db.CombatOnly then self.frame:Hide() end
+
     if self.db.PrintEnd then
-        local duration = FormatTime(NRSKNUI.lastCombatDuration, self.db.Format)
-        NRSKNUI:Print("Combat lasted " .. duration)
+        NRSKNUI:Print("Combat lasted " .. FormatTime(NRSKNUI.lastCombatDuration, self.db.Format))
     end
 
     self:ApplySettings()
-    self:UpdateText()
 end
 
--- Preview mode
 function CT:ShowPreview()
-    if not self.frame then
-        self:CreateFrame()
-    end
+    if not self.frame then self:CreateFrame() end
     self.isPreview = true
+    self.elapsed = 0
+    self.frame:SetScript("OnUpdate", function(_, elapsed) self:OnUpdate(elapsed) end)
     self.frame:Show()
     self:ApplySettings()
 end
 
 function CT:HidePreview()
     self.isPreview = false
-    if self.frame and not self.running and not self.db.Enabled then
-        self.frame:Hide()
+    if not self.running then
+        self.frame:SetScript("OnUpdate", nil)
+        if self.db.CombatOnly then
+            self.frame:Hide()
+        end
     end
 end
 
--- Expose position update for GUI changes
 function CT:ApplyPosition()
-    if not self.db.Enabled then return end
     if not self.frame then return end
     NRSKNUI:ApplyFramePosition(self.frame, self.db.Position, self.db)
 end
 
--- Module OnEnable
 function CT:OnEnable()
-    if not self.db.Enabled then return end
-
     self:CreateFrame()
     self:ApplySettings()
-    C_Timer.After(0.5, function() -- Delayed positioning to make sure frames exist
-        self:ApplyPosition()
-    end)
-    -- Register events
-    self:RegisterEvent("PLAYER_REGEN_DISABLED", "OnEnterCombat")
-    self:RegisterEvent("PLAYER_REGEN_ENABLED", "OnExitCombat")
 
-    -- Set up OnUpdate
-    self.frame:SetScript("OnUpdate", function(_, elapsed)
-        self:OnUpdate(elapsed)
-    end)
+    self:RegisterEvent("PLAYER_REGEN_DISABLED", function() self:StartTimer(false) end)
+    self:RegisterEvent("PLAYER_REGEN_ENABLED", function() self:StopTimer(false) end)
+    self:RegisterEvent("ENCOUNTER_START", function() self:StartTimer(true) end)
+    self:RegisterEvent("ENCOUNTER_END", function() self:StopTimer(true) end)
 
-    if self.db.Enabled then
-        self.frame:Show()
-    end
+    if not self.db.CombatOnly then self.frame:Show() end
 
-    -- Register with EditMode
-    local config = {
+    NRSKNUI.EditMode:RegisterElement({
         key = "CombatTimer",
         displayName = "Combat Timer",
         frame = self.frame,
@@ -284,21 +221,15 @@ function CT:OnEnable()
             self.db.Position.AnchorTo = pos.AnchorTo
             self.db.Position.XOffset = pos.XOffset
             self.db.Position.YOffset = pos.YOffset
-            if self.frame then
-                local parent = NRSKNUI:ResolveAnchorFrame(self.db.anchorFrameType, self.db.ParentFrame)
-                self.frame:ClearAllPoints()
-                self.frame:SetPoint(pos.AnchorFrom, parent, pos.AnchorTo, pos.XOffset, pos.YOffset)
-            end
+            self:ApplyPosition()
         end,
         getParentFrame = function()
             return NRSKNUI:ResolveAnchorFrame(self.db.anchorFrameType, self.db.ParentFrame)
         end,
         guiPath = "combatTimer",
-    }
-    NRSKNUI.EditMode:RegisterElement(config)
+    })
 end
 
--- Module OnDisable
 function CT:OnDisable()
     if self.frame then
         self.frame:SetScript("OnUpdate", nil)

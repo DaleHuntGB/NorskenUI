@@ -1,91 +1,75 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
-
--- Localization Setup
-local table_insert = table.insert
 local ipairs = ipairs
 
--- Helper to get MiscVars module
-local function GetMiscVarsModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("MiscVars", true)
-    end
-    return nil
-end
-
--- Register MiscVars tab content
 GUIFrame:RegisterContent("MiscVars", function(scrollChild, yOffset)
-    -- Safety check for database
     local db = NRSKNUI.db and NRSKNUI.db.profile.Miscellaneous.MiscVars
-    if not db then
-        local errorCard = GUIFrame:CreateCard(scrollChild, "Error", yOffset)
-        errorCard:AddLabel("Database not available")
-        return yOffset + errorCard:GetContentHeight() + Theme.paddingMedium
-    end
+    if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    -- Get MiscVars module
-    local MVAR = GetMiscVarsModule()
+    ---@type MiscVars?
+    local MVAR = NorskenUI and NorskenUI:GetModule("MiscVars", true)
+    local manager = GUIFrame:CreateWidgetStateManager()
+    local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled ~= false) end
 
-    -- Track widgets for enable/disable logic
-    local allWidgets = {} -- All widgets (except main toggle)
-
-    -- Comprehensive widget state update
-    local function UpdateAllWidgetStates()
-        local mainEnabled = db.Enabled ~= false
-
-        -- First: Apply main enable state to ALL widgets
-        for _, widget in ipairs(allWidgets) do
-            if widget.SetEnabled then
-                widget:SetEnabled(mainEnabled)
-            end
-        end
-    end
-
-    ----------------------------------------------------------------
-    -- Card 1: CVars, doing this in a for loop so that every cvar defined in MVAR.DEFS, gets its own toggle
-    ----------------------------------------------------------------
     local card1 = GUIFrame:CreateCard(scrollChild, "CVars", yOffset)
 
     if MVAR then
         for i, def in ipairs(MVAR.DEFS) do
             local key = def.key
 
-            local row = GUIFrame:CreateRow(card1.content, 38)
+            local widgetRow = GUIFrame:CreateRow(card1.content, Theme.rowHeight)
+            local widget
 
-            local checkbox = GUIFrame:CreateCheckbox(
-                row,
-                def.label,
-                db[key],
-                function(checked)
-                    db[key] = checked
+            local tooltipConfig = def.description and { text = def.description, default = def.default, } or nil
 
-                    -- Suppress CVAR_UPDATE refresh because this came from GUI
-                    MVAR._suppressCVarUpdate = true
-                    MVAR:ApplySettings()
-                    MVAR._suppressCVarUpdate = false
-                end
-            )
+            -- For cvars that simply use 0/1 to disable/enable we use checkboxes
+            if def.type == "boolean" then
+                widget = GUIFrame:CreateCheckbox(widgetRow, def.label, {
+                    value = db[key],
+                    tooltip = tooltipConfig,
+                    callback = function(checked)
+                        db[key] = checked
+                        MVAR._suppressCVarUpdate = true
+                        MVAR:ApplySettings()
+                        MVAR._suppressCVarUpdate = false
+                    end
+                })
+                widgetRow:AddWidget(widget, 1)
 
-            row:AddWidget(checkbox, 1.0)
-            card1:AddRow(row, 38)
+                -- For cvars that have a range of values we use sliders
+            elseif def.type == "number" then
+                widget = GUIFrame:CreateSlider(widgetRow, def.label, {
+                    min = def.min,
+                    max = def.max,
+                    step = def.step,
+                    value = db[key],
+                    tooltip = tooltipConfig,
+                    callback = function(value)
+                        db[key] = value
+                        MVAR._suppressCVarUpdate = true
+                        MVAR:ApplySettings()
+                        MVAR._suppressCVarUpdate = false
+                    end
+                })
+                widgetRow:AddWidget(widget, 1)
+            end
 
-            -- Separator only if NOT last
+            manager:Register(widget, "all")
+            card1:AddRow(widgetRow, Theme.rowHeight)
+
             if i < #MVAR.DEFS then
-                local sepRow = GUIFrame:CreateRow(card1.content, 8)
+                local sepRow = GUIFrame:CreateRow(card1.content, Theme.rowHeightSeparator)
                 local sep = GUIFrame:CreateSeparator(sepRow)
                 sepRow:AddWidget(sep, 1)
-                card1:AddRow(sepRow, 8)
+                manager:Register(sep, "all")
+                card1:AddRow(sepRow, Theme.rowHeightSeparator)
             end
         end
     end
 
-    yOffset = yOffset + card1:GetContentHeight() + Theme.paddingSmall
-
-    -- Apply initial widget states
+    yOffset = card1:GetNextOffset()
     UpdateAllWidgetStates()
-    yOffset = yOffset - (Theme.paddingSmall)
     return yOffset
 end)

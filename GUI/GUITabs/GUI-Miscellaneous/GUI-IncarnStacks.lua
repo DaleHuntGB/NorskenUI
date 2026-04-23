@@ -111,14 +111,15 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Incarnation Stack Tracker", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Incarn Stack Tracker", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Incarn Stack Tracker", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Incarn Stacks", "On", "Off"
-    )
+        msgPopup = true, msgText = "Incarn Stacks", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
 
     -- Preview toggle button
@@ -151,12 +152,16 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Icon Size Slider
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local iconSizeSlider = GUIFrame:CreateSlider(row2a, "Icon Size", 20, 100, 1,
-        db.IconSize or 40, nil,
-        function(val)
+    local iconSizeSlider = GUIFrame:CreateSlider(row2a, "Icon Size", {
+        min = 20,
+        max = 100,
+        step = 1,
+        value = db.IconSize or 40,
+        callback = function(val)
             db.IconSize = val
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(iconSizeSlider, 1)
     table_insert(allWidgets, iconSizeSlider)
     card2:AddRow(row2a, 40)
@@ -170,12 +175,14 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Enable Glow Checkbox
     local row2b = GUIFrame:CreateRow(card2.content, 40)
-    local enableGlowCheck = GUIFrame:CreateCheckbox(row2b, "Enable Glow Effect", db.GlowEnabled ~= false,
-        function(checked)
+    local enableGlowCheck = GUIFrame:CreateCheckbox(row2b, "Enable Glow Effect", {
+        value = db.GlowEnabled ~= false,
+        callback = function(checked)
             db.GlowEnabled = checked
             UpdateGlowWidgetStates()
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(enableGlowCheck, 0.5)
     table_insert(allWidgets, enableGlowCheck)
     card2:AddRow(row2b, 40)
@@ -247,22 +254,26 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
         end
     end
 
-    local glowTypeDropdown = GUIFrame:CreateDropdown(row2c, "Glow Type", glowTypeList, db.GlowType or "proc", 45,
-        function(key)
+    local glowTypeDropdown = GUIFrame:CreateDropdown(row2c, "Glow Type", {
+        options = glowTypeList,
+        value = db.GlowType or "proc",
+        callback = function(key)
             db.GlowType = key
             UpdateGlowLayout()
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(glowTypeDropdown, 0.5)
     table_insert(allWidgets, glowTypeDropdown)
     table_insert(glowWidgets, glowTypeDropdown)
 
-    local glowColorPicker = GUIFrame:CreateColorPicker(row2c, "Glow Color",
-        db.GlowColor or { 0, 1, 0, 1 },
-        function(r, g, b, a)
+    local glowColorPicker = GUIFrame:CreateColorPicker(row2c, "Glow Color", {
+        color = db.GlowColor or { 0, 1, 0, 1 },
+        callback = function(r, g, b, a)
             db.GlowColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(glowColorPicker, 0.5)
     table_insert(allWidgets, glowColorPicker)
     table_insert(glowWidgets, glowColorPicker)
@@ -273,20 +284,26 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- X/Y Offset (pixel, autocast, proc)
     local rowGlowOffset = GUIFrame:CreateRow(card2.content, 40)
-    local glowXSlider = GUIFrame:CreateSlider(rowGlowOffset, "X Offset", -100, 100, 0.5,
-        db.GlowXOffset or 0, nil, function(val)
+    local glowXSlider = GUIFrame:CreateSlider(rowGlowOffset, "X Offset", {
+        min = -100, max = 100, step = 0.5,
+        value = db.GlowXOffset or 0,
+        callback = function(val)
             db.GlowXOffset = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowOffset:AddWidget(glowXSlider, 0.5)
     table_insert(allWidgets, glowXSlider)
     table_insert(glowWidgets, glowXSlider)
 
-    local glowYSlider = GUIFrame:CreateSlider(rowGlowOffset, "Y Offset", -100, 100, 0.5,
-        db.GlowYOffset or 0, nil, function(val)
+    local glowYSlider = GUIFrame:CreateSlider(rowGlowOffset, "Y Offset", {
+        min = -100, max = 100, step = 0.5,
+        value = db.GlowYOffset or 0,
+        callback = function(val)
             db.GlowYOffset = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowOffset:AddWidget(glowYSlider, 0.5)
     table_insert(allWidgets, glowYSlider)
     table_insert(glowWidgets, glowYSlider)
@@ -294,20 +311,30 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Lines & Frequency (pixel, autocast)
     local rowGlowLinesFreq = GUIFrame:CreateRow(card2.content, 40)
-    local glowLinesSlider = GUIFrame:CreateSlider(rowGlowLinesFreq, "Lines", 1, 30, 1,
-        db.GlowLines or 8, nil, function(val)
+    local glowLinesSlider = GUIFrame:CreateSlider(rowGlowLinesFreq, "Lines", {
+        min = 1,
+        max = 30,
+        step = 1,
+        value = db.GlowLines or 8,
+        callback = function(val)
             db.GlowLines = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowLinesFreq:AddWidget(glowLinesSlider, 0.5)
     table_insert(allWidgets, glowLinesSlider)
     table_insert(glowWidgets, glowLinesSlider)
 
-    local glowFreqSlider = GUIFrame:CreateSlider(rowGlowLinesFreq, "Frequency", -2, 2, 0.05,
-        db.GlowFrequency or 0.25, nil, function(val)
+    local glowFreqSlider = GUIFrame:CreateSlider(rowGlowLinesFreq, "Frequency", {
+        min = -2,
+        max = 2,
+        step = 0.05,
+        value = db.GlowFrequency or 0.25,
+        callback = function(val)
             db.GlowFrequency = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowLinesFreq:AddWidget(glowFreqSlider, 0.5)
     table_insert(allWidgets, glowFreqSlider)
     table_insert(glowWidgets, glowFreqSlider)
@@ -315,20 +342,30 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Pixel only: Length & Thickness
     local rowGlowPixel = GUIFrame:CreateRow(card2.content, 40)
-    local glowLengthSlider = GUIFrame:CreateSlider(rowGlowPixel, "Length", 1, 20, 0.5,
-        db.GlowLength or 10, nil, function(val)
+    local glowLengthSlider = GUIFrame:CreateSlider(rowGlowPixel, "Length", {
+        min = 1,
+        max = 20,
+        step = 0.5,
+        value = db.GlowLength or 10,
+        callback = function(val)
             db.GlowLength = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowPixel:AddWidget(glowLengthSlider, 0.5)
     table_insert(allWidgets, glowLengthSlider)
     table_insert(glowWidgets, glowLengthSlider)
 
-    local glowThicknessSlider = GUIFrame:CreateSlider(rowGlowPixel, "Thickness", 0.05, 20, 0.05,
-        db.GlowThickness or 1, nil, function(val)
+    local glowThicknessSlider = GUIFrame:CreateSlider(rowGlowPixel, "Thickness", {
+        min = 0.05,
+        max = 20,
+        step = 0.05,
+        value = db.GlowThickness or 1,
+        callback = function(val)
             db.GlowThickness = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowPixel:AddWidget(glowThicknessSlider, 0.5)
     table_insert(allWidgets, glowThicknessSlider)
     table_insert(glowWidgets, glowThicknessSlider)
@@ -336,11 +373,13 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Pixel only: Border toggle
     local rowGlowBorder = GUIFrame:CreateRow(card2.content, 40)
-    local glowBorderCheck = GUIFrame:CreateCheckbox(rowGlowBorder, "Show Border", db.GlowBorder or false,
-        function(checked)
+    local glowBorderCheck = GUIFrame:CreateCheckbox(rowGlowBorder, "Show Border", {
+        value = db.GlowBorder or false,
+        callback = function(checked)
             db.GlowBorder = checked
             ApplySettings()
-        end)
+        end
+    })
     rowGlowBorder:AddWidget(glowBorderCheck, 1)
     table_insert(allWidgets, glowBorderCheck)
     table_insert(glowWidgets, glowBorderCheck)
@@ -348,11 +387,16 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- AutoCast only: Scale
     local rowGlowScale = GUIFrame:CreateRow(card2.content, 40)
-    local glowScaleSlider = GUIFrame:CreateSlider(rowGlowScale, "Scale", 0.05, 10, 0.05,
-        db.GlowScale or 1, nil, function(val)
+    local glowScaleSlider = GUIFrame:CreateSlider(rowGlowScale, "Scale", {
+        min = 0.05,
+        max = 10,
+        step = 0.05,
+        value = db.GlowScale or 1,
+        callback = function(val)
             db.GlowScale = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowScale:AddWidget(glowScaleSlider, 1)
     table_insert(allWidgets, glowScaleSlider)
     table_insert(glowWidgets, glowScaleSlider)
@@ -360,20 +404,27 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Proc only: Duration & Start Animation
     local rowGlowProc = GUIFrame:CreateRow(card2.content, 40)
-    local glowDurationSlider = GUIFrame:CreateSlider(rowGlowProc, "Duration", 0.01, 3, 0.05,
-        db.GlowDuration or 1, nil, function(val)
+    local glowDurationSlider = GUIFrame:CreateSlider(rowGlowProc, "Duration", {
+        min = 0.01,
+        max = 3,
+        step = 0.05,
+        value = db.GlowDuration or 1,
+        callback = function(val)
             db.GlowDuration = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowProc:AddWidget(glowDurationSlider, 0.5)
     table_insert(allWidgets, glowDurationSlider)
     table_insert(glowWidgets, glowDurationSlider)
 
-    local glowStartAnimCheck = GUIFrame:CreateCheckbox(rowGlowProc, "Start Animation", db.GlowStartAnim or false,
-        function(checked)
+    local glowStartAnimCheck = GUIFrame:CreateCheckbox(rowGlowProc, "Start Animation", {
+        value = db.GlowStartAnim or false,
+        callback = function(checked)
             db.GlowStartAnim = checked
             ApplySettings()
-        end)
+        end
+    })
     rowGlowProc:AddWidget(glowStartAnimCheck, 0.5)
     table_insert(allWidgets, glowStartAnimCheck)
     table_insert(glowWidgets, glowStartAnimCheck)
@@ -381,11 +432,14 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Button only: Frequency
     local rowGlowButtonFreq = GUIFrame:CreateRow(card2.content, 40)
-    local glowButtonFreqSlider = GUIFrame:CreateSlider(rowGlowButtonFreq, "Frequency", -2, 2, 0.05,
-        db.GlowFrequency or 0.25, nil, function(val)
+    local glowButtonFreqSlider = GUIFrame:CreateSlider(rowGlowButtonFreq, "Frequency", {
+        min = -2, max = 2, step = 0.05,
+        value = db.GlowFrequency or 0.25,
+        callback = function(val)
             db.GlowFrequency = val
             ApplySettings()
-        end)
+        end
+    })
     rowGlowButtonFreq:AddWidget(glowButtonFreqSlider, 1)
     table_insert(allWidgets, glowButtonFreqSlider)
     table_insert(glowWidgets, glowButtonFreqSlider)
@@ -401,21 +455,24 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Show Stacks Checkbox and Color
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local showStacksCheck = GUIFrame:CreateCheckbox(row3a, "Show Stack Count", db.ShowStacks ~= false,
-        function(checked)
+    local showStacksCheck = GUIFrame:CreateCheckbox(row3a, "Show Stack Count", {
+        value = db.ShowStacks ~= false,
+        callback = function(checked)
             db.ShowStacks = checked
             UpdateStackWidgetStates()
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(showStacksCheck, 0.5)
     table_insert(allWidgets, showStacksCheck)
 
-    local stackColorPicker = GUIFrame:CreateColorPicker(row3a, "Stack Color",
-        db.StackTextColor or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local stackColorPicker = GUIFrame:CreateColorPicker(row3a, "Stack Color", {
+        color = db.StackTextColor or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             db.StackTextColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(stackColorPicker, 0.5)
     table_insert(allWidgets, stackColorPicker)
     table_insert(stackWidgets, stackColorPicker)
@@ -446,20 +503,31 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Stack Font and Size
     local row3b = GUIFrame:CreateRow(card3.content, 40)
-    local stackFontDropdown = GUIFrame:CreateDropdown(row3b, "Font", fontList, db.StackFontFace or "Expressway", 30,
-        function(key)
+    local stackFontDropdown = GUIFrame:CreateDropdown(row3b, "Font", {
+        options = fontList,
+        value = db.StackFontFace or "Expressway",
+        callback = function(key)
             db.StackFontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3b:AddWidget(stackFontDropdown, 0.5)
     table_insert(allWidgets, stackFontDropdown)
     table_insert(stackWidgets, stackFontDropdown)
 
-    local stackFontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", 8, 36, 1, db.StackFontSize or 18, 60,
-        function(val)
+    local stackFontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", {
+        min = 8,
+        max = 36,
+        step = 1,
+        value = db.StackFontSize or 18,
+        labelWidth = 60,
+        callback = function(val)
             db.StackFontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(stackFontSizeSlider, 0.5)
     table_insert(allWidgets, stackFontSizeSlider)
     table_insert(stackWidgets, stackFontSizeSlider)
@@ -467,12 +535,15 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Stack Font Outline
     local row3c = GUIFrame:CreateRow(card3.content, 36)
-    local stackOutlineDropdown = GUIFrame:CreateDropdown(row3c, "Outline", outlineList, db.StackFontOutline or "OUTLINE",
-        45,
-        function(key)
+    local stackOutlineDropdown = GUIFrame:CreateDropdown(row3c, "Outline", {
+        options = outlineList,
+        value = db.StackFontOutline or "OUTLINE",
+        labelWidth = 45,
+        callback = function(key)
             db.StackFontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row3c:AddWidget(stackOutlineDropdown, 1)
     table_insert(allWidgets, stackOutlineDropdown)
     table_insert(stackWidgets, stackOutlineDropdown)
@@ -488,21 +559,24 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Show Timer Checkbox and Color
     local row4a = GUIFrame:CreateRow(card4.content, 40)
-    local showTimerCheck = GUIFrame:CreateCheckbox(row4a, "Show Timer Text", db.ShowTimer ~= false,
-        function(checked)
+    local showTimerCheck = GUIFrame:CreateCheckbox(row4a, "Show Timer Text", {
+        value = db.ShowTimer ~= false,
+        callback = function(checked)
             db.ShowTimer = checked
             UpdateTimerWidgetStates()
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(showTimerCheck, 0.5)
     table_insert(allWidgets, showTimerCheck)
 
-    local timerColorPicker = GUIFrame:CreateColorPicker(row4a, "Timer Color",
-        db.TimerTextColor or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local timerColorPicker = GUIFrame:CreateColorPicker(row4a, "Timer Color", {
+        color = db.TimerTextColor or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             db.TimerTextColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(timerColorPicker, 0.5)
     table_insert(allWidgets, timerColorPicker)
     table_insert(timerWidgets, timerColorPicker)
@@ -517,20 +591,31 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Timer Font and Size
     local row4b = GUIFrame:CreateRow(card4.content, 40)
-    local timerFontDropdown = GUIFrame:CreateDropdown(row4b, "Font", fontList, db.TimerFontFace or "Expressway", 30,
-        function(key)
+    local timerFontDropdown = GUIFrame:CreateDropdown(row4b, "Font", {
+        options = fontList,
+        value = db.TimerFontFace or "Expressway",
+        callback = function(key)
             db.TimerFontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row4b:AddWidget(timerFontDropdown, 0.5)
     table_insert(allWidgets, timerFontDropdown)
     table_insert(timerWidgets, timerFontDropdown)
 
-    local timerFontSizeSlider = GUIFrame:CreateSlider(card4.content, "Font Size", 8, 36, 1, db.TimerFontSize or 16, 60,
-        function(val)
+    local timerFontSizeSlider = GUIFrame:CreateSlider(card4.content, "Font Size", {
+        min = 8,
+        max = 36,
+        step = 1,
+        value = db.TimerFontSize or 16,
+        labelWidth = 60,
+        callback = function(val)
             db.TimerFontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(timerFontSizeSlider, 0.5)
     table_insert(allWidgets, timerFontSizeSlider)
     table_insert(timerWidgets, timerFontSizeSlider)
@@ -538,12 +623,15 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
 
     -- Timer Font Outline
     local row4c = GUIFrame:CreateRow(card4.content, 36)
-    local timerOutlineDropdown = GUIFrame:CreateDropdown(row4c, "Outline", outlineList,
-        db.TimerFontOutline or "SOFTOUTLINE", 45,
-        function(key)
+    local timerOutlineDropdown = GUIFrame:CreateDropdown(row4c, "Outline", {
+        options = outlineList,
+        value = db.TimerFontOutline or "SOFTOUTLINE",
+        labelWidth = 45,
+        callback = function(key)
             db.TimerFontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row4c:AddWidget(timerOutlineDropdown, 1)
     table_insert(allWidgets, timerOutlineDropdown)
     table_insert(timerWidgets, timerOutlineDropdown)
@@ -557,15 +645,6 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
     local newOffset
     card5, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = ApplySettings,

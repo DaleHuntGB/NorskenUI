@@ -34,7 +34,12 @@ local function ValidateThemeColor(color, default)
     return color
 end
 
--- Create Message Popup
+---@param timer number
+---@param text string
+---@param fontSize number
+---@param parentFrame? Frame
+---@param xOffset? number
+---@param yOffset? number
 function NRSKNUI:CreateMessagePopup(timer, text, fontSize, parentFrame, xOffset, yOffset)
     if NRSKNUI.msgContainer then
         NRSKNUI.msgContainer:Hide()

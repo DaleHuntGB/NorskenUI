@@ -1,16 +1,21 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization
 local table_insert = table.insert
 local pairs, ipairs = pairs, ipairs
-local CreateFrame = CreateFrame
-local time = time
+local GetNumSpecializationsForClassID = C_SpecializationInfo.GetNumSpecializationsForClassID
+local GetSpecializationInfoForClassID = GetSpecializationInfoForClassID
+local GetNumClasses = GetNumClasses
+local GetClassInfo = GetClassInfo
+local RAID_CLASS_COLORS = RAID_CLASS_COLORS
+local C_Timer = C_Timer
 
--- Get module reference
+local SIDEBAR_WIDTH = 192
+local ITEM_HEIGHT = 26
+local LIST_PADDING = 4
+
 local function GetModule()
     if NorskenUI then
         return NorskenUI:GetModule("CooldownStrings", true)
@@ -18,21 +23,37 @@ local function GetModule()
     return nil
 end
 
--- Persistent selected profile across refreshes
+local function BuildSpecList()
+    local specs = {}
+    for classID = 1, GetNumClasses() do
+        local className, classFile = GetClassInfo(classID)
+        if className and classFile then
+            local numSpecs = GetNumSpecializationsForClassID(classID)
+            for specIndex = 1, numSpecs do
+                local specID, specName, _, specIcon = GetSpecializationInfoForClassID(classID, specIndex)
+                if specID then
+                    table_insert(specs, {
+                        key = specID,
+                        text = className .. " - " .. specName,
+                        class = classFile,
+                        icon = specIcon,
+                    })
+                end
+            end
+        end
+    end
+    table.sort(specs, function(a, b) return a.text < b.text end)
+    return specs
+end
+
 local selectedProfileName = nil
 
--- Register CooldownStrings tab content
-GUIFrame:RegisterContent("CooldownStrings", function(scrollChild, yOffset)
+GUIFrame:RegisterPanel("CooldownStrings", function(container)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Miscellaneous.CooldownStrings
-    if not db then
-        local errorCard = GUIFrame:CreateCard(scrollChild, "Error", yOffset)
-        errorCard:AddLabel("Database not available")
-        return yOffset + errorCard:GetContentHeight() + Theme.paddingMedium
-    end
-
-    -- Ensure Profiles table exists
+    if not db then return end
     if not db.Profiles then db.Profiles = {} end
 
+    local allSpecList = BuildSpecList()
     local allWidgets = {}
 
     local function ApplyModuleState(enabled)
@@ -47,7 +68,7 @@ GUIFrame:RegisterContent("CooldownStrings", function(scrollChild, yOffset)
     end
 
     local function RefreshContent()
-        C_Timer.After(0.1, function()
+        C_Timer.After(0.05, function()
             GUIFrame:RefreshContent()
         end)
     end
@@ -68,229 +89,256 @@ GUIFrame:RegisterContent("CooldownStrings", function(scrollChild, yOffset)
         end
     end
 
-    -- Build profile dropdown list
-    local function GetProfileList()
-        local list = {}
-        for name, data in pairs(db.Profiles) do
-            table_insert(list, {
-                key = name,
-                text = name,
-            })
-        end
-        -- Sort alphabetically
-        table.sort(list, function(a, b) return a.text < b.text end)
-        return list
+    if selectedProfileName and not db.Profiles[selectedProfileName] then
+        selectedProfileName = nil
     end
-
-    -- Validate selected profile still exists
-    if selectedProfileName then
-        if not db.Profiles[selectedProfileName] then
-            selectedProfileName = nil
+    if not selectedProfileName then
+        for name in pairs(db.Profiles) do
+            selectedProfileName = name
+            break
         end
     end
 
-    -- Get selected profile data
-    local selectedProfile = selectedProfileName and db.Profiles[selectedProfileName] or nil
+    local function GetAllProfiles()
+        local profiles = {}
+        for name, profileData in pairs(db.Profiles) do
+            local mod = GetModule()
+            local specInfo = mod and profileData.SpecID and mod.GetSpecInfoByID(profileData.SpecID)
+            local className = specInfo and specInfo.class or "ZZZZZ"
+            table_insert(profiles, { key = name, name = name, data = profileData, className = className, specInfo = specInfo })
+        end
+        table.sort(profiles, function(a, b)
+            if a.className ~= b.className then
+                return a.className < b.className
+            end
+            return a.name < b.name
+        end)
+        return profiles
+    end
 
-    ----------------------------------------------------------------
-    -- Card 1: Enable CDM Profile Strings
-    ----------------------------------------------------------------
-    local card1 = GUIFrame:CreateCard(scrollChild, "CDM Profile Strings", yOffset)
+    local function GetSpecDropdownOptions()
+        local options = {}
+        for _, spec in ipairs(allSpecList) do
+            table_insert(options, { key = spec.key, text = spec.text })
+        end
+        return options
+    end
 
-    local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable CDM Profile Strings", db.Enabled ~= false,
-        function(checked)
+    local miniSidebar = NRSKNUI.GUI.CreateMiniSidebar(container, {
+        sidebarWidth = SIDEBAR_WIDTH,
+        listPadding = LIST_PADDING,
+        itemHeight = ITEM_HEIGHT,
+
+        getItems = GetAllProfiles,
+        getItemKey = function(item) return item.name end,
+
+        renderItem = function(btn, item)
+            local specInfo = item.specInfo
+            if specInfo and specInfo.icon then
+                btn._icon:SetTexture(specInfo.icon)
+                NRSKNUI:ApplyZoom(btn._icon, 0.1)
+            else
+                btn._icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+            end
+            btn._label:SetText(item.name)
+            if specInfo and specInfo.class and RAID_CLASS_COLORS[specInfo.class] then
+                local cc = RAID_CLASS_COLORS[specInfo.class]
+                btn._label:SetTextColor(cc.r, cc.g, cc.b, 1)
+            end
+        end,
+
+        onItemSelected = function(item)
+            selectedProfileName = item.name
+            RefreshContent()
+        end,
+
+        buttonArea = {
+            buttons = {
+                {
+                    text = "+ New Profile",
+                    onClick = function()
+                        NRSKNUI:CreatePrompt(
+                            "New CDM Profile",
+                            "Enter a name for this profile:",
+                            true, nil, false, nil, nil, nil, nil,
+                            function(inputText)
+                                if inputText and inputText ~= "" then
+                                    if db.Profiles[inputText] then
+                                        NRSKNUI:Print("Profile '" .. inputText .. "' already exists.")
+                                        return
+                                    end
+                                    db.Profiles[inputText] = {
+                                        String = "",
+                                        Created = nil,
+                                        SpecID = nil,
+                                    }
+                                    selectedProfileName = inputText
+                                    SyncWithModule()
+                                    RefreshContent()
+                                end
+                            end,
+                            nil, "Create", "Cancel"
+                        )
+                    end,
+                },
+            },
+        },
+    })
+
+    miniSidebar.SelectItem(selectedProfileName)
+    miniSidebar.RefreshList()
+
+    local contentChild = miniSidebar.contentArea.scrollChild
+    local selectedProfile = selectedProfileName and db.Profiles[selectedProfileName]
+
+    local yOffset = Theme.paddingSmall
+
+    local card1 = GUIFrame:CreateCard(contentChild, "CDM Profile Strings", yOffset)
+    miniSidebar.contentArea.RegisterCard(card1)
+
+    local row1 = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable CDM Profile Strings", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "CDM Profile Strings", "On", "Off"
-    )
+        msgPopup = true, msgText = "CDM Profile Strings", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
-    card1:AddRow(row1, 36)
-
-    -- Separator
-    local row4asep = GUIFrame:CreateRow(card1.content, 8)
-    local seprow4aCard = GUIFrame:CreateSeparator(row4asep)
-    row4asep:AddWidget(seprow4aCard, 1)
-    card1:AddRow(row4asep, 8)
-
-    -- Description text
-    local textRowSize = 50
-    local rowDesc = GUIFrame:CreateRow(card1.content, textRowSize)
-    local descText = GUIFrame:CreateText(rowDesc,
-        NRSKNUI:ColorTextByTheme("How It Works"),
-        (NRSKNUI:ColorTextByTheme("• ") .. "Opens automatically when Blizzard's Cooldown Manager settings open\n" ..
-            NRSKNUI:ColorTextByTheme("• ") .. "Save and backup your CDM profile strings in savedVariables"),
-        textRowSize, "hide")
-    rowDesc:AddWidget(descText, 1)
-    table_insert(allWidgets, descText)
-    card1:AddRow(rowDesc, textRowSize)
+    card1:AddRow(row1, Theme.rowHeightLast, 0)
 
     yOffset = yOffset + card1:GetContentHeight() + Theme.paddingSmall
 
-    ----------------------------------------------------------------
-    -- Card 2: Profile Management (Create + Dropdown)
-    ----------------------------------------------------------------
-    local card2 = GUIFrame:CreateCard(scrollChild, "Profile Management", yOffset)
-    table_insert(allWidgets, card2)
-
-    local row2a = GUIFrame:CreateRow(card2.content, 36)
-
-    -- Create New Profile button
-    local createBtn = GUIFrame:CreateButton(row2a, "Create New", {
-        width = 120,
-        callback = function()
-            NRSKNUI:CreatePrompt(
-                "New CDM Profile",
-                "Enter a name for this profile:",
-                true,
-                nil,
-                false,
-                nil, nil, nil, nil,
-                function(inputText)
-                    if inputText and inputText ~= "" then
-                        -- Check if profile already exists
-                        if db.Profiles[inputText] then
-                            NRSKNUI:Print("A profile named '" .. inputText .. "' already exists.")
-                            return
-                        end
-
-                        -- Create new profile
-                        db.Profiles[inputText] = {
-                            String = "",
-                            Created = time(),
-                        }
-                        selectedProfileName = inputText
-                        NRSKNUI:Print("Created new CDM profile: " .. inputText)
-
-                        -- Sync with attached panel
-                        SyncWithModule()
-                        RefreshContent()
-                    end
-                end,
-                nil,
-                "Create",
-                "Cancel"
-            )
-        end,
-    })
-    row2a:AddWidget(createBtn, 0.4, nil, 0, -2)
-    table_insert(allWidgets, createBtn)
-
-    -- Profile dropdown
-    local profileList = GetProfileList()
-    if #profileList > 0 then
-        local currentSelection = selectedProfileName or profileList[1].key
-        if not selectedProfileName then
-            selectedProfileName = profileList[1].key
-            selectedProfile = db.Profiles[selectedProfileName]
-        end
-
-        local profileDropdown = GUIFrame:CreateDropdown(row2a, "Edit Profile", profileList, currentSelection, 70,
-            function(key)
-                selectedProfileName = key
-                RefreshContent()
-            end)
-        row2a:AddWidget(profileDropdown, 0.6)
-        table_insert(allWidgets, profileDropdown)
-    end
-
-    card2:AddRow(row2a, 36)
-
-    yOffset = yOffset + card2:GetContentHeight() + Theme.paddingSmall
-
-    ----------------------------------------------------------------
-    -- Card 3: Selected Profile Editor
-    ----------------------------------------------------------------
     if selectedProfile then
-        local card3 = GUIFrame:CreateCard(scrollChild, "Profile Settings", yOffset)
-        table_insert(allWidgets, card3)
+        local card2 = GUIFrame:CreateCard(contentChild, "Profile Editor", yOffset)
+        miniSidebar.contentArea.RegisterCard(card2)
+        table_insert(allWidgets, card2)
 
-        -- Row 1: Profile name + Delete button
-        local row3a = GUIFrame:CreateRow(card3.content, 42)
-
-        -- Profile name label
-        local nameLabel = row3a:CreateFontString(nil, "OVERLAY")
-        nameLabel:SetPoint("LEFT", row3a, "LEFT", 4, 0)
-        nameLabel:SetFont(STANDARD_TEXT_FONT, Theme.fontSizeLarge or 12, "OUTLINE")
-        nameLabel:SetText("Editing: |cFFFFFFFF" .. selectedProfileName .. "|r")
-        nameLabel:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-        nameLabel:SetShadowOffset(0, 0)
-
-        -- Container for label
-        local nameLabelContainer = CreateFrame("Frame", nil, row3a)
-        nameLabelContainer:SetHeight(36)
-        nameLabel:SetParent(nameLabelContainer)
-        nameLabel:ClearAllPoints()
-        nameLabel:SetPoint("LEFT", nameLabelContainer, "LEFT", 0, 8)
-
-        row3a:AddWidget(nameLabelContainer, 0.7)
-
-        -- Delete button
-        local deleteBtn = GUIFrame:CreateButton(row3a, "Delete", {
-            width = 80,
-            callback = function()
-                NRSKNUI:CreatePrompt(
-                    "Delete Profile",
-                    "Are you sure you want to delete '" .. selectedProfileName .. "'?\n\nThis cannot be undone.",
-                    false, nil, false, nil, nil, nil, nil,
-                    function()
-                        local deletedName = selectedProfileName
-                        if deletedName then
-                            db.Profiles[deletedName] = nil
-                        end
-                        deletedName = nil
-
-                        -- Select next available profile
-                        for profileName, _ in pairs(db.Profiles) do
-                            deletedName = profileName
-                            break
-                        end
-
-                        NRSKNUI:Print("Deleted CDM profile: " .. deletedName)
-                        SyncWithModule()
-                        RefreshContent()
-                    end,
-                    nil,
-                    "Delete",
-                    "Cancel"
-                )
-            end,
+        local nameRow = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+        local nameEdit = GUIFrame:CreateEditBox(nameRow, "Profile Name", {
+            value = selectedProfileName,
+            callback = function(text)
+                if text and text ~= "" and text ~= selectedProfileName then
+                    if db.Profiles[text] then
+                        NRSKNUI:Print("Profile '" .. text .. "' already exists.")
+                        return
+                    end
+                    db.Profiles[text] = db.Profiles[selectedProfileName]
+                    db.Profiles[selectedProfileName] = nil
+                    selectedProfileName = text
+                    SyncWithModule()
+                    RefreshContent()
+                end
+            end
         })
-        row3a:AddWidget(deleteBtn, 0.3)
-        table_insert(allWidgets, deleteBtn)
+        nameRow:AddWidget(nameEdit, 1)
+        table_insert(allWidgets, nameEdit)
+        card2:AddRow(nameRow, Theme.rowHeight)
 
-        card3:AddRow(row3a, 42)
+        local specRow = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+        local specDropdown = GUIFrame:CreateDropdown(specRow, "Specialization", {
+            options = GetSpecDropdownOptions(),
+            value = selectedProfile.SpecID,
+            callback = function(key)
+                if selectedProfileName and db.Profiles[selectedProfileName] then
+                    db.Profiles[selectedProfileName].SpecID = key
+                    SyncWithModule()
+                    RefreshContent()
+                end
+            end,
+            searchable = true
+        })
+        specRow:AddWidget(specDropdown, 1)
+        table_insert(allWidgets, specDropdown)
+        card2:AddRow(specRow, Theme.rowHeight)
 
-        -- Row 2: Profile String EditBox (multiline)
-        local row3b = GUIFrame:CreateRow(card3.content, 134)
-        local profileStringEditor = GUIFrame:CreateMultiLineEditBox(row3b, {
-            label = "Profile String (paste your CDM export here)",
+        local sepRow = GUIFrame:CreateRow(card2.content, Theme.rowHeightSeparator)
+        local sepWidget = GUIFrame:CreateSeparator(sepRow)
+        sepRow:AddWidget(sepWidget, 1)
+        card2:AddRow(sepRow, Theme.rowHeightSeparator)
+
+        local stringRow = GUIFrame:CreateRow(card2.content)
+        local stringEdit = GUIFrame:CreateMultiLineEditBox(stringRow, "Profile String (paste CDM export)", {
             value = selectedProfile.String or "",
-            height = 120,
-            tooltip = "CTRL+C to copy, CTRL+V to paste, CTRL+A to select all",
-            onTextChanged = function(text)
+            height = 140,
+            tooltip = "CTRL+V to paste, CTRL+A to select all",
+            callback = function(text)
                 if selectedProfileName and db.Profiles[selectedProfileName] then
                     db.Profiles[selectedProfileName].String = text
                     SyncWithModule()
                 end
             end,
         })
-        row3b:AddWidget(profileStringEditor, 1)
-        table_insert(allWidgets, profileStringEditor)
-        card3:AddRow(row3b, 134)
+        stringRow:AddWidget(stringEdit, 1)
+        table_insert(allWidgets, stringEdit)
+        card2:AddRow(stringRow, stringEdit.rowHeight)
 
-        yOffset = yOffset + card3:GetContentHeight() + Theme.paddingSmall
+        local btnRow = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+        local applyBtn = GUIFrame:CreateButton(btnRow, "Apply to CDM", {
+            height = 38,
+            callback = function()
+                local mod = GetModule()
+                if not mod then return end
+                mod.ApplyProfileToCDM(selectedProfile.String or "", selectedProfileName, {
+                    onConflict = function(proceed)
+                        NRSKNUI:CreatePrompt(
+                            "Replace CDM Profile",
+                            "'" .. selectedProfileName .. "' exists in CDM. Replace?",
+                            false, nil, false, nil, nil, nil, nil,
+                            proceed, nil, "Replace", "Cancel"
+                        )
+                    end,
+                    onLayoutsFull = function()
+                        NRSKNUI:Print("CDM layout limit reached.")
+                    end,
+                })
+            end,
+        })
+        btnRow:AddWidget(applyBtn, 0.5)
+        table_insert(allWidgets, applyBtn)
+
+        local deleteBtn = GUIFrame:CreateButton(btnRow, "Delete", {
+            height = 38,
+            callback = function()
+                NRSKNUI:CreatePrompt(
+                    "Delete Profile",
+                    "Delete '" .. selectedProfileName .. "'?",
+                    false, nil, false, nil, nil, nil, nil,
+                    function()
+                        db.Profiles[selectedProfileName] = nil
+                        selectedProfileName = nil
+                        for n in pairs(db.Profiles) do
+                            selectedProfileName = n
+                            break
+                        end
+                        SyncWithModule()
+                        RefreshContent()
+                    end,
+                    nil, "Delete", "Cancel"
+                )
+            end,
+        })
+        btnRow:AddWidget(deleteBtn, 0.5)
+        table_insert(allWidgets, deleteBtn)
+        card2:AddRow(btnRow, Theme.rowHeightLast, 0)
+
+        yOffset = yOffset + card2:GetContentHeight() + Theme.paddingSmall
     else
-        -- No profile selected message
-        local card3 = GUIFrame:CreateCard(scrollChild, "Profile Editor", yOffset)
-        table_insert(allWidgets, card3)
-        card3:AddLabel("No profiles configured. Click 'Create New' to create one.")
-        yOffset = yOffset + card3:GetContentHeight() + Theme.paddingSmall
+        local card2 = GUIFrame:CreateCard(contentChild, "Profile Editor", yOffset)
+        miniSidebar.contentArea.RegisterCard(card2)
+        card2:AddLabel("No profiles. Click '+ New Profile' to create one.")
+        yOffset = yOffset + card2:GetContentHeight() + Theme.paddingSmall
     end
 
+    miniSidebar.contentArea.SetContentHeight(yOffset)
+    C_Timer.After(0, function()
+        miniSidebar.contentArea.UpdateScrollBarVisibility()
+        miniSidebar.contentArea.UpdateCardWidths()
+    end)
+
     UpdateAllWidgetStates()
-    yOffset = yOffset - (Theme.paddingSmall * 3)
-    return yOffset
+
+    return miniSidebar.panel
 end)

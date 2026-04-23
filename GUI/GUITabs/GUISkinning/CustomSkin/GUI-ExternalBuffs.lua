@@ -65,17 +65,18 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "External Buff Frame", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable External Buff Frame", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable External Buff Frame", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyExternalsState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "External Buff Frame",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "External Buff Frame",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
 
     -- Preview toggle button
@@ -110,51 +111,76 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
 
     -- Icon Size slider
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local iconSizeSlider = GUIFrame:CreateSlider(row2a, "Icon Size", 16, 100, 1, db.IconSize or 50, nil,
-        function(value)
+    local iconSizeSlider = GUIFrame:CreateSlider(row2a, "Icon Size", {
+        min = 16,
+        max = 100,
+        step = 1,
+        value = db.IconSize or 50,
+        callback = function(value)
             db.IconSize = value
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(iconSizeSlider, 0.5)
     table_insert(allWidgets, iconSizeSlider)
 
     -- Icon Spacing slider
-    local iconSpacingSlider = GUIFrame:CreateSlider(row2a, "Icon Spacing", 0, 10, 1, db.IconSpacing or 2, nil,
-        function(value)
+    local iconSpacingSlider = GUIFrame:CreateSlider(row2a, "Icon Spacing", {
+        min = 0,
+        max = 10,
+        step = 1,
+        value = db.IconSpacing or 2,
+        callback = function(value)
             db.IconSpacing = value
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(iconSpacingSlider, 0.5)
     table_insert(allWidgets, iconSpacingSlider)
     card2:AddRow(row2a, 40)
 
     -- Icons Per Row slider
     local row2b = GUIFrame:CreateRow(card2.content, 40)
-    local iconsPerRowSlider = GUIFrame:CreateSlider(row2b, "Icons Per Row", 1, 20, 1, db.IconsPerRow or 6, nil,
-        function(value)
+    local iconsPerRowSlider = GUIFrame:CreateSlider(row2b, "Icons Per Row", {
+        min = 1,
+        max = 20,
+        step = 1,
+        value = db.IconsPerRow or 6,
+        callback = function(value)
             db.IconsPerRow = value
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(iconsPerRowSlider, 0.5)
     table_insert(allWidgets, iconsPerRowSlider)
 
     -- Max Rows slider
-    local maxRowsSlider = GUIFrame:CreateSlider(row2b, "Max Rows", 1, 5, 1, db.MaxRows or 1, nil,
-        function(value)
+    local maxRowsSlider = GUIFrame:CreateSlider(row2b, "Max Rows", {
+        min = 1,
+        max = 5,
+        step = 1,
+        value = db.MaxRows or 1,
+        callback = function(value)
             db.MaxRows = value
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(maxRowsSlider, 0.5)
     table_insert(allWidgets, maxRowsSlider)
     card2:AddRow(row2b, 40)
 
     -- Icon Zoom slider
     local row2c = GUIFrame:CreateRow(card2.content, 40)
-    local iconZoomSlider = GUIFrame:CreateSlider(row2c, "Icon Zoom", 0, 0.5, 0.01, db.IconZoom or 0.32, nil,
-        function(value)
+    local iconZoomSlider = GUIFrame:CreateSlider(row2c, "Icon Zoom", {
+        min = 0,
+        max = 0.5,
+        step = 0.01,
+        value = db.IconZoom or 0.32,
+        callback = function(value)
             db.IconZoom = value
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(iconZoomSlider, 0.5)
     table_insert(allWidgets, iconZoomSlider)
     card2:AddRow(row2c, 40)
@@ -168,20 +194,24 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
 
     -- Border Color
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local borderColorPicker = GUIFrame:CreateColorPicker(row3a, "Border Color", db.BorderColor,
-        function(r, g, b, a)
+    local borderColorPicker = GUIFrame:CreateColorPicker(row3a, "Border Color", {
+        color = db.BorderColor,
+        callback = function(r, g, b, a)
             db.BorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(borderColorPicker, 0.5)
     table_insert(allWidgets, borderColorPicker)
 
     -- Background Color
-    local bgColorPicker = GUIFrame:CreateColorPicker(row3a, "Background Color", db.BackgroundColor,
-        function(r, g, b, a)
+    local bgColorPicker = GUIFrame:CreateColorPicker(row3a, "Background Color", {
+        color = db.BackgroundColor,
+        callback = function(r, g, b, a)
             db.BackgroundColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(bgColorPicker, 0.5)
     table_insert(allWidgets, bgColorPicker)
     card3:AddRow(row3a, 40)
@@ -203,40 +233,62 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
 
     -- Font Face and Outline
     local row4a = GUIFrame:CreateRow(card4.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", fontList, db.FontFace, 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", {
+        options = fontList,
+        value = db.FontFace,
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row4a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
-    local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick" }
-    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineList = {
+        { key = "NONE",         text = "None" },
+        { key = "OUTLINE",      text = "Outline" },
+        { key = "THICKOUTLINE", text = "Thick" },
+    }
+    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card4:AddRow(row4a, 40)
 
     -- Font Size
     local row4b = GUIFrame:CreateRow(card4.content, 40)
-    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Count Font Size", 8, 24, 1, db.FontSize or 14, nil,
-        function(value)
+    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Count Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = db.FontSize or 14,
+        callback = function(value)
             db.FontSize = value
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(fontSizeSlider, 0.5)
     table_insert(allWidgets, fontSizeSlider)
 
     -- Timer Font Size
-    local timerFontSizeSlider = GUIFrame:CreateSlider(row4b, "Timer Font Size", 8, 32, 1, db.TimerFontSize or 16, nil,
-        function(value)
+    local timerFontSizeSlider = GUIFrame:CreateSlider(row4b, "Timer Font Size", {
+        min = 8,
+        max = 32,
+        step = 1,
+        value = db.TimerFontSize or 16,
+        callback = function(value)
             db.TimerFontSize = value
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(timerFontSizeSlider, 0.5)
     table_insert(allWidgets, timerFontSizeSlider)
     card4:AddRow(row4b, 40)
@@ -244,21 +296,31 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     -- Timer Position Offsets
     local timerPos = db.TimerPosition or {}
     local row4c = GUIFrame:CreateRow(card4.content, 40)
-    local timerXSlider = GUIFrame:CreateSlider(row4c, "Timer X Offset", -50, 50, 1, timerPos.XOffset or 0, nil,
-        function(value)
+    local timerXSlider = GUIFrame:CreateSlider(row4c, "Timer X Offset", {
+        min = -50,
+        max = 50,
+        step = 1,
+        value = timerPos.XOffset or 0,
+        callback = function(value)
             db.TimerPosition = db.TimerPosition or {}
             db.TimerPosition.XOffset = value
             ApplySettings()
-        end)
+        end
+    })
     row4c:AddWidget(timerXSlider, 0.5)
     table_insert(allWidgets, timerXSlider)
 
-    local timerYSlider = GUIFrame:CreateSlider(row4c, "Timer Y Offset", -50, 50, 1, timerPos.YOffset or 0, nil,
-        function(value)
+    local timerYSlider = GUIFrame:CreateSlider(row4c, "Timer Y Offset", {
+        min = -50,
+        max = 50,
+        step = 1,
+        value = timerPos.YOffset or 0,
+        callback = function(value)
             db.TimerPosition = db.TimerPosition or {}
             db.TimerPosition.YOffset = value
             ApplySettings()
-        end)
+        end
+    })
     row4c:AddWidget(timerYSlider, 0.5)
     table_insert(allWidgets, timerYSlider)
     card4:AddRow(row4c, 40)
@@ -273,24 +335,30 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     -- Sort Method and Direction
     local row5a = GUIFrame:CreateRow(card5.content, 40)
     local sortMethodList = { ["TIME"] = "Time", ["NAME"] = "Name", ["INDEX"] = "Index" }
-    local sortMethodDropdown = GUIFrame:CreateDropdown(row5a, "Sort Method", sortMethodList, db.SortMethod, 30,
-        function(key)
+    local sortMethodDropdown = GUIFrame:CreateDropdown(row5a, "Sort Method", {
+        options = sortMethodList,
+        value = db.SortMethod,
+        callback = function(key)
             db.SortMethod = key
             if EXTERNALS and EXTERNALS:IsEnabled() and EXTERNALS.UpdateAuras then
                 EXTERNALS:UpdateAuras()
             end
-        end)
+        end
+    })
     row5a:AddWidget(sortMethodDropdown, 0.5)
     table_insert(allWidgets, sortMethodDropdown)
 
     local sortDirList = { ["-"] = "Descending", ["+"] = "Ascending" }
-    local sortDirDropdown = GUIFrame:CreateDropdown(row5a, "Sort Direction", sortDirList, db.SortDirection, 30,
-        function(key)
+    local sortDirDropdown = GUIFrame:CreateDropdown(row5a, "Sort Direction", {
+        options = sortDirList,
+        value = db.SortDirection,
+        callback = function(key)
             db.SortDirection = key
             if EXTERNALS and EXTERNALS:IsEnabled() and EXTERNALS.UpdateAuras then
                 EXTERNALS:UpdateAuras()
             end
-        end)
+        end
+    })
     row5a:AddWidget(sortDirDropdown, 0.5)
     table_insert(allWidgets, sortDirDropdown)
     card5:AddRow(row5a, 40)
@@ -303,15 +371,6 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     local card6 = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Position",
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = function()

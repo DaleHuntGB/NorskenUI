@@ -94,17 +94,15 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Skyriding UI", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Skyriding UI", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyDragonRidingState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Skyriding UI",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Skyriding UI", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -118,48 +116,64 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
 
     -- Width Slider
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local widthSlider = GUIFrame:CreateSlider(row2, "Width", 100, 500, 1,
-        db.Width or 252, nil,
-        function(val)
+    local widthSlider = GUIFrame:CreateSlider(row2, "Width", {
+        min = 100,
+        max = 500,
+        step = 1,
+        value = db.Width or 252,
+        callback = function(val)
             db.Width = val
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(widthSlider, 1)
     table_insert(allWidgets, widthSlider)
     card2:AddRow(row2, 40)
 
     -- Bar Height Slider
     local row3 = GUIFrame:CreateRow(card2.content, 40)
-    local heightSlider = GUIFrame:CreateSlider(row3, "Bar Height", 1, 24, 1,
-        db.BarHeight or 12, nil,
-        function(val)
+    local heightSlider = GUIFrame:CreateSlider(row3, "Bar Height", {
+        min = 1,
+        max = 24,
+        step = 1,
+        value = db.BarHeight or 12,
+        callback = function(val)
             db.BarHeight = val
             ApplySettings()
-        end)
+        end
+    })
     row3:AddWidget(heightSlider, 1)
     table_insert(allWidgets, heightSlider)
     card2:AddRow(row3, 40)
 
     -- Spacing Slider
     local row3b = GUIFrame:CreateRow(card2.content, 40)
-    local spacingSlider = GUIFrame:CreateSlider(row3b, "Row Spacing", 0, 10, 1,
-        db.Spacing or 1, nil,
-        function(val)
+    local spacingSlider = GUIFrame:CreateSlider(row3b, "Row Spacing", {
+        min = 0,
+        max = 10,
+        step = 1,
+        value = db.Spacing or 1,
+        callback = function(val)
             db.Spacing = val
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(spacingSlider, 1)
     table_insert(allWidgets, spacingSlider)
     card2:AddRow(row3b, 40)
 
     -- Speed Font Size
     local row4 = GUIFrame:CreateRow(card2.content, 40)
-    local speedFontSlider = GUIFrame:CreateSlider(row4, "Speed Font Size", 8, 24, 1,
-        db.SpeedFontSize or 14, nil,
-        function(val)
+    local speedFontSlider = GUIFrame:CreateSlider(row4, "Speed Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = db.SpeedFontSize or 14,
+        callback = function(val)
             db.SpeedFontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(speedFontSlider, 1)
     table_insert(allWidgets, speedFontSlider)
     card2:AddRow(row4, 40)
@@ -178,11 +192,13 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     -- Vigor Color
     local row5 = GUIFrame:CreateRow(card3.content, 36)
     local vigorColor = db.Colors.Vigor or { 0.898, 0.063, 0.224, 1 }
-    local vigorPicker = GUIFrame:CreateColorPicker(row5, "Vigor", vigorColor,
-        function(r, g, b, a)
+    local vigorPicker = GUIFrame:CreateColorPicker(row5, "Vigor", {
+        color = vigorColor,
+        callback = function(r, g, b, a)
             db.Colors.Vigor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(vigorPicker, 0.5)
     table_insert(allWidgets, vigorPicker)
     card3:AddRow(row5, 36)
@@ -190,11 +206,13 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     -- Vigor Thrill Color
     local row6 = GUIFrame:CreateRow(card3.content, 36)
     local thrillColor = db.Colors.VigorThrill or { 0.2, 0.8, 0.2, 1 }
-    local thrillPicker = GUIFrame:CreateColorPicker(row6, "Vigor (Thrill)", thrillColor,
-        function(r, g, b, a)
+    local thrillPicker = GUIFrame:CreateColorPicker(row6, "Vigor (Thrill)", {
+        color = thrillColor,
+        callback = function(r, g, b, a)
             db.Colors.VigorThrill = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row6:AddWidget(thrillPicker, 0.5)
     table_insert(allWidgets, thrillPicker)
     card3:AddRow(row6, 36)
@@ -202,11 +220,13 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     -- Whirling Surge Color
     local row7 = GUIFrame:CreateRow(card3.content, 36)
     local surgeColor = db.Colors.WhirlingSurge or { 0.6, 0.4, 0.9, 1 }
-    local surgePicker = GUIFrame:CreateColorPicker(row7, "Whirling Surge", surgeColor,
-        function(r, g, b, a)
+    local surgePicker = GUIFrame:CreateColorPicker(row7, "Whirling Surge", {
+        color = surgeColor,
+        callback = function(r, g, b, a)
             db.Colors.WhirlingSurge = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row7:AddWidget(surgePicker, 0.5)
     table_insert(allWidgets, surgePicker)
     card3:AddRow(row7, 36)
@@ -214,11 +234,13 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     -- Second Wind Color
     local row8 = GUIFrame:CreateRow(card3.content, 36)
     local swColor = db.Colors.SecondWind or { 0.3, 0.7, 1, 1 }
-    local swPicker = GUIFrame:CreateColorPicker(row8, "Second Wind", swColor,
-        function(r, g, b, a)
+    local swPicker = GUIFrame:CreateColorPicker(row8, "Second Wind", {
+        color = swColor,
+        callback = function(r, g, b, a)
             db.Colors.SecondWind = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row8:AddWidget(swPicker, 0.5)
     table_insert(allWidgets, swPicker)
     card3:AddRow(row8, 36)
@@ -234,15 +256,16 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
 
         -- Enable Alpha Out Toggle
         local row9 = GUIFrame:CreateRow(card4.content, 36)
-        local alphaOutCheck = GUIFrame:CreateCheckbox(row9, "Reduce CDM Alpha While Mounted/Pet Battle",
-            cdmDB.AlphaoutMountPet ~= false,
-            function(checked)
+        local alphaOutCheck = GUIFrame:CreateCheckbox(row9, "Reduce CDM Alpha While Mounted/Pet Battle", {
+            value = cdmDB.AlphaoutMountPet ~= false,
+            callback = function(checked)
                 cdmDB.AlphaoutMountPet = checked
                 if CDM and CDM.UpdateMountPetAlpha then
                     CDM:UpdateMountPetAlpha()
                 end
                 UpdateAllWidgetStates()
-            end)
+            end
+        })
         row9:AddWidget(alphaOutCheck, 1)
         table_insert(allWidgets, alphaOutCheck)
         card4:AddRow(row9, 36)
@@ -256,12 +279,16 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
 
         -- Alpha Slider
         local row10 = GUIFrame:CreateRow(card4.content, 40)
-        local alphaSlider = GUIFrame:CreateSlider(row10, "Reduced Alpha", 0, 1, 0.05,
-            cdmDB.AlphaMountPet or 0.5, nil,
-            function(val)
+        local alphaSlider = GUIFrame:CreateSlider(row10, "Reduced Alpha", {
+            min = 0,
+            max = 1,
+            step = 0.05,
+            value = cdmDB.AlphaMountPet or 0.5,
+            callback = function(val)
                 cdmDB.AlphaMountPet = val
                 applyCDMSettings()
-            end)
+            end
+        })
         row10:AddWidget(alphaSlider, 1)
         table_insert(allWidgets, alphaSlider)
         table_insert(alphaWidgets, alphaSlider)
@@ -275,15 +302,6 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card5, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = false,
         showStrata = true,
         onChangeCallback = ApplySettings,

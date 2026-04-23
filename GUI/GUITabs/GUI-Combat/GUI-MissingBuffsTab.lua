@@ -18,10 +18,6 @@ local type = type
 -- Store current sub-tab
 local currentSubTab = "raidBuffs"
 
--- Cached tab bar reference
-local cachedTabBar = nil
-local cachedTabButtons = nil
-
 local allWidgets = {}
 
 -- Sub-tab definitions
@@ -248,23 +244,28 @@ local function CreateCategoryRow(card, categoryKey, label, iconSpellId, db, isFi
     row:AddWidget(iconWidget, 0.1)
 
     -- Enable checkbox
-    local enableCheck = GUIFrame:CreateCheckbox(row, label, db[categoryKey] and db[categoryKey].Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row, label, {
+        value = db[categoryKey] and db[categoryKey].Enabled ~= false,
+        callback = function(checked)
             db[categoryKey] = db[categoryKey] or {}
             db[categoryKey].Enabled = checked
             Refresh()
-        end)
+        end
+    })
     row:AddWidget(enableCheck, 0.5)
     table_insert(allWidgets, enableCheck)
 
     -- Load condition dropdown
-    local loadDropdown = GUIFrame:CreateDropdown(row, "Load", LOAD_CONDITIONS,
-        (db[categoryKey] and db[categoryKey].LoadCondition) or "ALWAYS", 60,
-        function(key)
+    local loadDropdown = GUIFrame:CreateDropdown(row, "Load", {
+        options = LOAD_CONDITIONS,
+        value = (db[categoryKey] and db[categoryKey].LoadCondition) or "ALWAYS",
+        labelWidth = 60,
+        callback = function(key)
             db[categoryKey] = db[categoryKey] or {}
             db[categoryKey].LoadCondition = key
             Refresh()
-        end)
+        end
+    })
     row:AddWidget(loadDropdown, 0.4)
     table_insert(allWidgets, loadDropdown)
 
@@ -285,14 +286,15 @@ local function RenderRaidBuffsTab(scrollChild, yOffset, activeCards)
     table_insert(activeCards, card1a)
 
     local row1a = GUIFrame:CreateRow(card1a.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1a, "Enable Missing Buffs", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1a, "Enable Missing Buffs", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyMissingBuffsState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Missing Buffs", "On", "Off"
-    )
+        msgPopup = true, msgText = "Missing Buffs", msgOn = "On", msgOff = "Off"
+    })
     row1a:AddWidget(enableCheck, 0.5)
     card1a:AddRow(row1a, 36)
 
@@ -307,19 +309,27 @@ local function RenderRaidBuffsTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local lowDurCheck = GUIFrame:CreateCheckbox(row1, "Warn Before Expiry", db.NotifyLowDuration ~= false,
-        function(checked)
+    local lowDurCheck = GUIFrame:CreateCheckbox(row1, "Warn Before Expiry", {
+        value = db.NotifyLowDuration ~= false,
+        callback = function(checked)
             db.NotifyLowDuration = checked
             ApplySettings()
-        end)
+        end
+    })
     row1:AddWidget(lowDurCheck, 0.5)
     table_insert(allWidgets, lowDurCheck)
 
-    local thresholdSlider = GUIFrame:CreateSlider(row1, "Minutes Left", 1, 60, 1, db.LowDurationThreshold or 5, 60,
-        function(val)
+    local thresholdSlider = GUIFrame:CreateSlider(row1, "Minutes Left", {
+        min = 1,
+        max = 60,
+        step = 1,
+        value = db.LowDurationThreshold or 5,
+        labelWidth = 60,
+        callback = function(val)
             db.LowDurationThreshold = val
             ApplySettings()
-        end)
+        end
+    })
     row1:AddWidget(thresholdSlider, 0.5)
     table_insert(allWidgets, thresholdSlider)
     card1:AddRow(row1, 36)
@@ -368,21 +378,31 @@ local function RenderRaidBuffsTab(scrollChild, yOffset, activeCards)
 
     -- Icon Size + Spacing
     local row3a = GUIFrame:CreateRow(card3.content, 36)
-    local iconSizeSlider = GUIFrame:CreateSlider(row3a, "Icon Size", 24, 96, 1,
-        db.RaidBuffDisplay.IconSize or db.IconSize or 48, 60,
-        function(val)
+    local iconSizeSlider = GUIFrame:CreateSlider(row3a, "Icon Size", {
+        min = 24,
+        max = 96,
+        step = 1,
+        value = db.RaidBuffDisplay.IconSize or db.IconSize or 48,
+        labelWidth = 60,
+        callback = function(val)
             db.RaidBuffDisplay.IconSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(iconSizeSlider, 0.5)
     table_insert(allWidgets, iconSizeSlider)
 
-    local iconSpacingSlider = GUIFrame:CreateSlider(row3a, "Icon Spacing", 0, 32, 1,
-        db.RaidBuffDisplay.IconSpacing or db.IconSpacing or 8, 60,
-        function(val)
+    local iconSpacingSlider = GUIFrame:CreateSlider(row3a, "Icon Spacing", {
+        min = 0,
+        max = 32,
+        step = 1,
+        value = db.RaidBuffDisplay.IconSpacing or db.IconSpacing or 8,
+        labelWidth = 60,
+        callback = function(val)
             db.RaidBuffDisplay.IconSpacing = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(iconSpacingSlider, 0.5)
     table_insert(allWidgets, iconSpacingSlider)
     card3:AddRow(row3a, 36)
@@ -416,33 +436,46 @@ local function RenderRaidBuffsTab(scrollChild, yOffset, activeCards)
 
     -- Font and Outline
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", fontList,
-        db.RaidBuffDisplay.FontFace or "Friz Quadrata TT", 120,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", {
+        options = fontList,
+        value = db.RaidBuffDisplay.FontFace or "Friz Quadrata TT",
+        labelWidth = 120,
+        searchable = true,
+        isFontPreview = true,
+        callback = function(key)
             db.RaidBuffDisplay.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end
+    })
     row4a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
-    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", outlineList,
-        db.RaidBuffDisplay.FontOutline or "OUTLINE", 80,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", {
+        options = outlineList,
+        value = db.RaidBuffDisplay.FontOutline or "OUTLINE",
+        labelWidth = 80,
+        callback = function(key)
             db.RaidBuffDisplay.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card4:AddRow(row4a, 36)
 
     -- Font Size
     local row4b = GUIFrame:CreateRow(card4.content, 36)
-    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", 8, 32, 1,
-        db.RaidBuffDisplay.FontSize or 14, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", {
+        min = 8,
+        max = 32,
+        step = 1,
+        value = db.RaidBuffDisplay.FontSize or 14,
+        labelWidth = 60,
+        callback = function(val)
             db.RaidBuffDisplay.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     card4:AddRow(row4b, 36)
@@ -458,12 +491,6 @@ local function RenderRaidBuffsTab(scrollChild, yOffset, activeCards)
     positionCard, yOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Position Settings",
         db = db.RaidBuffDisplay,
-        dbKeys = {
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-        },
         defaults = {
             selfPoint = "CENTER",
             anchorPoint = "CENTER",
@@ -606,34 +633,39 @@ local function CreateClassStanceCard(scrollChild, yOffset, classKey, title, icon
 
             -- Spec enable toggle
             local specEnabledKey = specName .. "Enabled"
-            local specToggle = GUIFrame:CreateCheckbox(specRow, specName,
-                db[classKey][specEnabledKey] == true,
-                function(checked)
+            local specToggle = GUIFrame:CreateCheckbox(specRow, specName, {
+                value = db[classKey][specEnabledKey] == true,
+                callback = function(checked)
                     db[classKey][specEnabledKey] = checked
                     UpdateSpecWidgetStates()
                     Refresh()
-                end)
+                end
+            })
             specRow:AddWidget(specToggle, 0.35)
             table_insert(allWidgets, specToggle)
 
             -- Reverse icon toggle: show current stance icon and hide missing text
             local reverseIconKey = specName .. "ReverseIcon"
-            local reverseToggle = GUIFrame:CreateCheckbox(specRow, "Reverse Icon",
-                db[classKey][reverseIconKey] == true,
-                function(checked)
+            local reverseToggle = GUIFrame:CreateCheckbox(specRow, "Reverse Icon", {
+                value = db[classKey][reverseIconKey] == true,
+                callback = function(checked)
                     db[classKey][reverseIconKey] = checked
                     Refresh()
-                end)
+                end
+            })
             specRow:AddWidget(reverseToggle, 0.25)
             table_insert(allWidgets, reverseToggle)
 
             -- Preferred stance dropdown
-            local specDropdown = GUIFrame:CreateDropdown(specRow, "Required", options,
-                db[classKey][specName] or options[1].key, 80,
-                function(key)
+            local specDropdown = GUIFrame:CreateDropdown(specRow, "Required", {
+                options = options,
+                value = db[classKey][specName] or options[1].key,
+                labelWidth = 80,
+                callback = function(key)
                     db[classKey][specName] = key
                     Refresh()
-                end)
+                end
+            })
             specRow:AddWidget(specDropdown, 0.3)
             table_insert(allWidgets, specDropdown)
 
@@ -667,12 +699,13 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
 
     local infoTextHeight = 90
     local infoRow = GUIFrame:CreateRow(infoCard.content, infoTextHeight)
-    local infoText = GUIFrame:CreateText(infoRow,
-        NRSKNUI:ColorTextByTheme("How it works"),
-        (NRSKNUI:ColorTextByTheme("• ") .. "Spec toggles: Enable/disable stance tracking for each spec\n" ..
+    local infoText = GUIFrame:CreateText(infoRow, NRSKNUI:ColorTextByTheme("How it works"), {
+        text = (NRSKNUI:ColorTextByTheme("• ") .. "Spec toggles: Enable/disable stance tracking for each spec\n" ..
             NRSKNUI:ColorTextByTheme("• ") .. "Required dropdown: Choose which stance is required for that spec\n" ..
             NRSKNUI:ColorTextByTheme("• ") .. "Reverse Icon: Show current stance icon instead of required stance, hides missing text"),
-        infoTextHeight, "hide")
+        height = infoTextHeight,
+        bgMode = "hide"
+    })
     infoRow:AddWidget(infoText, 1)
     table_insert(allWidgets, infoText)
     infoCard:AddRow(infoRow, infoTextHeight)
@@ -702,21 +735,23 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     local balanceIcon = CreateIconWidget(balanceRow, SPEC_ICONS.DRUID.Balance, 40)
     balanceRow:AddWidget(balanceIcon, 0.1)
 
-    local balanceToggle = GUIFrame:CreateCheckbox(balanceRow, "Balance: Require Moonkin Form",
-        db.Stances.DRUID.BalanceEnabled == true,
-        function(checked)
+    local balanceToggle = GUIFrame:CreateCheckbox(balanceRow, "Balance: Require Moonkin Form", {
+        value = db.Stances.DRUID.BalanceEnabled == true,
+        callback = function(checked)
             db.Stances.DRUID.BalanceEnabled = checked
             Refresh()
-        end)
+        end
+    })
     balanceRow:AddWidget(balanceToggle, 0.6)
     table_insert(allWidgets, balanceToggle)
 
-    local balanceCombatToggle = GUIFrame:CreateCheckbox(balanceRow, "Combat Only",
-        db.Stances.DRUID.BalanceCombatOnly == true,
-        function(checked)
+    local balanceCombatToggle = GUIFrame:CreateCheckbox(balanceRow, "Combat Only", {
+        value = db.Stances.DRUID.BalanceCombatOnly == true,
+        callback = function(checked)
             db.Stances.DRUID.BalanceCombatOnly = checked
             Refresh()
-        end)
+        end
+    })
     balanceRow:AddWidget(balanceCombatToggle, 0.3)
     table_insert(allWidgets, balanceCombatToggle)
     druidCard:AddRow(balanceRow, 40)
@@ -733,21 +768,23 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     local feralIcon = CreateIconWidget(feralRow, SPEC_ICONS.DRUID.Feral, 40)
     feralRow:AddWidget(feralIcon, 0.1)
 
-    local feralToggle = GUIFrame:CreateCheckbox(feralRow, "Feral: Require Cat Form",
-        db.Stances.DRUID.FeralEnabled == true,
-        function(checked)
+    local feralToggle = GUIFrame:CreateCheckbox(feralRow, "Feral: Require Cat Form", {
+        value = db.Stances.DRUID.FeralEnabled == true,
+        callback = function(checked)
             db.Stances.DRUID.FeralEnabled = checked
             Refresh()
-        end)
+        end
+    })
     feralRow:AddWidget(feralToggle, 0.6)
     table_insert(allWidgets, feralToggle)
 
-    local feralCombatToggle = GUIFrame:CreateCheckbox(feralRow, "Combat Only",
-        db.Stances.DRUID.FeralCombatOnly == true,
-        function(checked)
+    local feralCombatToggle = GUIFrame:CreateCheckbox(feralRow, "Combat Only", {
+        value = db.Stances.DRUID.FeralCombatOnly == true,
+        callback = function(checked)
             db.Stances.DRUID.FeralCombatOnly = checked
             Refresh()
-        end)
+        end
+    })
     feralRow:AddWidget(feralCombatToggle, 0.3)
     table_insert(allWidgets, feralCombatToggle)
     druidCard:AddRow(feralRow, 40)
@@ -764,21 +801,23 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     local guardianIcon = CreateIconWidget(guardianRow, SPEC_ICONS.DRUID.Guardian, 40)
     guardianRow:AddWidget(guardianIcon, 0.1)
 
-    local guardianToggle = GUIFrame:CreateCheckbox(guardianRow, "Guardian: Require Bear Form",
-        db.Stances.DRUID.GuardianEnabled == true,
-        function(checked)
+    local guardianToggle = GUIFrame:CreateCheckbox(guardianRow, "Guardian: Require Bear Form", {
+        value = db.Stances.DRUID.GuardianEnabled == true,
+        callback = function(checked)
             db.Stances.DRUID.GuardianEnabled = checked
             Refresh()
-        end)
+        end
+    })
     guardianRow:AddWidget(guardianToggle, 0.6)
     table_insert(allWidgets, guardianToggle)
 
-    local guardianCombatToggle = GUIFrame:CreateCheckbox(guardianRow, "Combat Only",
-        db.Stances.DRUID.GuardianCombatOnly == true,
-        function(checked)
+    local guardianCombatToggle = GUIFrame:CreateCheckbox(guardianRow, "Combat Only", {
+        value = db.Stances.DRUID.GuardianCombatOnly == true,
+        callback = function(checked)
             db.Stances.DRUID.GuardianCombatOnly = checked
             Refresh()
-        end)
+        end
+    })
     guardianRow:AddWidget(guardianCombatToggle, 0.3)
     table_insert(allWidgets, guardianCombatToggle)
     druidCard:AddRow(guardianRow, 40)
@@ -795,12 +834,13 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     local evokerIcon = CreateIconWidget(evokerRow, SPEC_ICONS.EVOKER.Augmentation, 40)
     evokerRow:AddWidget(evokerIcon, 0.1)
 
-    local evokerToggle = GUIFrame:CreateCheckbox(evokerRow, "Require Attunement",
-        db.Stances.EVOKER.AugmentationEnabled == true,
-        function(checked)
+    local evokerToggle = GUIFrame:CreateCheckbox(evokerRow, "Require Attunement", {
+        value = db.Stances.EVOKER.AugmentationEnabled == true,
+        callback = function(checked)
             db.Stances.EVOKER.AugmentationEnabled = checked
             Refresh()
-        end)
+        end
+    })
     evokerRow:AddWidget(evokerToggle, 0.5)
     table_insert(allWidgets, evokerToggle)
 
@@ -808,12 +848,15 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
         { key = "403264", text = "Black Attunement" },
         { key = "403265", text = "Bronze Attunement" },
     }
-    local evokerDropdown = GUIFrame:CreateDropdown(evokerRow, "Required", attunementOptions,
-        db.Stances.EVOKER.Augmentation or "403264", 100,
-        function(key)
+    local evokerDropdown = GUIFrame:CreateDropdown(evokerRow, "Required", {
+        options = attunementOptions,
+        value = db.Stances.EVOKER.Augmentation or "403264",
+        labelWidth = 100,
+        callback = function(key)
             db.Stances.EVOKER.Augmentation = key
             Refresh()
-        end)
+        end
+    })
     evokerRow:AddWidget(evokerDropdown, 0.4)
     table_insert(allWidgets, evokerDropdown)
     evokerCard:AddRow(evokerRow, 40)
@@ -830,11 +873,13 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     local priestIcon = CreateIconWidget(priestRow, SPEC_ICONS.PRIEST.Shadow, 40)
     priestRow:AddWidget(priestIcon, 0.1)
 
-    local priestToggle = GUIFrame:CreateCheckbox(priestRow, "Require Shadowform", db.Stances.PRIEST.ShadowEnabled == true,
-        function(checked)
+    local priestToggle = GUIFrame:CreateCheckbox(priestRow, "Require Shadowform", {
+        value = db.Stances.PRIEST.ShadowEnabled == true,
+        callback = function(checked)
             db.Stances.PRIEST.ShadowEnabled = checked
             Refresh()
-        end)
+        end
+    })
     priestRow:AddWidget(priestToggle, 0.9)
     table_insert(allWidgets, priestToggle)
     priestCard:AddRow(priestRow, 40)
@@ -851,12 +896,17 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
 
     -- Icon Size
     local row3a = GUIFrame:CreateRow(card3.content, 36)
-    local iconSizeSlider = GUIFrame:CreateSlider(row3a, "Icon Size", 24, 96, 1,
-        db.StanceDisplay.IconSize or 48, 60,
-        function(val)
+    local iconSizeSlider = GUIFrame:CreateSlider(row3a, "Icon Size", {
+        min = 24,
+        max = 96,
+        step = 1,
+        value = db.StanceDisplay.IconSize or 48,
+        labelWidth = 60,
+        callback = function(val)
             db.StanceDisplay.IconSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(iconSizeSlider, 1)
     table_insert(allWidgets, iconSizeSlider)
     card3:AddRow(row3a, 36)
@@ -890,33 +940,46 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
 
     -- Font and Outline
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", fontList,
-        db.StanceDisplay.FontFace or "Friz Quadrata TT", 120,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", {
+        options = fontList,
+        value = db.StanceDisplay.FontFace or "Friz Quadrata TT",
+        labelWidth = 120,
+        searchable = true,
+        isFontPreview = true,
+        callback = function(key)
             db.StanceDisplay.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end
+    })
     row4a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
-    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", outlineList,
-        db.StanceDisplay.FontOutline or "OUTLINE", 80,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", {
+        options = outlineList,
+        value = db.StanceDisplay.FontOutline or "OUTLINE",
+        labelWidth = 80,
+        callback = function(key)
             db.StanceDisplay.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card4:AddRow(row4a, 36)
 
     -- Font Size
     local row4b = GUIFrame:CreateRow(card4.content, 36)
-    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", 8, 32, 1,
-        db.StanceDisplay.FontSize or 14, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", {
+        min = 8,
+        max = 32,
+        step = 1,
+        value = db.StanceDisplay.FontSize or 14,
+        labelWidth = 60,
+        callback = function(val)
             db.StanceDisplay.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     card4:AddRow(row4b, 36)
@@ -931,12 +994,6 @@ local function RenderStancesTab(scrollChild, yOffset, activeCards)
     positionCard, yOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Position Settings",
         db = db.StanceDisplay,
-        dbKeys = {
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-        },
         defaults = {
             selfPoint = "CENTER",
             anchorPoint = "CENTER",
@@ -1016,32 +1073,35 @@ local function CreateStanceTextCard(scrollChild, yOffset, classKey, title, iconD
         row:AddWidget(iconWidget, 0.1)
 
         -- Enable toggle
-        local enableToggle = GUIFrame:CreateCheckbox(row, "Show",
-            db[classKey][stance.key].Enabled == true,
-            function(checked)
+        local enableToggle = GUIFrame:CreateCheckbox(row, "Show", {
+            value = db[classKey][stance.key].Enabled == true,
+            callback = function(checked)
                 db[classKey][stance.key].Enabled = checked
                 Refresh()
-            end)
+            end
+        })
         row:AddWidget(enableToggle, 0.15)
         table_insert(allWidgets, enableToggle)
 
         -- Color picker
-        local colorPicker = GUIFrame:CreateColorPicker(row, "Color",
-            db[classKey][stance.key].Color or { 1, 1, 1, 1 },
-            function(r, g, b, a)
+        local colorPicker = GUIFrame:CreateColorPicker(row, "Color", {
+            color = db[classKey][stance.key].Color or { 1, 1, 1, 1 },
+            callback = function(r, g, b, a)
                 db[classKey][stance.key].Color = { r, g, b, a }
                 ApplySettings()
-            end)
+            end
+        })
         row:AddWidget(colorPicker, 0.25)
         table_insert(allWidgets, colorPicker)
 
         -- Text input
-        local textInput = GUIFrame:CreateEditBox(row, "Text",
-            db[classKey][stance.key].Text or stance.text,
-            function(text)
+        local textInput = GUIFrame:CreateEditBox(row, "Text", {
+            value = db[classKey][stance.key].Text or stance.text,
+            callback = function(text)
                 db[classKey][stance.key].Text = text
                 ApplySettings()
-            end)
+            end
+        })
         row:AddWidget(textInput, 0.5)
         table_insert(allWidgets, textInput)
 
@@ -1082,12 +1142,14 @@ local function RenderStanceTextsTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Stance Text", db.StanceText.Enabled == true,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Stance Text", {
+        value = db.StanceText.Enabled == true,
+        callback = function(checked)
             db.StanceText.Enabled = checked
             Refresh()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row1:AddWidget(enableCheck, 1)
     table_insert(allWidgets, enableCheck)
     card1:AddRow(row1, 36)
@@ -1115,33 +1177,46 @@ local function RenderStanceTextsTab(scrollChild, yOffset, activeCards)
 
     -- Font and Outline
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", fontList,
-        db.StanceText.FontFace or "Friz Quadrata TT", 120,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row4a, "Font", {
+        options = fontList,
+        value = db.StanceText.FontFace or "Friz Quadrata TT",
+        labelWidth = 120,
+        searchable = true,
+        isFontPreview = true,
+        callback = function(key)
             db.StanceText.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end
+    })
     row4a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
-    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", outlineList,
-        db.StanceText.FontOutline or "OUTLINE", 80,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row4a, "Outline", {
+        options = outlineList,
+        value = db.StanceText.FontOutline or "OUTLINE",
+        labelWidth = 80,
+        callback = function(key)
             db.StanceText.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card4:AddRow(row4a, 36)
 
     -- Font Size
     local row4b = GUIFrame:CreateRow(card4.content, 36)
-    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", 8, 32, 1,
-        db.StanceText.FontSize or 14, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", {
+        min = 8,
+        max = 32,
+        step = 1,
+        value = db.StanceText.FontSize or 14,
+        labelWidth = 60,
+        callback = function(val)
             db.StanceText.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     card4:AddRow(row4b, 36)
@@ -1156,15 +1231,6 @@ local function RenderStanceTextsTab(scrollChild, yOffset, activeCards)
     positionCard, yOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Position Settings",
         db = db.StanceText,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         defaults = {
             anchorFrameType = "UIPARENT",
             selfPoint = "CENTER",
@@ -1195,157 +1261,24 @@ end
 -- Create Missing Buffs Panel
 ----------------------------------------------------------------
 local function CreateMissingBuffsPanel(container)
-    -- Full-size frame to take over content area
-    local panel = CreateFrame("Frame", nil, container)
-    panel:SetAllPoints()
+    -- Forward reference for tabPanel
+    local tabPanel
 
-    -- Tab bar at top
-    local tabBar = CreateFrame("Frame", nil, panel)
-    tabBar:SetHeight(TAB_BAR_HEIGHT)
-    tabBar:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
-    tabBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", 0, 0)
+    -- Render content for selected tab
+    local function RenderContent(tabId)
+        if not tabPanel then return end
 
-    -- Tab bar background
-    local tabBarBg = tabBar:CreateTexture(nil, "BACKGROUND")
-    tabBarBg:SetAllPoints()
-    tabBarBg:SetColorTexture(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
-
-    -- Tab bar bottom border
-    local tabBarBorder = tabBar:CreateTexture(nil, "ARTWORK")
-    tabBarBorder:SetHeight(1)
-    tabBarBorder:SetPoint("BOTTOMLEFT", tabBar, "BOTTOMLEFT", 0, 0)
-    tabBarBorder:SetPoint("BOTTOMRIGHT", tabBar, "BOTTOMRIGHT", 0, 0)
-    tabBarBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-
-    -- Cache tab bar
-    cachedTabBar = tabBar
-
-    -- Scroll frame below tab bar
-    local scrollbarWidth = Theme.scrollbarWidth or 16
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -1)
-    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
-
-    -- Style scrollbar
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        sb:ClearAllPoints()
-        sb:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -3, -(TAB_BAR_HEIGHT + Theme.paddingSmall + 13))
-        sb:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -3, Theme.paddingSmall + 13)
-        sb:SetWidth(scrollbarWidth - 4)
-
-        -- Hide default scrollbar decorations
-        if sb.Background then sb.Background:Hide() end
-        if sb.Top then sb.Top:Hide() end
-        if sb.Middle then sb.Middle:Hide() end
-        if sb.Bottom then sb.Bottom:Hide() end
-        if sb.trackBG then sb.trackBG:Hide() end
-        if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-        if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-        -- Hide thumb when not needed
-        sb:SetAlpha(0)
-
-        -- Force scroll values to snap to whole screen pixels
-        local isSnapping = false
-        local PIXEL_STEP = 8 / 15
-        sb:HookScript("OnValueChanged", function(self, value)
-            if isSnapping then return end
-            local scale = scrollFrame:GetEffectiveScale()
-            local screenPixels = value * scale
-            local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-            local snappedValue = snappedPixels / scale
-            if math.abs(value - snappedValue) > 0.001 then
-                isSnapping = true
-                self:SetValue(snappedValue)
-                isSnapping = false
-            end
-        end)
-    end
-
-    -- Scroll child
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    -- Track scrollbar visibility state
-    local scrollbarVisible = false
-    local baseWidth = Theme.contentWidth
-
-    -- Update scrollChild width based on scrollbar visibility
-    local function UpdateScrollChildWidth()
-        if scrollbarVisible then
-            scrollChild:SetWidth(baseWidth - scrollbarWidth)
-        else
-            scrollChild:SetWidth(baseWidth)
-        end
-    end
-
-    -- Show/hide scrollbar and adjust content width based on content height
-    local function UpdateScrollBarVisibility()
-        if scrollFrame.ScrollBar then
-            local contentHeight = scrollChild:GetHeight()
-            local frameHeight = scrollFrame:GetHeight()
-            local needsScrollbar = contentHeight > frameHeight
-
-            scrollbarVisible = needsScrollbar
-            scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-            UpdateScrollChildWidth()
-        end
-    end
-
-    -- Initial width setup
-    UpdateScrollChildWidth()
-
-    -- Hook events for visibility updates
-    scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
-    scrollChild:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-    scrollFrame:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-
-    -- Also update on show
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateScrollBarVisibility)
-    end)
-
-    -- Track cards for width updates
-    local activeCards = {}
-
-    -- Update all card widths when scrollChild resizes
-    local function UpdateCardWidths()
-        local newWidth = scrollChild:GetWidth()
-        for _, card in ipairs(activeCards) do
-            if card and card.SetWidth then
-                card:SetWidth(newWidth)
-            end
-        end
-    end
-
-    -- Hook scrollChild resize to update card widths
-    scrollChild:HookScript("OnSizeChanged", function(self, width, height)
-        UpdateCardWidths()
-    end)
-
-    -- Render content into scroll child
-    local function RenderContentIntoScrollChild(tabId)
         -- Clear widget tracking
         wipe(allWidgets)
 
-        -- Clear active cards tracking
-        wipe(activeCards)
+        -- Clear panel content
+        tabPanel:ClearContent()
 
-        -- Clear all existing children
-        for _, child in ipairs({ scrollChild:GetChildren() }) do
-            child:Hide()
-            child:SetParent(nil)
-        end
-
-        -- Clear any regions
-        for _, region in ipairs({ scrollChild:GetRegions() }) do
-            if region:GetObjectType() == "FontString" or region:GetObjectType() == "Texture" then
-                region:Hide()
-            end
-        end
-
+        local scrollChild = tabPanel.scrollChild
         local yOffset = Theme.paddingMedium
+
+        -- Collect cards for width updates
+        local activeCards = {}
 
         -- Render selected tab content
         if tabId == "raidBuffs" then
@@ -1356,143 +1289,31 @@ local function CreateMissingBuffsPanel(container)
             yOffset = RenderStanceTextsTab(scrollChild, yOffset, activeCards)
         end
 
+        -- Register cards for width updates
+        for _, card in ipairs(activeCards) do
+            tabPanel:RegisterCard(card)
+        end
+
         -- Update scroll child height
-        scrollChild:SetHeight(yOffset + Theme.paddingLarge)
+        tabPanel:SetContentHeight(yOffset + Theme.paddingLarge)
+
+        UpdateAllWidgetStates()
     end
 
-    -- Helper to update tab button visuals
-    local function UpdateTabVisuals(buttons, selectedId)
-        for _, btn in ipairs(buttons) do
-            if btn.tabId == selectedId then
-                btn.label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-                btn.underline:Show()
-                btn.selectedOverlay:Show()
-            else
-                btn.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-                btn.underline:Hide()
-                btn.selectedOverlay:Hide()
-            end
+    -- Create sub-tab panel using the widget
+    tabPanel = NRSKNUI.GUI.CreateSubTabPanel(container, SUB_TABS, {
+        tabBarHeight = TAB_BAR_HEIGHT,
+        defaultTab = currentSubTab,
+        onTabChanged = function(tabId)
+            currentSubTab = tabId
+            RenderContent(tabId)
         end
-    end
-
-    -- Create tab buttons
-    local tabButtons = {}
-    local minPadding = Theme.paddingMedium * 2
-    local totalTextWidth = 0
-
-    for i, tabDef in ipairs(SUB_TABS) do
-        local btn = CreateFrame("Button", nil, tabBar)
-        btn:SetHeight(TAB_BAR_HEIGHT)
-        btn.tabId = tabDef.id
-        btn.tabIndex = i
-
-        -- Background
-        local hoverBg = btn:CreateTexture(nil, "BACKGROUND", nil, 1)
-        hoverBg:SetAllPoints()
-        hoverBg:SetColorTexture(1, 1, 1, 0.05)
-        hoverBg:Hide()
-        btn.hoverBg = hoverBg
-
-        -- Selected overlay
-        local selectedOverlay = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
-        selectedOverlay:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
-        selectedOverlay:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        selectedOverlay:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.1)
-        selectedOverlay:Hide()
-        btn.selectedOverlay = selectedOverlay
-
-        -- Label
-        local label = btn:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        if NRSKNUI.ApplyThemeFont then
-            NRSKNUI:ApplyThemeFont(label, "small")
-        else
-            label:SetFontObject("GameFontNormalSmall")
-        end
-        label:SetText(tabDef.text)
-        label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-        btn.label = label
-
-        -- Measure text width for proportional layout
-        local textWidth = label:GetStringWidth()
-        btn.textWidth = textWidth
-        totalTextWidth = totalTextWidth + textWidth
-
-        -- Underline
-        local underline = btn:CreateTexture(nil, "OVERLAY")
-        underline:SetHeight(2)
-        underline:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 0, 0)
-        underline:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        underline:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        underline:Hide()
-        btn.underline = underline
-
-        -- Mouse events
-        btn:SetScript("OnEnter", function(self)
-            if currentSubTab ~= self.tabId then
-                self.hoverBg:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self.hoverBg:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if currentSubTab ~= self.tabId then
-                currentSubTab = self.tabId
-                UpdateTabVisuals(cachedTabButtons, currentSubTab)
-                RenderContentIntoScrollChild(currentSubTab)
-            end
-        end)
-
-        table_insert(tabButtons, btn)
-    end
-
-    -- Cache tab buttons for callbacks
-    cachedTabButtons = tabButtons
-
-    -- Function to layout tabs proportionally based on text width
-    local function LayoutTabs(barWidth)
-        if barWidth <= 0 then return end
-
-        local numTabs = #tabButtons
-        local totalMinWidth = totalTextWidth + (minPadding * numTabs)
-
-        -- Calculate extra space to distribute
-        local extraSpace = math.max(0, barWidth - totalMinWidth)
-        local extraPerTab = extraSpace / numTabs
-
-        local xOffset = 0
-        for _, btn in ipairs(tabButtons) do
-            local tabWidth = btn.textWidth + minPadding + extraPerTab
-
-            btn:ClearAllPoints()
-            btn:SetPoint("TOP", tabBar, "TOP", 0, 0)
-            btn:SetPoint("BOTTOM", tabBar, "BOTTOM", 0, 0)
-            btn:SetPoint("LEFT", tabBar, "LEFT", xOffset, 0)
-            btn:SetWidth(tabWidth)
-
-            xOffset = xOffset + tabWidth
-        end
-    end
-
-    -- Initial layout
-    LayoutTabs(tabBar:GetWidth())
-
-    -- Update tab positions when tabBar size changes
-    tabBar:SetScript("OnSizeChanged", function(self, width, height)
-        LayoutTabs(width)
-    end)
-
-    -- Initial tab selection and visuals
-    UpdateTabVisuals(tabButtons, currentSubTab)
+    })
 
     -- Render initial content
-    RenderContentIntoScrollChild(currentSubTab)
+    RenderContent(currentSubTab)
 
-    UpdateAllWidgetStates()
-    return panel
+    return tabPanel.panel
 end
 
 ----------------------------------------------------------------

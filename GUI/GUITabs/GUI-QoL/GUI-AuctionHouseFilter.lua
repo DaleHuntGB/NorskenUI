@@ -62,14 +62,15 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Auction House Filter", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Auction House Filter", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Auction House Filter", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Auction House Filter", "On", "Off"
-    )
+        msgPopup = true, msgText = "Auction House Filter", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -84,19 +85,22 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     local row2a = GUIFrame:CreateRow(card2.content, 40)
 
     -- Current Expansion Toggle
-    local ahExpansionCheck = GUIFrame:CreateCheckbox(row2a, "Current Expansion Only",
-        db.AuctionHouse.CurrentExpansion ~= false,
-        function(checked)
+    local ahExpansionCheck = GUIFrame:CreateCheckbox(row2a, "Current Expansion Only", {
+        value = db.AuctionHouse.CurrentExpansion ~= false,
+        callback = function(checked)
             db.AuctionHouse.CurrentExpansion = checked
-        end)
+        end
+    })
     row2a:AddWidget(ahExpansionCheck, 0.5)
     table_insert(allWidgets, ahExpansionCheck)
 
     -- Focus Search Bar Toggle
-    local ahFocusCheck = GUIFrame:CreateCheckbox(row2a, "Focus Search Bar", db.AuctionHouse.FocusSearchBar == true,
-        function(checked)
+    local ahFocusCheck = GUIFrame:CreateCheckbox(row2a, "Focus Search Bar", {
+        value = db.AuctionHouse.FocusSearchBar == true,
+        callback = function(checked)
             db.AuctionHouse.FocusSearchBar = checked
-        end)
+        end
+    })
     row2a:AddWidget(ahFocusCheck, 0.5)
     table_insert(allWidgets, ahFocusCheck)
 
@@ -113,19 +117,22 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     local row3a = GUIFrame:CreateRow(card3.content, 40)
 
     -- Current Expansion Toggle
-    local coExpansionCheck = GUIFrame:CreateCheckbox(row3a, "Current Expansion Only",
-        db.CraftOrders.CurrentExpansion ~= false,
-        function(checked)
+    local coExpansionCheck = GUIFrame:CreateCheckbox(row3a, "Current Expansion Only", {
+        value = db.CraftOrders.CurrentExpansion ~= false,
+        callback = function(checked)
             db.CraftOrders.CurrentExpansion = checked
-        end)
+        end
+    })
     row3a:AddWidget(coExpansionCheck, 0.5)
     table_insert(allWidgets, coExpansionCheck)
 
     -- Focus Search Bar Toggle
-    local coFocusCheck = GUIFrame:CreateCheckbox(row3a, "Focus Search Bar", db.CraftOrders.FocusSearchBar == true,
-        function(checked)
+    local coFocusCheck = GUIFrame:CreateCheckbox(row3a, "Focus Search Bar", {
+        value = db.CraftOrders.FocusSearchBar == true,
+        callback = function(checked)
             db.CraftOrders.FocusSearchBar = checked
-        end)
+        end
+    })
     row3a:AddWidget(coFocusCheck, 0.5)
     table_insert(allWidgets, coFocusCheck)
 
@@ -147,20 +154,23 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     local row4a = GUIFrame:CreateRow(card4.content, 40)
 
     -- Current Expansion Toggle
-    local atrExpansionCheck = GUIFrame:CreateCheckbox(row4a, "Current Expansion Only",
-        db.Auctionator.CurrentExpansion ~= false,
-        function(checked)
+    local atrExpansionCheck = GUIFrame:CreateCheckbox(row4a, "Current Expansion Only", {
+        value = db.Auctionator.CurrentExpansion ~= false,
+        callback = function(checked)
             db.Auctionator.CurrentExpansion = checked
-        end)
+        end
+    })
     row4a:AddWidget(atrExpansionCheck, 0.5)
     table_insert(allWidgets, atrExpansionCheck)
     table_insert(auctionatorWidgets, atrExpansionCheck)
 
     -- Focus Search Bar Toggle
-    local atrFocusCheck = GUIFrame:CreateCheckbox(row4a, "Focus Search Bar", db.Auctionator.FocusSearchBar == true,
-        function(checked)
+    local atrFocusCheck = GUIFrame:CreateCheckbox(row4a, "Focus Search Bar", {
+        value = db.Auctionator.FocusSearchBar == true,
+        callback = function(checked)
             db.Auctionator.FocusSearchBar = checked
-        end)
+        end
+    })
     row4a:AddWidget(atrFocusCheck, 0.5)
     table_insert(allWidgets, atrFocusCheck)
     table_insert(auctionatorWidgets, atrFocusCheck)

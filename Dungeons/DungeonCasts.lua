@@ -227,20 +227,20 @@ function DC:ConfigureBar(bar)
     bar.nameText:ClearAllPoints()
     bar.nameText:SetPoint("LEFT", bar.castBar, "LEFT", 4, 0)
     bar.nameText:SetJustifyH(textDb.NameAlign)
-    NRSKNUI:ApplyFont(bar.nameText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
+    NRSKNUI:ApplyFontToText(bar.nameText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
     bar.nameText:SetTextColor(tc[1], tc[2], tc[3], tc[4])
 
     bar.timeText:ClearAllPoints()
     bar.timeText:SetPoint("RIGHT", bar.castBar, "RIGHT", -4, 0)
     bar.timeText:SetJustifyH(textDb.TimeAlign)
-    NRSKNUI:ApplyFont(bar.timeText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
+    NRSKNUI:ApplyFontToText(bar.timeText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
     bar.timeText:SetTextColor(tc[1], tc[2], tc[3], tc[4])
     bar.timeText:SetShown(textDb.ShowTime)
 
     -- Target text (positioned between name and time)
     local targetDb = db.Target
     bar.targetText:ClearAllPoints()
-    NRSKNUI:ApplyFont(bar.targetText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
+    NRSKNUI:ApplyFontToText(bar.targetText, barDb.FontFace, barDb.FontSize, barDb.FontOutline)
     bar.targetText:SetTextColor(tc[1], tc[2], tc[3], tc[4])
     if targetDb and targetDb.Position == "LEFT" then
         bar.targetText:SetPoint("LEFT", bar.nameText, "RIGHT", 2, 0)
@@ -369,14 +369,31 @@ function DC:UpdateTargetText(bar, targetName, targetClass)
     local targetDb = self.db.Target
     if not targetDb or not targetDb.Enabled or not targetName then
         bar.targetText:Hide()
+        if bar.targetText.softOutline then
+            bar.targetText.softOutline:SetShown(false)
+        end
         return
     end
 
-    -- Get separator
     local separator = TARGET_SEPARATORS[targetDb.Separator] or targetDb.Separator or "»"
+
+    -- Build plain text for soft outline (no color codes)
+    local plainText
+    if separator ~= "" then
+        if targetDb.Position == "LEFT" then
+            plainText = separator .. " " .. targetName
+        else
+            plainText = targetName .. " " .. separator
+        end
+    else
+        plainText = targetName
+    end
+
+    -- Build colored display text (concatenation works with secrets)
     local tc = self.db.Text.TextColor
     local textColorMarkup = string.format("|cff%02x%02x%02x", tc[1] * 255, tc[2] * 255, tc[3] * 255)
     local coloredTarget
+
     if targetDb.ShowClassColor and targetClass then
         local color = C_ClassColor.GetClassColor(targetClass)
         if color and color.WrapTextInColorCode then
@@ -388,10 +405,8 @@ function DC:UpdateTargetText(bar, targetName, targetClass)
         coloredTarget = textColorMarkup .. targetName .. "|r"
     end
 
-    -- Build display text with separator
     local coloredSeparator = textColorMarkup .. separator .. "|r"
     local displayText
-
     if separator ~= "" then
         if targetDb.Position == "LEFT" then
             displayText = coloredSeparator .. " " .. coloredTarget
@@ -403,6 +418,12 @@ function DC:UpdateTargetText(bar, targetName, targetClass)
     end
 
     bar.targetText:SetText(displayText)
+
+    if bar.targetText.softOutline then
+        bar.targetText.softOutline:SetShown(true)
+        bar.targetText.softOutline:SetText(plainText)
+    end
+
     bar.targetText:Show()
 end
 
@@ -412,10 +433,9 @@ end
 function DC:FetchCastData(unit)
     local name, text, texture, _, _, _, castID, notInterruptible, spellID = UnitCastingInfo(unit)
     if name then
-        -- Fetch target information
-        local targetToken = UnitSpellTargetName and UnitSpellTargetName(unit) or nil
-        local targetName = targetToken and (UnitName(targetToken) or targetToken) or nil
-        local targetClass = targetToken and UnitSpellTargetClass and UnitSpellTargetClass(unit) or nil
+        -- Fetch target information (UnitSpellTargetName returns the name directly)
+        local targetName = UnitSpellTargetName and UnitSpellTargetName(unit) or nil
+        local targetClass = targetName and UnitSpellTargetClass and UnitSpellTargetClass(unit) or nil
 
         return {
             name = name,
@@ -435,10 +455,9 @@ function DC:FetchCastData(unit)
 
     name, text, texture, _, _, _, notInterruptible, spellID = UnitChannelInfo(unit)
     if name then
-        -- Fetch target information for channels too
-        local targetToken = UnitSpellTargetName and UnitSpellTargetName(unit) or nil
-        local targetName = targetToken and (UnitName(targetToken) or targetToken) or nil
-        local targetClass = targetToken and UnitSpellTargetClass and UnitSpellTargetClass(unit) or nil
+        -- Fetch target information for channels (UnitSpellTargetName returns the name directly)
+        local targetName = UnitSpellTargetName and UnitSpellTargetName(unit) or nil
+        local targetClass = targetName and UnitSpellTargetClass and UnitSpellTargetClass(unit) or nil
 
         return {
             name = name,

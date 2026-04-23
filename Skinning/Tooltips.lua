@@ -211,8 +211,14 @@ local function RegisterTooltipProcessors()
             return
         end
 
+        -- Check tooltip data for guid before calling GetUnit to avoid taint with secret values
+        local tooltipData = tooltip:GetTooltipData()
+        if not tooltipData or not tooltipData.guid or issecretvalue(tooltipData.guid) then
+            return
+        end
+
         local _, unit, guid = tooltip:GetUnit()
-        if not guid then
+        if not guid or issecretvalue(unit) then
             return
         end
 
@@ -400,14 +406,11 @@ do
             local getter = getters[self.processingInfo.getterName]
             if getter then
                 local auraInfo = getter(unpack(self.processingInfo.getterArgs))
-                if auraInfo and auraInfo.sourceUnit then
+                if auraInfo and auraInfo.sourceUnit and not issecretvalue(auraInfo.sourceUnit) then
                     local name = UnitName(auraInfo.sourceUnit)
-
-                    if not issecretvalue(auraInfo.sourceUnit) then
-                        local _, classToken = UnitClass(auraInfo.sourceUnit)
-                        if classToken then
-                            name = C_ClassColor.GetClassColor(classToken):WrapTextInColorCode(name)
-                        end
+                    local _, classToken = UnitClass(auraInfo.sourceUnit)
+                    if classToken then
+                        name = C_ClassColor.GetClassColor(classToken):WrapTextInColorCode(name)
                     end
 
                     self:AddLine(" ")

@@ -58,18 +58,21 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Pet Status Texts", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Pet Status Texts", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Pet Status Texts", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
-            -- Show preview when enabling (works for non-pet classes too)
             if checked and mod then
                 mod:ShowPreview()
             end
         end,
-        true, "Pet Status Texts", "On", "Off"
-    )
+        msgPopup = true,
+        msgText = "Pet Status Texts",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -83,60 +86,69 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
 
     -- Row 1: Pet Missing - Text + Color
     local row2a = GUIFrame:CreateRow(card2.content, 38)
-    local petMissingInput = GUIFrame:CreateEditBox(row2a, "Pet Missing Text", db.PetMissing or "PET MISSING",
-        function(val)
+    local petMissingInput = GUIFrame:CreateEditBox(row2a, "Pet Missing Text", {
+        value = db.PetMissing or "PET MISSING",
+        callback = function(val)
             db.PetMissing = val
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(petMissingInput, 0.5)
     table_insert(allWidgets, petMissingInput)
 
-    local missingColorPicker = GUIFrame:CreateColorPicker(row2a, "Missing Color",
-        db.MissingColor or { 1, 0.82, 0, 1 },
-        function(r, g, b, a)
+    local missingColorPicker = GUIFrame:CreateColorPicker(row2a, "Missing Color", {
+        color = db.MissingColor or { 1, 0.82, 0, 1 },
+        callback = function(r, g, b, a)
             db.MissingColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(missingColorPicker, 0.5)
     table_insert(allWidgets, missingColorPicker)
     card2:AddRow(row2a, 38)
 
     -- Row 2: Pet Dead - Text + Color
     local row2b = GUIFrame:CreateRow(card2.content, 38)
-    local petDeadInput = GUIFrame:CreateEditBox(row2b, "Pet Dead Text", db.PetDead or "PET DEAD",
-        function(val)
+    local petDeadInput = GUIFrame:CreateEditBox(row2b, "Pet Dead Text", {
+        value = db.PetDead or "PET DEAD",
+        callback = function(val)
             db.PetDead = val
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(petDeadInput, 0.5)
     table_insert(allWidgets, petDeadInput)
 
-    local deadColorPicker = GUIFrame:CreateColorPicker(row2b, "Dead Color",
-        db.DeadColor or { 1, 0.2, 0.2, 1 },
-        function(r, g, b, a)
+    local deadColorPicker = GUIFrame:CreateColorPicker(row2b, "Dead Color", {
+        color = db.DeadColor or { 1, 0.2, 0.2, 1 },
+        callback = function(r, g, b, a)
             db.DeadColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(deadColorPicker, 0.5)
     table_insert(allWidgets, deadColorPicker)
     card2:AddRow(row2b, 38)
 
     -- Row 3: Pet Passive - Text + Color
     local row2c = GUIFrame:CreateRow(card2.content, 38)
-    local petPassiveInput = GUIFrame:CreateEditBox(row2c, "Pet Passive Text", db.PetPassive or "PET PASSIVE",
-        function(val)
+    local petPassiveInput = GUIFrame:CreateEditBox(row2c, "Pet Passive Text", {
+        value = db.PetPassive or "PET PASSIVE",
+        callback = function(val)
             db.PetPassive = val
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(petPassiveInput, 0.5)
     table_insert(allWidgets, petPassiveInput)
 
-    local passiveColorPicker = GUIFrame:CreateColorPicker(row2c, "Passive Color",
-        db.PassiveColor or { 0.3, 0.7, 1, 1 },
-        function(r, g, b, a)
+    local passiveColorPicker = GUIFrame:CreateColorPicker(row2c, "Passive Color", {
+        color = db.PassiveColor or { 0.3, 0.7, 1, 1 },
+        callback = function(r, g, b, a)
             db.PassiveColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(passiveColorPicker, 0.5)
     table_insert(allWidgets, passiveColorPicker)
     card2:AddRow(row2c, 38)
@@ -159,20 +171,31 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
 
     -- Font Face and Outline Dropdowns
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     -- Font Size Slider
-    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", 8, 72, 1, db.FontSize or 24, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", {
+        min = 8,
+        max = 72,
+        step = 1,
+        value = db.FontSize or 24,
+        labelWidth = 60,
+        callback = function(val)
             db.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(fontSizeSlider, 0.5)
     table_insert(allWidgets, fontSizeSlider)
     card3:AddRow(row3a, 40)
@@ -185,11 +208,14 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE", text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(outlineDropdown, 1)
     table_insert(allWidgets, outlineDropdown)
 
@@ -202,15 +228,6 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card4, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         defaults = {
             anchorFrameType = "UIPARENT",
             anchorFrameFrame = "UIParent",

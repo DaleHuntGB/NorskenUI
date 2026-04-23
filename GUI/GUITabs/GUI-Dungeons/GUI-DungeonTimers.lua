@@ -13,28 +13,23 @@ local CreateFrame = CreateFrame
 local C_Spell = C_Spell
 local PlaySoundFile = PlaySoundFile
 
--- Dungeon mapping (sidebar ID -> db key -> display name)
+-- Dungeon mapping, sidebar ID -> db key -> display name
 local DUNGEON_INFO = {
-    Dungeon_MagistersTerrace   = { key = "MagistersTerrace",   name = "Magisters' Terrace" },
-    Dungeon_MaisaraCaverns     = { key = "MaisaraCaverns",     name = "Maisara Caverns" },
-    Dungeon_NexusPointXenas    = { key = "NexusPointXenas",    name = "Nexus-Point Xenas" },
-    Dungeon_WindrunnerSpire    = { key = "WindrunnerSpire",    name = "Windrunner Spire" },
-    Dungeon_AlgetharAcademy    = { key = "AlgetharAcademy",    name = "Algeth'ar Academy" },
-    Dungeon_PitOfSaron         = { key = "PitOfSaron",         name = "Pit of Saron" },
-    Dungeon_SeatOfTriumvirate  = { key = "SeatOfTriumvirate",  name = "Seat of the Triumvirate" },
-    Dungeon_Skyreach           = { key = "Skyreach",           name = "Skyreach" },
+    Dungeon_MagistersTerrace  = { key = "MagistersTerrace", name = "Magisters' Terrace" },
+    Dungeon_MaisaraCaverns    = { key = "MaisaraCaverns", name = "Maisara Caverns" },
+    Dungeon_NexusPointXenas   = { key = "NexusPointXenas", name = "Nexus-Point Xenas" },
+    Dungeon_WindrunnerSpire   = { key = "WindrunnerSpire", name = "Windrunner Spire" },
+    Dungeon_AlgetharAcademy   = { key = "AlgetharAcademy", name = "Algeth'ar Academy" },
+    Dungeon_PitOfSaron        = { key = "PitOfSaron", name = "Pit of Saron" },
+    Dungeon_SeatOfTriumvirate = { key = "SeatOfTriumvirate", name = "Seat of the Triumvirate" },
+    Dungeon_Skyreach          = { key = "Skyreach", name = "Skyreach" },
 }
-
--- Check if a sidebar ID is a dungeon
-local function IsDungeonId(id)
-    return DUNGEON_INFO[id] ~= nil
-end
 
 -- Sub-tab definitions
 local SUB_TABS = {
     { id = "trigger", text = "Trigger" },
     { id = "display", text = "Display" },
-    { id = "load", text = "Load" },
+    { id = "load",    text = "Load" },
     { id = "actions", text = "Actions" },
 }
 
@@ -64,7 +59,7 @@ local function StopPreview()
     currentPreviewTimer = nil
     local mod = GetModule()
     if mod then
-        -- Disable previews first (this also hides preview frames)
+        -- Disable previews first
         if mod.DisablePreviews then
             mod:DisablePreviews()
         end
@@ -77,10 +72,7 @@ end
 
 -- Start looping preview for all timers in a dungeon
 local function StartDungeonPreview(dungeonKey)
-    -- CRITICAL: Only allow previews if GUI is actually open
-    if not GUIFrame or not GUIFrame:IsShown() then
-        return
-    end
+    if not GUIFrame or not GUIFrame:IsShown() then return end
 
     -- Stop any existing preview first
     StopPreview()
@@ -94,13 +86,10 @@ local function StartDungeonPreview(dungeonKey)
     if not mod then return end
 
     -- Enable previews before starting
-    if mod.EnablePreviews then
-        mod:EnablePreviews()
-    end
+    if mod.EnablePreviews then mod:EnablePreviews() end
 
     -- Create the loop callback with closure over current state
     local function loopCallback()
-        -- CRITICAL: Only restart if GUI is still open
         if not GUIFrame or not GUIFrame:IsShown() then
             return
         end
@@ -119,7 +108,7 @@ local function StartDungeonPreview(dungeonKey)
     end
 end
 
--- Register global cleanup callbacks (once, at load time)
+-- Register global cleanup callbacks
 GUIFrame.contentCleanupCallbacks = GUIFrame.contentCleanupCallbacks or {}
 GUIFrame.contentCleanupCallbacks["DungeonTimers"] = StopPreview
 
@@ -138,7 +127,7 @@ local function GetDungeonState(dungeonKey)
             spellSearchFilter = "",
         }
     end
-    -- Validate current sub-tab (in case old state had removed tabs)
+    -- Validate current sub-tab
     if not VALID_SUB_TABS[dungeonStates[dungeonKey].currentSubTab] then
         dungeonStates[dungeonKey].currentSubTab = "trigger"
     end
@@ -211,7 +200,8 @@ local function CreateSpellIconPreview(parent, spellId, size)
     local nameLabel = container:CreateFontString(nil, "OVERLAY")
     nameLabel:SetPoint("LEFT", iconFrame, "RIGHT", 8, 0)
     nameLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", (Theme.fontSizeSmall or 11), "OUTLINE")
-    nameLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+    nameLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+        (Theme.textPrimary or { 1, 1, 1 })[3], 1)
     nameLabel:SetText(spellName)
 
     return container
@@ -283,9 +273,7 @@ local function CreateDungeonPanel(dungeonId)
             end
         end)
 
-        ----------------------------------------------------------------
         -- Forward declarations for functions used before definition
-        ----------------------------------------------------------------
         local RenderContent
         local BuildTimerList
         local UpdateTimerListSelection
@@ -305,14 +293,16 @@ local function CreateDungeonPanel(dungeonId)
         -- Sidebar background
         local sidebarBg = sidebar:CreateTexture(nil, "BACKGROUND")
         sidebarBg:SetAllPoints()
-        sidebarBg:SetColorTexture((Theme.bgDark or {0.08,0.08,0.08,1})[1], (Theme.bgDark or {0.08,0.08,0.08,1})[2], (Theme.bgDark or {0.08,0.08,0.08,1})[3], 1)
+        sidebarBg:SetColorTexture((Theme.bgDark or { 0.08, 0.08, 0.08, 1 })[1], (Theme.bgDark or { 0.08, 0.08, 0.08, 1 })
+            [2], (Theme.bgDark or { 0.08, 0.08, 0.08, 1 })[3], 1)
 
         -- Sidebar right border
         local sidebarBorder = sidebar:CreateTexture(nil, "ARTWORK")
         sidebarBorder:SetWidth(1)
         sidebarBorder:SetPoint("TOPRIGHT", sidebar, "TOPRIGHT", 0, 0)
         sidebarBorder:SetPoint("BOTTOMRIGHT", sidebar, "BOTTOMRIGHT", 0, 0)
-        sidebarBorder:SetColorTexture((Theme.border or {0.3,0.3,0.3,1})[1], (Theme.border or {0.3,0.3,0.3,1})[2], (Theme.border or {0.3,0.3,0.3,1})[3], 1)
+        sidebarBorder:SetColorTexture((Theme.border or { 0.3, 0.3, 0.3, 1 })[1], (Theme.border or { 0.3, 0.3, 0.3, 1 })
+            [2], (Theme.border or { 0.3, 0.3, 0.3, 1 })[3], 1)
 
         ----------------------------------------------------------------
         -- Sub-tab bar (next to sidebar)
@@ -324,61 +314,51 @@ local function CreateDungeonPanel(dungeonId)
 
         local tabBarBg = tabBar:CreateTexture(nil, "BACKGROUND")
         tabBarBg:SetAllPoints()
-        tabBarBg:SetColorTexture((Theme.bgMedium or {0.12,0.12,0.12,1})[1], (Theme.bgMedium or {0.12,0.12,0.12,1})[2], (Theme.bgMedium or {0.12,0.12,0.12,1})[3], 1)
+        tabBarBg:SetColorTexture((Theme.bgMedium or { 0.12, 0.12, 0.12, 1 })[1],
+            (Theme.bgMedium or { 0.12, 0.12, 0.12, 1 })[2], (Theme.bgMedium or { 0.12, 0.12, 0.12, 1 })[3], 1)
 
         local tabBarBorder = tabBar:CreateTexture(nil, "ARTWORK")
         tabBarBorder:SetHeight(1)
         tabBarBorder:SetPoint("BOTTOMLEFT", tabBar, "BOTTOMLEFT", 0, 0)
         tabBarBorder:SetPoint("BOTTOMRIGHT", tabBar, "BOTTOMRIGHT", 0, 0)
-        tabBarBorder:SetColorTexture((Theme.border or {0.3,0.3,0.3,1})[1], (Theme.border or {0.3,0.3,0.3,1})[2], (Theme.border or {0.3,0.3,0.3,1})[3], 1)
+        tabBarBorder:SetColorTexture((Theme.border or { 0.3, 0.3, 0.3, 1 })[1], (Theme.border or { 0.3, 0.3, 0.3, 1 })
+            [2], (Theme.border or { 0.3, 0.3, 0.3, 1 })[3], 1)
 
         -- Timer list scroll area (below buttons)
-        local listArea = CreateFrame("ScrollFrame", nil, sidebar, "UIPanelScrollFrameTemplate")
+        local listArea = CreateFrame("ScrollFrame", nil, sidebar)
         listArea:SetPoint("TOPLEFT", sidebar, "TOPLEFT", LIST_PADDING, -(BUTTON_HEIGHT + LIST_PADDING * 2 + 1))
         listArea:SetPoint("BOTTOMRIGHT", sidebar, "BOTTOMRIGHT", -LIST_PADDING, LIST_PADDING)
-
-        -- Hide list area scrollbar decorations and set up visibility control
-        local listScrollbarVisible = false
-        if listArea.ScrollBar then
-            local lsb = listArea.ScrollBar
-            lsb:SetWidth(8)
-            lsb:ClearAllPoints()
-            lsb:SetPoint("TOPRIGHT", listArea, "TOPRIGHT", 0, -2)
-            lsb:SetPoint("BOTTOMRIGHT", listArea, "BOTTOMRIGHT", 0, 2)
-            if lsb.Background then lsb.Background:Hide() end
-            if lsb.Top then lsb.Top:Hide() end
-            if lsb.Middle then lsb.Middle:Hide() end
-            if lsb.Bottom then lsb.Bottom:Hide() end
-            if lsb.trackBG then lsb.trackBG:Hide() end
-            if lsb.ScrollUpButton then lsb.ScrollUpButton:Hide() end
-            if lsb.ScrollDownButton then lsb.ScrollDownButton:Hide() end
-            -- Start hidden
-            lsb:SetAlpha(0)
-        end
+        listArea:SetClipsChildren(true)
 
         local listChild = CreateFrame("Frame", nil, listArea)
         listChild:SetHeight(1)
         listArea:SetScrollChild(listChild)
 
+        -- Create custom styled scrollbar for list area
+        local listScrollbar = NRSKNUI.GUI.CreateScrollbar(listArea, {
+            width = 10,
+            thumbHeight = 30,
+            padding = { top = 0, bottom = 0, right = -LIST_PADDING },
+            scrollStep = 30
+        })
+
+        -- Track list scrollbar visibility
+        local listScrollbarVisible = false
+
         -- Function to update list scrollbar visibility
         local function UpdateListScrollbarVisibility()
-            if listArea.ScrollBar then
-                local contentHeight = listChild:GetHeight()
-                local frameHeight = listArea:GetHeight()
-                local needsScrollbar = contentHeight > frameHeight
-                listScrollbarVisible = needsScrollbar
-                listArea.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-                -- Adjust child width based on scrollbar visibility
-                if needsScrollbar then
-                    listChild:SetWidth(SIDEBAR_WIDTH - LIST_PADDING * 2 - 10)
-                else
-                    listChild:SetWidth(SIDEBAR_WIDTH - LIST_PADDING * 2)
-                end
+            local contentHeight = listChild:GetHeight()
+            local frameHeight = listArea:GetHeight()
+            listScrollbarVisible = listScrollbar:UpdateVisibility(contentHeight, frameHeight)
+            -- Adjust child width based on scrollbar visibility
+            if listScrollbarVisible then
+                listChild:SetWidth(SIDEBAR_WIDTH - LIST_PADDING * 2 - 10)
+            else
+                listChild:SetWidth(SIDEBAR_WIDTH - LIST_PADDING * 2)
             end
         end
 
         -- Hook events for list scrollbar visibility
-        listArea:HookScript("OnScrollRangeChanged", UpdateListScrollbarVisibility)
         listChild:HookScript("OnSizeChanged", UpdateListScrollbarVisibility)
         listArea:HookScript("OnSizeChanged", UpdateListScrollbarVisibility)
 
@@ -412,7 +392,8 @@ local function CreateDungeonPanel(dungeonId)
             -- Selected highlight
             local selected = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
             selected:SetAllPoints()
-            selected:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.2)
+            selected:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.2)
             selected:Hide()
             btn.selected = selected
 
@@ -429,12 +410,12 @@ local function CreateDungeonPanel(dungeonId)
                 if iconTexture then
                     spellIcon:SetTexture(iconTexture)
                 else
-                    spellIcon:SetTexture(134400)  -- Default question mark icon
+                    spellIcon:SetTexture(134400) -- Default question mark icon
                 end
             else
-                spellIcon:SetTexture(134400)  -- Default question mark icon
+                spellIcon:SetTexture(134400)              -- Default question mark icon
             end
-            spellIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)  -- Trim icon borders
+            spellIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92) -- Trim icon borders
             btn.spellIcon = spellIcon
 
             -- Display type indicator (right side) - B for bar, T for text
@@ -449,16 +430,16 @@ local function CreateDungeonPanel(dungeonId)
             local isBar = triggerData.displayType == "bar"
             if isBar then
                 typeIndicator:SetText("B")
-                typeIndicator:SetTextColor(0.4, 0.7, 1.0, 0.9)  -- Blue for bars
+                typeIndicator:SetTextColor(0.4, 0.7, 1.0, 0.9) -- Blue for bars
             else
                 typeIndicator:SetText("T")
-                typeIndicator:SetTextColor(0.4, 1.0, 0.5, 0.9)  -- Green for text
+                typeIndicator:SetTextColor(0.4, 1.0, 0.5, 0.9) -- Green for text
             end
             btn.typeIndicator = typeIndicator
 
             -- Sound indicator (S) - shown if trigger has sound actions
             local hasSound = (triggerData.actionOnShowSound and triggerData.actionOnShowSound ~= "" and triggerData.actionOnShowSound ~= "None")
-                          or (triggerData.actionOnHideSound and triggerData.actionOnHideSound ~= "" and triggerData.actionOnHideSound ~= "None")
+                or (triggerData.actionOnHideSound and triggerData.actionOnHideSound ~= "" and triggerData.actionOnHideSound ~= "None")
             local soundIndicator = btn:CreateFontString(nil, "OVERLAY")
             soundIndicator:SetPoint("RIGHT", typeIndicator, "LEFT", -2, 0)
             if NRSKNUI.ApplyThemeFont then
@@ -468,7 +449,7 @@ local function CreateDungeonPanel(dungeonId)
             end
             if hasSound then
                 soundIndicator:SetText("S")
-                soundIndicator:SetTextColor(1.0, 0.8, 0.3, 0.9)  -- Yellow/gold for sound
+                soundIndicator:SetTextColor(1.0, 0.8, 0.3, 0.9) -- Yellow/gold for sound
             else
                 soundIndicator:SetText("")
             end
@@ -489,7 +470,8 @@ local function CreateDungeonPanel(dungeonId)
                 displayName = displayName:sub(1, 21) .. ".."
             end
             label:SetText(displayName)
-            label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+            label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1], (Theme.textSecondary or { 0.7, 0.7, 0.7 })
+                [2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
             btn.label = label
 
             -- Events
@@ -503,7 +485,8 @@ local function CreateDungeonPanel(dungeonId)
             btn:SetScript("OnLeave", function(self)
                 self.hover:Hide()
                 if state.selectedTriggerId ~= self.triggerId then
-                    self.label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    self.label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                 end
             end)
 
@@ -523,10 +506,12 @@ local function CreateDungeonPanel(dungeonId)
             for _, btn in ipairs(timerButtons) do
                 if btn.triggerId == state.selectedTriggerId then
                     btn.selected:Show()
-                    btn.label:SetTextColor((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 1)
+                    btn.label:SetTextColor((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                        (Theme.accent or { 0.4, 0.7, 1 })[3], 1)
                 else
                     btn.selected:Hide()
-                    btn.label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    btn.label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                 end
             end
         end
@@ -577,14 +562,16 @@ local function CreateDungeonPanel(dungeonId)
         buttonAreaBorder:SetHeight(1)
         buttonAreaBorder:SetPoint("BOTTOMLEFT", buttonArea, "BOTTOMLEFT", 0, 0)
         buttonAreaBorder:SetPoint("BOTTOMRIGHT", buttonArea, "BOTTOMRIGHT", 0, 0)
-        buttonAreaBorder:SetColorTexture((Theme.border or {0.3,0.3,0.3,1})[1], (Theme.border or {0.3,0.3,0.3,1})[2], (Theme.border or {0.3,0.3,0.3,1})[3], 0.5)
+        buttonAreaBorder:SetColorTexture((Theme.border or { 0.3, 0.3, 0.3, 1 })[1],
+            (Theme.border or { 0.3, 0.3, 0.3, 1 })
+            [2], (Theme.border or { 0.3, 0.3, 0.3, 1 })[3], 0.5)
 
         -- Button width for 5 buttons
         local btnWidth = (SIDEBAR_WIDTH - LIST_PADDING * 6) / 5
 
         -- Helper to add border to a button
         local function AddButtonBorder(btn)
-            local borderColor = Theme.border or {0.3, 0.3, 0.3, 1}
+            local borderColor = Theme.border or { 0.3, 0.3, 0.3, 1 }
             local r, g, b, a = borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1
 
             local top = btn:CreateTexture(nil, "BORDER")
@@ -619,7 +606,9 @@ local function CreateDungeonPanel(dungeonId)
 
         local newBtnBg = newBtn:CreateTexture(nil, "BACKGROUND")
         newBtnBg:SetAllPoints()
-        newBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+        newBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+            (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+            [2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
         AddButtonBorder(newBtn)
 
         local newBtnLabel = newBtn:CreateFontString(nil, "OVERLAY")
@@ -630,16 +619,19 @@ local function CreateDungeonPanel(dungeonId)
             newBtnLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         end
         newBtnLabel:SetText("+")
-        newBtnLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+        newBtnLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+            (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
         newBtn:SetScript("OnEnter", function(self)
-            newBtnBg:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.3)
+            newBtnBg:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.3)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText("Create New Timer")
             GameTooltip:Show()
         end)
         newBtn:SetScript("OnLeave", function(self)
-            newBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+            newBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
             GameTooltip:Hide()
         end)
         newBtn:SetScript("OnClick", function()
@@ -663,7 +655,9 @@ local function CreateDungeonPanel(dungeonId)
 
         local dupBtnBg = dupBtn:CreateTexture(nil, "BACKGROUND")
         dupBtnBg:SetAllPoints()
-        dupBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+        dupBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+            (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+            [2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
         AddButtonBorder(dupBtn)
 
         local dupBtnLabel = dupBtn:CreateFontString(nil, "OVERLAY")
@@ -674,16 +668,19 @@ local function CreateDungeonPanel(dungeonId)
             dupBtnLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         end
         dupBtnLabel:SetText("D")
-        dupBtnLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+        dupBtnLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+            (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
         dupBtn:SetScript("OnEnter", function(self)
-            dupBtnBg:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.3)
+            dupBtnBg:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.3)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText("Duplicate Selected Timer")
             GameTooltip:Show()
         end)
         dupBtn:SetScript("OnLeave", function(self)
-            dupBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+            dupBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
             GameTooltip:Hide()
         end)
         dupBtn:SetScript("OnClick", function()
@@ -709,7 +706,9 @@ local function CreateDungeonPanel(dungeonId)
 
         local delBtnBg = delBtn:CreateTexture(nil, "BACKGROUND")
         delBtnBg:SetAllPoints()
-        delBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+        delBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+            (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+            [2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
         AddButtonBorder(delBtn)
 
         local delBtnLabel = delBtn:CreateFontString(nil, "OVERLAY")
@@ -720,7 +719,8 @@ local function CreateDungeonPanel(dungeonId)
             delBtnLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
         end
         delBtnLabel:SetText("-")
-        delBtnLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+        delBtnLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+            (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
         delBtn:SetScript("OnEnter", function(self)
             delBtnBg:SetColorTexture(0.8, 0.2, 0.2, 0.3)
@@ -729,7 +729,8 @@ local function CreateDungeonPanel(dungeonId)
             GameTooltip:Show()
         end)
         delBtn:SetScript("OnLeave", function(self)
-            delBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+            delBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
             GameTooltip:Hide()
         end)
         delBtn:SetScript("OnClick", function()
@@ -754,24 +755,28 @@ local function CreateDungeonPanel(dungeonId)
 
         local upBtnBg = upBtn:CreateTexture(nil, "BACKGROUND")
         upBtnBg:SetAllPoints()
-        upBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+        upBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+            [2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
         AddButtonBorder(upBtn)
 
         local upBtnIcon = upBtn:CreateTexture(nil, "OVERLAY")
         upBtnIcon:SetSize(12, 12)
         upBtnIcon:SetPoint("CENTER")
         upBtnIcon:SetTexture(NRSKNUI.PATH .. "GUITextures\\collapse.tga")
-        upBtnIcon:SetRotation(math.pi)  -- Rotate 180 degrees to point up
-        upBtnIcon:SetVertexColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+        upBtnIcon:SetRotation(math.pi) -- Rotate 180 degrees to point up
+        upBtnIcon:SetVertexColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+            (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
         upBtn:SetScript("OnEnter", function(self)
-            upBtnBg:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.3)
+            upBtnBg:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.3)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText("Move Timer Up")
             GameTooltip:Show()
         end)
         upBtn:SetScript("OnLeave", function(self)
-            upBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+            upBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
             GameTooltip:Hide()
         end)
         upBtn:SetScript("OnClick", function()
@@ -797,7 +802,9 @@ local function CreateDungeonPanel(dungeonId)
 
         local downBtnBg = downBtn:CreateTexture(nil, "BACKGROUND")
         downBtnBg:SetAllPoints()
-        downBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+        downBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+            (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+            [2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
         AddButtonBorder(downBtn)
 
         local downBtnIcon = downBtn:CreateTexture(nil, "OVERLAY")
@@ -805,16 +812,19 @@ local function CreateDungeonPanel(dungeonId)
         downBtnIcon:SetPoint("CENTER")
         downBtnIcon:SetTexture(NRSKNUI.PATH .. "GUITextures\\collapse.tga")
         -- No rotation needed - collapse.tga already points down
-        downBtnIcon:SetVertexColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+        downBtnIcon:SetVertexColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+            (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
         downBtn:SetScript("OnEnter", function(self)
-            downBtnBg:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.3)
+            downBtnBg:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.3)
             GameTooltip:SetOwner(self, "ANCHOR_TOP")
             GameTooltip:SetText("Move Timer Down")
             GameTooltip:Show()
         end)
         downBtn:SetScript("OnLeave", function(self)
-            downBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+            downBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3], 1)
             GameTooltip:Hide()
         end)
         downBtn:SetScript("OnClick", function()
@@ -840,51 +850,24 @@ local function CreateDungeonPanel(dungeonId)
         -- Scroll frame for content (Right side)
         ----------------------------------------------------------------
         local scrollbarWidth = Theme.scrollbarWidth or 16
-        local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+        local scrollFrame = CreateFrame("ScrollFrame", nil, panel)
         scrollFrame:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -1)
         scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
-
-        -- Style scrollbar
-        if scrollFrame.ScrollBar then
-            local sb = scrollFrame.ScrollBar
-            sb:ClearAllPoints()
-            sb:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", -3, -13)
-            sb:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", -3, 13)
-            sb:SetWidth(scrollbarWidth - 4)
-
-            -- Hide default scrollbar decorations
-            if sb.Background then sb.Background:Hide() end
-            if sb.Top then sb.Top:Hide() end
-            if sb.Middle then sb.Middle:Hide() end
-            if sb.Bottom then sb.Bottom:Hide() end
-            if sb.trackBG then sb.trackBG:Hide() end
-            if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-            if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-
-            -- Hide thumb when not needed
-            sb:SetAlpha(0)
-
-            -- Pixel snapping for smooth scrolling
-            local isSnapping = false
-            local PIXEL_STEP = 8 / 15
-            sb:HookScript("OnValueChanged", function(self, value)
-                if isSnapping then return end
-                local scale = scrollFrame:GetEffectiveScale()
-                local screenPixels = value * scale
-                local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-                local snappedValue = snappedPixels / scale
-                if math.abs(value - snappedValue) > 0.001 then
-                    isSnapping = true
-                    self:SetValue(snappedValue)
-                    isSnapping = false
-                end
-            end)
-        end
+        scrollFrame:SetClipsChildren(true)
 
         -- Scroll child (dynamic width based on scrollbar visibility)
         local scrollChild = CreateFrame("Frame", nil, scrollFrame)
         scrollChild:SetHeight(1)
         scrollFrame:SetScrollChild(scrollChild)
+
+        -- Create custom styled scrollbar
+        local scrollbar = NRSKNUI.GUI.CreateScrollbar(scrollFrame, {
+            width = 16,
+            thumbHeight = 40,
+            padding = { top = -2, bottom = -1, right = 0 },
+            scrollStep = 40,
+            anchorToScrollFrame = true
+        })
 
         -- Track scrollbar visibility state
         local scrollbarVisible = false
@@ -914,22 +897,16 @@ local function CreateDungeonPanel(dungeonId)
 
         -- Show/hide scrollbar and adjust content width based on content height
         local function UpdateScrollBarVisibility()
-            if scrollFrame.ScrollBar then
-                local contentHeight = scrollChild:GetHeight()
-                local frameHeight = scrollFrame:GetHeight()
-                local needsScrollbar = contentHeight > frameHeight
-
-                scrollbarVisible = needsScrollbar
-                scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-                UpdateScrollChildWidth()
-            end
+            local contentHeight = scrollChild:GetHeight()
+            local frameHeight = scrollFrame:GetHeight()
+            scrollbarVisible = scrollbar:UpdateVisibility(contentHeight, frameHeight)
+            UpdateScrollChildWidth()
         end
 
         -- Initial width setup
         UpdateScrollChildWidth()
 
         -- Hook events for visibility updates
-        scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
         scrollChild:HookScript("OnSizeChanged", function(self, width, height)
             UpdateScrollBarVisibility()
             UpdateCardWidths()
@@ -959,29 +936,35 @@ local function CreateDungeonPanel(dungeonId)
             table_insert(activeCards, card1)
 
             local row1 = GUIFrame:CreateRow(card1.content, 40)
-            local nameInput = GUIFrame:CreateEditBox(row1, "Timer Name", selectedTrigger.name or "",
-                function(text)
+            local nameInput = GUIFrame:CreateEditBox(row1, "Timer Name", {
+                value = selectedTrigger.name or "",
+                callback = function(text)
                     selectedTrigger.name = text
                     ApplySettings()
                     RefreshContent()
-                end)
+                end
+            })
             row1:AddWidget(nameInput, 0.5)
 
-            local enableTrigger = GUIFrame:CreateCheckbox(row1, "Enabled", selectedTrigger.enabled ~= false,
-                function(checked)
+            local enableTrigger = GUIFrame:CreateCheckbox(row1, "Enabled", {
+                value = selectedTrigger.enabled ~= false,
+                callback = function(checked)
                     selectedTrigger.enabled = checked
                     ApplySettings()
-                end)
+                end
+            })
             row1:AddWidget(enableTrigger, 0.5)
             card1:AddRow(row1, 40)
 
             local row2 = GUIFrame:CreateRow(card1.content, 40)
-            local typeDropdown = GUIFrame:CreateDropdown(row2, "Trigger Type", TRIGGER_TYPE_OPTIONS,
-                selectedTrigger.triggerType or "timer", 100,
-                function(key)
+            local typeDropdown = GUIFrame:CreateDropdown(row2, "Trigger Type", {
+                options = TRIGGER_TYPE_OPTIONS,
+                value = selectedTrigger.triggerType or "timer",
+                callback = function(key)
                     selectedTrigger.triggerType = key
                     ApplySettings()
-                end)
+                end
+            })
             row2:AddWidget(typeDropdown, 1)
             card1:AddRow(row2, 40)
 
@@ -992,12 +975,14 @@ local function CreateDungeonPanel(dungeonId)
             table_insert(activeCards, card2)
 
             local row3 = GUIFrame:CreateRow(card2.content, 40)
-            local spellInput = GUIFrame:CreateEditBox(row3, "Spell ID (optional)", selectedTrigger.spellId or "",
-                function(text)
+            local spellInput = GUIFrame:CreateEditBox(row3, "Spell ID (optional)", {
+                value = selectedTrigger.spellId or "",
+                callback = function(text)
                     selectedTrigger.spellId = text
                     ApplySettings()
                     RefreshContent()
-                end)
+                end
+            })
             row3:AddWidget(spellInput, 0.5)
 
             local iconPreview = CreateSpellIconPreview(row3, selectedTrigger.spellId, 32)
@@ -1005,29 +990,38 @@ local function CreateDungeonPanel(dungeonId)
             card2:AddRow(row3, 40)
 
             local row4 = GUIFrame:CreateRow(card2.content, 40)
-            local msgInput = GUIFrame:CreateEditBox(row4, "Message Filter (optional)", selectedTrigger.message or "",
-                function(text)
+            local msgInput = GUIFrame:CreateEditBox(row4, "Message Filter (optional)", {
+                value = selectedTrigger.message or "",
+                callback = function(text)
                     selectedTrigger.message = text
                     ApplySettings()
-                end)
+                end
+            })
             row4:AddWidget(msgInput, 0.5)
 
-            local msgOpDropdown = GUIFrame:CreateDropdown(row4, "Match", MESSAGE_OPERATOR_OPTIONS,
-                selectedTrigger.messageOperator or "find", 80,
-                function(key)
+            local msgOpDropdown = GUIFrame:CreateDropdown(row4, "Match", {
+                options = MESSAGE_OPERATOR_OPTIONS,
+                value = selectedTrigger.messageOperator or "find",
+                callback = function(key)
                     selectedTrigger.messageOperator = key
                     ApplySettings()
-                end)
+                end
+            })
             row4:AddWidget(msgOpDropdown, 0.5)
             card2:AddRow(row4, 40)
 
             local row5 = GUIFrame:CreateRow(card2.content, 40)
-            local offsetSlider = GUIFrame:CreateSlider(row5, "Timer Offset (seconds)", -10, 10, 0.5,
-                selectedTrigger.extendTimer or 0, 80,
-                function(val)
+            local offsetSlider = GUIFrame:CreateSlider(row5, "Timer Offset (seconds)", {
+                min = -10,
+                max = 10,
+                step = 0.5,
+                value = selectedTrigger.extendTimer or 0,
+                labelWidth = 80,
+                callback = function(val)
                     selectedTrigger.extendTimer = val
                     ApplySettings()
-                end)
+                end
+            })
             row5:AddWidget(offsetSlider, 1)
             card2:AddRow(row5, 40)
 
@@ -1038,32 +1032,40 @@ local function CreateDungeonPanel(dungeonId)
             table_insert(activeCards, card3)
 
             local row6 = GUIFrame:CreateRow(card3.content, 36)
-            local remCheck = GUIFrame:CreateCheckbox(row6, "Enable remaining time condition",
-                selectedTrigger.remainingEnabled == true,
-                function(checked)
+            local remCheck = GUIFrame:CreateCheckbox(row6, "Enable remaining time condition", {
+                value = selectedTrigger.remainingEnabled == true,
+                callback = function(checked)
                     selectedTrigger.remainingEnabled = checked
                     ApplySettings()
                     RefreshContent()
-                end)
+                end
+            })
             row6:AddWidget(remCheck, 1)
             card3:AddRow(row6, 36)
 
             if selectedTrigger.remainingEnabled then
                 local row7 = GUIFrame:CreateRow(card3.content, 40)
-                local remOpDropdown = GUIFrame:CreateDropdown(row7, "Operator", COMPARISON_OPTIONS,
-                    selectedTrigger.remainingOperator or "<", 140,
-                    function(key)
+                local remOpDropdown = GUIFrame:CreateDropdown(row7, "Operator", {
+                    options = COMPARISON_OPTIONS,
+                    value = selectedTrigger.remainingOperator or "<",
+                    callback = function(key)
                         selectedTrigger.remainingOperator = key
                         ApplySettings()
-                    end)
+                    end
+                })
                 row7:AddWidget(remOpDropdown, 0.5)
 
-                local remSlider = GUIFrame:CreateSlider(row7, "Seconds", 1, 60, 1,
-                    selectedTrigger.remainingValue or 5, 60,
-                    function(val)
+                local remSlider = GUIFrame:CreateSlider(row7, "Seconds", {
+                    min = 1,
+                    max = 60,
+                    step = 1,
+                    value = selectedTrigger.remainingValue or 5,
+                    labelWidth = 60,
+                    callback = function(val)
                         selectedTrigger.remainingValue = val
                         ApplySettings()
-                    end)
+                    end
+                })
                 row7:AddWidget(remSlider, 0.5)
                 card3:AddRow(row7, 40)
             end
@@ -1081,11 +1083,13 @@ local function CreateDungeonPanel(dungeonId)
                 -- Search input
                 local searchRow = GUIFrame:CreateRow(browserCard.content, 40)
                 local searchValue = state.spellSearchFilter or ""
-                local searchInput = GUIFrame:CreateEditBox(searchRow, "Search spells...", searchValue,
-                    function(text)
+                local searchInput = GUIFrame:CreateEditBox(searchRow, "Search spells...", {
+                    value = searchValue,
+                    callback = function(text)
                         state.spellSearchFilter = text
                         RefreshContent()
-                    end)
+                    end
+                })
                 searchRow:AddWidget(searchInput, 1)
                 browserCard:AddRow(searchRow, 40)
 
@@ -1135,7 +1139,8 @@ local function CreateDungeonPanel(dungeonId)
                         headerLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
                     end
                     headerLabel:SetText(headerText)
-                    headerLabel:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    headerLabel:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                     browserCard:AddRow(headerRow, 24)
 
                     -- Spell rows for this boss
@@ -1183,7 +1188,8 @@ local function CreateDungeonPanel(dungeonId)
                             spellLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
                         end
                         spellLabel:SetText(spell.name .. " (" .. spell.spellId .. ")")
-                        spellLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+                        spellLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })
+                            [2], (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
                         -- Use button
                         local useBtn = CreateFrame("Button", nil, spellRow)
@@ -1192,33 +1198,39 @@ local function CreateDungeonPanel(dungeonId)
 
                         local useBtnBg = useBtn:CreateTexture(nil, "BACKGROUND")
                         useBtnBg:SetAllPoints()
-                        useBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+                        useBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                            (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[3],
+                            1)
 
                         -- Border for use button
-                        local borderColor = Theme.border or {0.3, 0.3, 0.3, 1}
+                        local borderColor = Theme.border or { 0.3, 0.3, 0.3, 1 }
                         local useBtnBorderTop = useBtn:CreateTexture(nil, "BORDER")
                         useBtnBorderTop:SetHeight(1)
                         useBtnBorderTop:SetPoint("TOPLEFT", 0, 0)
                         useBtnBorderTop:SetPoint("TOPRIGHT", 0, 0)
-                        useBtnBorderTop:SetColorTexture(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+                        useBtnBorderTop:SetColorTexture(borderColor[1], borderColor[2], borderColor[3],
+                            borderColor[4] or 1)
 
                         local useBtnBorderBottom = useBtn:CreateTexture(nil, "BORDER")
                         useBtnBorderBottom:SetHeight(1)
                         useBtnBorderBottom:SetPoint("BOTTOMLEFT", 0, 0)
                         useBtnBorderBottom:SetPoint("BOTTOMRIGHT", 0, 0)
-                        useBtnBorderBottom:SetColorTexture(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+                        useBtnBorderBottom:SetColorTexture(borderColor[1], borderColor[2], borderColor[3],
+                            borderColor[4] or 1)
 
                         local useBtnBorderLeft = useBtn:CreateTexture(nil, "BORDER")
                         useBtnBorderLeft:SetWidth(1)
                         useBtnBorderLeft:SetPoint("TOPLEFT", 0, 0)
                         useBtnBorderLeft:SetPoint("BOTTOMLEFT", 0, 0)
-                        useBtnBorderLeft:SetColorTexture(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+                        useBtnBorderLeft:SetColorTexture(borderColor[1], borderColor[2], borderColor[3],
+                            borderColor[4] or 1)
 
                         local useBtnBorderRight = useBtn:CreateTexture(nil, "BORDER")
                         useBtnBorderRight:SetWidth(1)
                         useBtnBorderRight:SetPoint("TOPRIGHT", 0, 0)
                         useBtnBorderRight:SetPoint("BOTTOMRIGHT", 0, 0)
-                        useBtnBorderRight:SetColorTexture(borderColor[1], borderColor[2], borderColor[3], borderColor[4] or 1)
+                        useBtnBorderRight:SetColorTexture(borderColor[1], borderColor[2], borderColor[3],
+                            borderColor[4] or 1)
 
                         local useBtnLabel = useBtn:CreateFontString(nil, "OVERLAY")
                         useBtnLabel:SetPoint("CENTER")
@@ -1228,17 +1240,22 @@ local function CreateDungeonPanel(dungeonId)
                             useBtnLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
                         end
                         useBtnLabel:SetText("Use")
-                        useBtnLabel:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+                        useBtnLabel:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1],
+                            (Theme.textPrimary or { 1, 1, 1 })
+                            [2], (Theme.textPrimary or { 1, 1, 1 })[3], 1)
 
                         useBtn:SetScript("OnEnter", function(self)
-                            useBtnBg:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.3)
+                            useBtnBg:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1],
+                                (Theme.accent or { 0.4, 0.7, 1 })[2], (Theme.accent or { 0.4, 0.7, 1 })[3], 0.3)
                             -- Also show spell tooltip when hovering button
                             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                             GameTooltip:SetSpellByID(capturedSpellIdForTooltip)
                             GameTooltip:Show()
                         end)
                         useBtn:SetScript("OnLeave", function(self)
-                            useBtnBg:SetColorTexture((Theme.bgLight or {0.18,0.18,0.18,1})[1], (Theme.bgLight or {0.18,0.18,0.18,1})[2], (Theme.bgLight or {0.18,0.18,0.18,1})[3], 1)
+                            useBtnBg:SetColorTexture((Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[1],
+                                (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })[2], (Theme.bgLight or { 0.18, 0.18, 0.18, 1 })
+                                [3], 1)
                             GameTooltip:Hide()
                         end)
 
@@ -1266,7 +1283,8 @@ local function CreateDungeonPanel(dungeonId)
                         noMatchLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
                     end
                     noMatchLabel:SetText("No spells match your search.")
-                    noMatchLabel:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    noMatchLabel:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                     browserCard:AddRow(noMatchRow, 30)
                 end
 
@@ -1275,7 +1293,8 @@ local function CreateDungeonPanel(dungeonId)
                 -- No BigWigs data available - show info message
                 local noBwCard = GUIFrame:CreateCard(scrollChild, "BigWigs Spell Browser", yOffset)
                 table_insert(activeCards, noBwCard)
-                noBwCard:AddLabel("No BigWigs data available for this dungeon. Make sure BigWigs is installed and the dungeon module is loaded.")
+                noBwCard:AddLabel(
+                    "No BigWigs data available for this dungeon. Make sure BigWigs is installed and the dungeon module is loaded.")
                 yOffset = yOffset + noBwCard:GetContentHeight() + padding
             end
 
@@ -1298,13 +1317,15 @@ local function CreateDungeonPanel(dungeonId)
             table_insert(activeCards, card1)
 
             local row1 = GUIFrame:CreateRow(card1.content, 40)
-            local displayDropdown = GUIFrame:CreateDropdown(row1, "Style", DISPLAY_TYPE_OPTIONS,
-                selectedTrigger.displayType or "bar", 100,
-                function(key)
+            local displayDropdown = GUIFrame:CreateDropdown(row1, "Style", {
+                options = DISPLAY_TYPE_OPTIONS,
+                value = selectedTrigger.displayType or "bar",
+                callback = function(key)
                     selectedTrigger.displayType = key
                     ApplySettings()
                     RefreshContent()
-                end)
+                end
+            })
             row1:AddWidget(displayDropdown, 1)
             card1:AddRow(row1, 40)
 
@@ -1317,37 +1338,51 @@ local function CreateDungeonPanel(dungeonId)
                 table_insert(activeCards, card3)
 
                 local row3a = GUIFrame:CreateRow(card3.content, 40)
-                local format1Input = GUIFrame:CreateEditBox(row3a, "Format", selectedTrigger.barText1Format or "%n",
-                    function(text)
+                local format1Input = GUIFrame:CreateEditBox(row3a, "Format", {
+                    value = selectedTrigger.barText1Format or "%n",
+                    callback = function(text)
                         selectedTrigger.barText1Format = text
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3a:AddWidget(format1Input, 0.5)
 
-                local justify1Dropdown = GUIFrame:CreateDropdown(row3a, "Align", TEXT_JUSTIFY_OPTIONS,
-                    selectedTrigger.barText1Justify or "LEFT", 80,
-                    function(key)
+                local justify1Dropdown = GUIFrame:CreateDropdown(row3a, "Align", {
+                    options = TEXT_JUSTIFY_OPTIONS,
+                    value = selectedTrigger.barText1Justify or "LEFT",
+                    callback = function(key)
                         selectedTrigger.barText1Justify = key
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3a:AddWidget(justify1Dropdown, 0.5)
                 card3:AddRow(row3a, 40)
 
                 local row3b = GUIFrame:CreateRow(card3.content, 40)
-                local xOffset1Slider = GUIFrame:CreateSlider(row3b, "X Offset", -100, 100, 1,
-                    selectedTrigger.barText1XOffset or 4, 50,
-                    function(val)
+                local xOffset1Slider = GUIFrame:CreateSlider(row3b, "X Offset", {
+                    min = -100,
+                    max = 100,
+                    step = 1,
+                    value = selectedTrigger.barText1XOffset or 4,
+                    labelWidth = 50,
+                    callback = function(val)
                         selectedTrigger.barText1XOffset = val
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3b:AddWidget(xOffset1Slider, 0.5)
 
-                local yOffset1Slider = GUIFrame:CreateSlider(row3b, "Y Offset", -20, 20, 1,
-                    selectedTrigger.barText1YOffset or 0, 50,
-                    function(val)
+                local yOffset1Slider = GUIFrame:CreateSlider(row3b, "Y Offset", {
+                    min = -20,
+                    max = 20,
+                    step = 1,
+                    value = selectedTrigger.barText1YOffset or 0,
+                    labelWidth = 50,
+                    callback = function(val)
                         selectedTrigger.barText1YOffset = val
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3b:AddWidget(yOffset1Slider, 0.5)
                 card3:AddRow(row3b, 40)
 
@@ -1358,37 +1393,51 @@ local function CreateDungeonPanel(dungeonId)
                 table_insert(activeCards, card3b)
 
                 local row3c = GUIFrame:CreateRow(card3b.content, 40)
-                local format2Input = GUIFrame:CreateEditBox(row3c, "Format", selectedTrigger.barText2Format or "%p",
-                    function(text)
+                local format2Input = GUIFrame:CreateEditBox(row3c, "Format", {
+                    value = selectedTrigger.barText2Format or "%p",
+                    callback = function(text)
                         selectedTrigger.barText2Format = text
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3c:AddWidget(format2Input, 0.5)
 
-                local justify2Dropdown = GUIFrame:CreateDropdown(row3c, "Align", TEXT_JUSTIFY_OPTIONS,
-                    selectedTrigger.barText2Justify or "RIGHT", 80,
-                    function(key)
+                local justify2Dropdown = GUIFrame:CreateDropdown(row3c, "Align", {
+                    options = TEXT_JUSTIFY_OPTIONS,
+                    value = selectedTrigger.barText2Justify or "RIGHT",
+                    callback = function(key)
                         selectedTrigger.barText2Justify = key
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3c:AddWidget(justify2Dropdown, 0.5)
                 card3b:AddRow(row3c, 40)
 
                 local row3d = GUIFrame:CreateRow(card3b.content, 40)
-                local xOffset2Slider = GUIFrame:CreateSlider(row3d, "X Offset", -100, 100, 1,
-                    selectedTrigger.barText2XOffset or -4, 50,
-                    function(val)
+                local xOffset2Slider = GUIFrame:CreateSlider(row3d, "X Offset", {
+                    min = -100,
+                    max = 100,
+                    step = 1,
+                    value = selectedTrigger.barText2XOffset or -4,
+                    labelWidth = 50,
+                    callback = function(val)
                         selectedTrigger.barText2XOffset = val
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3d:AddWidget(xOffset2Slider, 0.5)
 
-                local yOffset2Slider = GUIFrame:CreateSlider(row3d, "Y Offset", -20, 20, 1,
-                    selectedTrigger.barText2YOffset or 0, 50,
-                    function(val)
+                local yOffset2Slider = GUIFrame:CreateSlider(row3d, "Y Offset", {
+                    min = -20,
+                    max = 20,
+                    step = 1,
+                    value = selectedTrigger.barText2YOffset or 0,
+                    labelWidth = 50,
+                    callback = function(val)
                         selectedTrigger.barText2YOffset = val
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3d:AddWidget(yOffset2Slider, 0.5)
                 card3b:AddRow(row3d, 40)
 
@@ -1399,21 +1448,28 @@ local function CreateDungeonPanel(dungeonId)
                 table_insert(activeCards, card3c)
 
                 local row3e = GUIFrame:CreateRow(card3c.content, 40)
-                local showDecimalsCheck = GUIFrame:CreateCheckbox(row3e, "Show Decimals", selectedTrigger.showDecimals == true,
-                    function(checked)
+                local showDecimalsCheck = GUIFrame:CreateCheckbox(row3e, "Show Decimals", {
+                    value = selectedTrigger.showDecimals == true,
+                    callback = function(checked)
                         selectedTrigger.showDecimals = checked
                         ApplySettings()
                         RefreshContent()
-                    end)
+                    end
+                })
                 row3e:AddWidget(showDecimalsCheck, selectedTrigger.showDecimals and 0.5 or 1)
 
                 if selectedTrigger.showDecimals then
-                    local decimalThresholdSlider = GUIFrame:CreateSlider(row3e, "Below (seconds)", 1, 30, 1,
-                        selectedTrigger.decimalThreshold or 3, 50,
-                        function(val)
+                    local decimalThresholdSlider = GUIFrame:CreateSlider(row3e, "Below (seconds)", {
+                        min = 1,
+                        max = 30,
+                        step = 1,
+                        value = selectedTrigger.decimalThreshold or 3,
+                        labelWidth = 50,
+                        callback = function(val)
                             selectedTrigger.decimalThreshold = val
                             ApplySettings()
-                        end)
+                        end
+                    })
                     row3e:AddWidget(decimalThresholdSlider, 0.5)
                 end
                 card3c:AddRow(row3e, 40)
@@ -1425,31 +1481,40 @@ local function CreateDungeonPanel(dungeonId)
                 table_insert(activeCards, card3)
 
                 local row3 = GUIFrame:CreateRow(card3.content, 40)
-                local formatInput = GUIFrame:CreateEditBox(row3, "Format String", selectedTrigger.textFormat or "%i %n %p",
-                    function(text)
+                local formatInput = GUIFrame:CreateEditBox(row3, "Format String", {
+                    value = selectedTrigger.textFormat or "%i %n %p",
+                    callback = function(text)
                         selectedTrigger.textFormat = text
                         ApplySettings()
-                        RefreshContent() -- Refresh to show/hide Custom Text Function card based on %c
-                    end)
+                        RefreshContent()
+                    end
+                })
                 row3:AddWidget(formatInput, 1)
                 card3:AddRow(row3, 40)
 
                 local row3c = GUIFrame:CreateRow(card3.content, 40)
-                local showDecimalsCheck = GUIFrame:CreateCheckbox(row3c, "Show Decimals", selectedTrigger.showDecimals == true,
-                    function(checked)
+                local showDecimalsCheck = GUIFrame:CreateCheckbox(row3c, "Show Decimals", {
+                    value = selectedTrigger.showDecimals == true,
+                    callback = function(checked)
                         selectedTrigger.showDecimals = checked
                         ApplySettings()
                         RefreshContent()
-                    end)
+                    end
+                })
                 row3c:AddWidget(showDecimalsCheck, selectedTrigger.showDecimals and 0.5 or 1)
 
                 if selectedTrigger.showDecimals then
-                    local decimalThresholdSlider = GUIFrame:CreateSlider(row3c, "Below (seconds)", 1, 30, 1,
-                        selectedTrigger.decimalThreshold or 3, 50,
-                        function(val)
+                    local decimalThresholdSlider = GUIFrame:CreateSlider(row3c, "Below (seconds)", {
+                        min = 1,
+                        max = 30,
+                        step = 1,
+                        value = selectedTrigger.decimalThreshold or 3,
+                        labelWidth = 50,
+                        callback = function(val)
                             selectedTrigger.decimalThreshold = val
                             ApplySettings()
-                        end)
+                        end
+                    })
                     row3c:AddWidget(decimalThresholdSlider, 0.5)
                 end
                 card3:AddRow(row3c, 40)
@@ -1464,53 +1529,59 @@ local function CreateDungeonPanel(dungeonId)
             if isBar then
                 -- Bar mode: BigWigs colors option + bar/bg/text colors
                 local row4 = GUIFrame:CreateRow(card4.content, 36)
-                local bwColorCheck = GUIFrame:CreateCheckbox(row4, "Use BigWigs Colors", selectedTrigger.useBigWigsColors ~= false,
-                    function(checked)
+                local bwColorCheck = GUIFrame:CreateCheckbox(row4, "Use BigWigs Colors", {
+                    value = selectedTrigger.useBigWigsColors ~= false,
+                    callback = function(checked)
                         selectedTrigger.useBigWigsColors = checked
                         ApplySettings()
                         RefreshContent()
-                    end)
+                    end
+                })
                 row4:AddWidget(bwColorCheck, 1)
                 card4:AddRow(row4, 36)
 
                 if not selectedTrigger.useBigWigsColors then
                     local row5 = GUIFrame:CreateRow(card4.content, 36)
-                    local barColorPicker = GUIFrame:CreateColorPicker(row5, "Bar",
-                        selectedTrigger.barColor or { 0.2, 0.6, 1.0, 1 },
-                        function(r, g, b, a)
+                    local barColorPicker = GUIFrame:CreateColorPicker(row5, "Bar", {
+                        color = selectedTrigger.barColor or { 0.2, 0.6, 1.0, 1 },
+                        callback = function(r, g, b, a)
                             selectedTrigger.barColor = { r, g, b, a }
                             ApplySettings()
-                        end)
+                        end
+                    })
                     row5:AddWidget(barColorPicker, 0.5)
 
-                    local bgColorPicker = GUIFrame:CreateColorPicker(row5, "Background",
-                        selectedTrigger.backgroundColor or { 0.1, 0.1, 0.1, 0.8 },
-                        function(r, g, b, a)
+                    local bgColorPicker = GUIFrame:CreateColorPicker(row5, "Background", {
+                        color = selectedTrigger.backgroundColor or { 0.1, 0.1, 0.1, 0.8 },
+                        callback = function(r, g, b, a)
                             selectedTrigger.backgroundColor = { r, g, b, a }
                             ApplySettings()
-                        end)
+                        end
+                    })
                     row5:AddWidget(bgColorPicker, 0.5)
                     card4:AddRow(row5, 36)
 
                     local row6 = GUIFrame:CreateRow(card4.content, 36)
-                    local textColorPicker = GUIFrame:CreateColorPicker(row6, "Text",
-                        selectedTrigger.textColor or { 1, 1, 1, 1 },
-                        function(r, g, b, a)
+                    local textColorPicker = GUIFrame:CreateColorPicker(row6, "Text", {
+                        color = selectedTrigger.textColor or { 1, 1, 1, 1 },
+                        callback = function(r, g, b, a)
                             selectedTrigger.textColor = { r, g, b, a }
                             ApplySettings()
-                        end)
+                        end
+                    })
                     row6:AddWidget(textColorPicker, 1)
                     card4:AddRow(row6, 36)
                 end
             else
                 -- Text mode: only text color
                 local row4 = GUIFrame:CreateRow(card4.content, 36)
-                local textColorPicker = GUIFrame:CreateColorPicker(row4, "Text Color",
-                    selectedTrigger.textColor or { 1, 1, 1, 1 },
-                    function(r, g, b, a)
+                local textColorPicker = GUIFrame:CreateColorPicker(row4, "Text Color", {
+                    color = selectedTrigger.textColor or { 1, 1, 1, 1 },
+                    callback = function(r, g, b, a)
                         selectedTrigger.textColor = { r, g, b, a }
                         ApplySettings()
-                    end)
+                    end
+                })
                 row4:AddWidget(textColorPicker, 1)
                 card4:AddRow(row4, 36)
             end
@@ -1534,12 +1605,11 @@ local function CreateDungeonPanel(dungeonId)
 
                 -- Multi-line code editor
                 local codeRow = GUIFrame:CreateRow(card5.content, 134)
-                local codeEditor = GUIFrame:CreateMultiLineEditBox(codeRow, {
-                    label = "Lua Code (returns value for %c placeholder)",
+                local codeEditor = GUIFrame:CreateMultiLineEditBox(codeRow, "Lua Code (returns value for %c placeholder)", {
                     value = selectedTrigger.customText or "",
                     height = 120,
                     syntaxHighlight = true,
-                    onTextChanged = function(text)
+                    callback = function(text)
                         selectedTrigger.customText = text
                         ApplySettings()
                     end,
@@ -1625,12 +1695,14 @@ local function CreateDungeonPanel(dungeonId)
             -- Enable/Disable role filtering (height 40 if more rows follow, 36 if last)
             local row1Height = selectedTrigger.loadRoleEnabled and 40 or 36
             local row1 = GUIFrame:CreateRow(card1.content, row1Height)
-            local roleToggle = GUIFrame:CreateCheckbox(row1, "Filter by Role", selectedTrigger.loadRoleEnabled or false,
-                function(checked)
+            local roleToggle = GUIFrame:CreateCheckbox(row1, "Filter by Role", {
+                value = selectedTrigger.loadRoleEnabled or false,
+                callback = function(checked)
                     selectedTrigger.loadRoleEnabled = checked
                     ApplySettings()
                     RefreshContent()
-                end)
+                end
+            })
             row1:AddWidget(roleToggle, 1)
             card1:AddRow(row1, row1Height)
 
@@ -1640,31 +1712,37 @@ local function CreateDungeonPanel(dungeonId)
 
                 -- Tank row
                 local row2 = GUIFrame:CreateRow(card1.content, 40)
-                local tankCheck = GUIFrame:CreateCheckbox(row2, "Tank", selectedTrigger.loadRoleTank ~= false,
-                    function(checked)
+                local tankCheck = GUIFrame:CreateCheckbox(row2, "Tank", {
+                    value = selectedTrigger.loadRoleTank ~= false,
+                    callback = function(checked)
                         selectedTrigger.loadRoleTank = checked
                         ApplySettings()
-                    end)
+                    end
+                })
                 row2:AddWidget(tankCheck, 1)
                 card1:AddRow(row2, 40)
 
                 -- Healer row
                 local row3 = GUIFrame:CreateRow(card1.content, 40)
-                local healerCheck = GUIFrame:CreateCheckbox(row3, "Healer", selectedTrigger.loadRoleHealer ~= false,
-                    function(checked)
+                local healerCheck = GUIFrame:CreateCheckbox(row3, "Healer", {
+                    value = selectedTrigger.loadRoleHealer ~= false,
+                    callback = function(checked)
                         selectedTrigger.loadRoleHealer = checked
                         ApplySettings()
-                    end)
+                    end
+                })
                 row3:AddWidget(healerCheck, 1)
                 card1:AddRow(row3, 40)
 
                 -- DPS row (last row, height 36)
                 local row4 = GUIFrame:CreateRow(card1.content, 36)
-                local dpsCheck = GUIFrame:CreateCheckbox(row4, "DPS", selectedTrigger.loadRoleDPS ~= false,
-                    function(checked)
+                local dpsCheck = GUIFrame:CreateCheckbox(row4, "DPS", {
+                    value = selectedTrigger.loadRoleDPS ~= false,
+                    callback = function(checked)
                         selectedTrigger.loadRoleDPS = checked
                         ApplySettings()
-                    end)
+                    end
+                })
                 row4:AddWidget(dpsCheck, 1)
                 card1:AddRow(row4, 36)
             end
@@ -1699,12 +1777,15 @@ local function CreateDungeonPanel(dungeonId)
 
             -- On Show Sound
             local row1 = GUIFrame:CreateRow(card1.content, 40)
-            local onShowDropdown = GUIFrame:CreateDropdown(row1, "On Show", soundList,
-                selectedTrigger.actionOnShowSound or "None", 100,
-                function(key)
+            local onShowDropdown = GUIFrame:CreateDropdown(row1, "On Show", {
+                options = soundList,
+                value = selectedTrigger.actionOnShowSound or "None",
+                callback = function(key)
                     selectedTrigger.actionOnShowSound = key
                     ApplySettings()
-                end, { searchable = true })
+                end,
+                searchable = true
+            })
             row1:AddWidget(onShowDropdown, 0.7)
 
             local testShowBtn = GUIFrame:CreateButton(row1, "Test", {
@@ -1723,12 +1804,15 @@ local function CreateDungeonPanel(dungeonId)
 
             -- On Hide Sound
             local row2 = GUIFrame:CreateRow(card1.content, 36)
-            local onHideDropdown = GUIFrame:CreateDropdown(row2, "On Hide", soundList,
-                selectedTrigger.actionOnHideSound or "None", 100,
-                function(key)
+            local onHideDropdown = GUIFrame:CreateDropdown(row2, "On Hide", {
+                options = soundList,
+                value = selectedTrigger.actionOnHideSound or "None",
+                callback = function(key)
                     selectedTrigger.actionOnHideSound = key
                     ApplySettings()
-                end, { searchable = true })
+                end,
+                searchable = true
+            })
             row2:AddWidget(onHideDropdown, 0.7)
 
             local testHideBtn = GUIFrame:CreateButton(row2, "Test", {
@@ -1789,11 +1873,13 @@ local function CreateDungeonPanel(dungeonId)
         local function UpdateTabVisuals(buttons, selectedId)
             for _, btn in ipairs(buttons) do
                 if btn.tabId == selectedId then
-                    btn.label:SetTextColor((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 1)
+                    btn.label:SetTextColor((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                        (Theme.accent or { 0.4, 0.7, 1 })[3], 1)
                     btn.underline:Show()
                     btn.selectedOverlay:Show()
                 else
-                    btn.label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    btn.label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                     btn.underline:Hide()
                     btn.selectedOverlay:Hide()
                 end
@@ -1822,7 +1908,8 @@ local function CreateDungeonPanel(dungeonId)
             -- Selected overlay
             local selectedOverlay = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
             selectedOverlay:SetAllPoints()
-            selectedOverlay:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 0.1)
+            selectedOverlay:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 0.1)
             selectedOverlay:Hide()
             btn.selectedOverlay = selectedOverlay
 
@@ -1835,7 +1922,8 @@ local function CreateDungeonPanel(dungeonId)
                 label:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
             end
             label:SetText(tabDef.text)
-            label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+            label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1], (Theme.textSecondary or { 0.7, 0.7, 0.7 })
+                [2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
             btn.label = label
 
             -- Measure text width
@@ -1848,7 +1936,8 @@ local function CreateDungeonPanel(dungeonId)
             underline:SetHeight(2)
             underline:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 0, 0)
             underline:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-            underline:SetColorTexture((Theme.accent or {0.4,0.7,1})[1], (Theme.accent or {0.4,0.7,1})[2], (Theme.accent or {0.4,0.7,1})[3], 1)
+            underline:SetColorTexture((Theme.accent or { 0.4, 0.7, 1 })[1], (Theme.accent or { 0.4, 0.7, 1 })[2],
+                (Theme.accent or { 0.4, 0.7, 1 })[3], 1)
             underline:Hide()
             btn.underline = underline
 
@@ -1863,7 +1952,8 @@ local function CreateDungeonPanel(dungeonId)
             btn:SetScript("OnLeave", function(self)
                 self.hoverBg:Hide()
                 if state.currentSubTab ~= self.tabId then
-                    self.label:SetTextColor((Theme.textSecondary or {0.7,0.7,0.7})[1], (Theme.textSecondary or {0.7,0.7,0.7})[2], (Theme.textSecondary or {0.7,0.7,0.7})[3], 1)
+                    self.label:SetTextColor((Theme.textSecondary or { 0.7, 0.7, 0.7 })[1],
+                        (Theme.textSecondary or { 0.7, 0.7, 0.7 })[2], (Theme.textSecondary or { 0.7, 0.7, 0.7 })[3], 1)
                 end
             end)
 
@@ -1934,8 +2024,6 @@ end
 ----------------------------------------------------------------
 -- Settings panel sub-tab state (persists across content rebuilds)
 local settingsCurrentSubTab = "general"
-local settingsCachedTabBar = nil
-local settingsCachedTabButtons = nil
 
 -- Settings sub-tab definitions
 local SETTINGS_SUB_TABS = {
@@ -1953,22 +2041,22 @@ local settingsPreviewTextFrames = {}
 
 -- Preview data with different colors for bars
 local SETTINGS_BAR_PREVIEWS = {
-    { name = "Tank Hit", time = 12.4, icon = 136116, color = { 0.2, 0.6, 1.0 } },      -- Blue
-    { name = "Soak", time = 8.7, icon = 135994, color = { 1.0, 0.5, 0.0 } },           -- Orange
-    { name = "Frontal", time = 5.2, icon = 132155, color = { 1.0, 0.2, 0.2 } },        -- Red
-    { name = "Spread", time = 18.1, icon = 136197, color = { 0.6, 0.2, 1.0 } },        -- Purple
-    { name = "Dodge", time = 3.8, icon = 132307, color = { 0.2, 1.0, 0.4 } },          -- Green
+    { name = "Tank Hit", time = 12.4, icon = 136116, color = { 0.2, 0.6, 1.0 } }, -- Blue
+    { name = "Soak",     time = 8.7,  icon = 135994, color = { 1.0, 0.5, 0.0 } }, -- Orange
+    { name = "Frontal",  time = 5.2,  icon = 132155, color = { 1.0, 0.2, 0.2 } }, -- Red
+    { name = "Spread",   time = 18.1, icon = 136197, color = { 0.6, 0.2, 1.0 } }, -- Purple
+    { name = "Dodge",    time = 3.8,  icon = 132307, color = { 0.2, 1.0, 0.4 } }, -- Green
 }
 local SETTINGS_TEXT_PREVIEWS = {
-    { name = "Adds", time = 14.3, icon = 136116, color = { 1.0, 0.5, 0.2 } },   -- Orange
-    { name = "Heal", time = 6.9, icon = 135915, color = { 0.4, 0.8, 1.0 } },    -- Light Blue
-    { name = "Kick", time = 2.1, icon = 132219, color = { 0.9, 0.3, 0.9 } },    -- Purple
+    { name = "Adds", time = 14.3, icon = 136116, color = { 1.0, 0.5, 0.2 } }, -- Orange
+    { name = "Heal", time = 6.9,  icon = 135915, color = { 0.4, 0.8, 1.0 } }, -- Light Blue
+    { name = "Kick", time = 2.1,  icon = 132219, color = { 0.9, 0.3, 0.9 } }, -- Purple
 }
 
 -- Options tables
 local SETTINGS_GROWTH_OPTIONS = {
     { key = "DOWN", text = "Down" },
-    { key = "UP", text = "Up" },
+    { key = "UP",   text = "Up" },
 }
 
 local SETTINGS_BAR_OUTLINE_OPTIONS = {
@@ -2033,12 +2121,9 @@ local function CreateSettingsBarPreview(index, data)
     local barHeight = db.BarDisplay.barHeight or 20
     local fontSize = db.BarDisplay.fontSize or 12
     local fontOutline = db.BarDisplay.fontOutline or "OUTLINE"
+    local fontFace = db.BarDisplay.fontFace or "Expressway"
     local barTexture = db.BarDisplay.barTexture or "NorskenUI"
     local showIcon = db.BarDisplay.iconEnabled ~= false
-
-    local actualOutline = (fontOutline == "NONE" or fontOutline == "SOFTOUTLINE") and "" or fontOutline
-    local fontFace = db.BarDisplay.fontFace or "Expressway"
-    local fontPath = NRSKNUI:GetFontPath(fontFace) or NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF"
     local texturePath = NRSKNUI:GetStatusbarPath(barTexture) or "Interface\\Buttons\\WHITE8x8"
     local iconSize = showIcon and barHeight or 0
 
@@ -2092,19 +2177,17 @@ local function CreateSettingsBarPreview(index, data)
     frame.bar:SetMinMaxValues(0, 20)
     frame.bar:SetValue(data.time)
 
-    frame.text1:SetFont(fontPath, fontSize, actualOutline)
     frame.text1:ClearAllPoints()
     frame.text1:SetPoint("LEFT", frame.bar, "LEFT", 4, 0)
-    frame.text1:SetPoint("RIGHT", frame.bar, "RIGHT", -40, 0)
     frame.text1:SetJustifyH("LEFT")
+    NRSKNUI:ApplyFontToText(frame.text1, fontFace, fontSize, fontOutline)
     frame.text1:SetTextColor(1, 1, 1, 1)
     frame.text1:SetText(data.name)
 
-    frame.text2:SetFont(fontPath, fontSize, actualOutline)
     frame.text2:ClearAllPoints()
-    frame.text2:SetPoint("LEFT", frame.bar, "LEFT", 4, 0)
     frame.text2:SetPoint("RIGHT", frame.bar, "RIGHT", -4, 0)
     frame.text2:SetJustifyH("RIGHT")
+    NRSKNUI:ApplyFontToText(frame.text2, fontFace, fontSize, fontOutline)
     frame.text2:SetTextColor(1, 1, 1, 1)
     frame.text2:SetText(string.format("%.1f", data.time))
 
@@ -2122,11 +2205,7 @@ local function CreateSettingsTextPreview(index, data)
     local fontSize = db.TextDisplay.fontSize or 14
     local fontOutline = db.TextDisplay.fontOutline or "SOFTOUTLINE"
     local textAlign = db.TextDisplay.textAlign or "LEFT"
-
-    local useSoftOutline = fontOutline == "SOFTOUTLINE"
-    local actualOutline = useSoftOutline and "" or (fontOutline == "NONE" and "" or fontOutline)
     local fontFace = db.TextDisplay.fontFace or "Expressway"
-    local fontPath = NRSKNUI:GetFontPath(fontFace) or NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF"
     -- No icons in settings preview (icons are per-trigger via format string)
     local showIcon = false
     local iconSize = 0
@@ -2155,31 +2234,13 @@ local function CreateSettingsTextPreview(index, data)
     -- Text - create fresh FontString
     local textWidth = 200 - iconSize - 4
     frame.displayText = frame:CreateFontString(nil, "OVERLAY")
-    frame.displayText:SetFont(fontPath, fontSize, actualOutline)
     frame.displayText:SetWidth(textWidth)
     frame.displayText:SetJustifyH(textAlign)
+    frame.displayText:SetPoint("LEFT", frame, "LEFT", iconSize + 4, 0)
+    NRSKNUI:ApplyFontToText(frame.displayText, fontFace, fontSize, fontOutline)
     local textColor = data.color or { 1, 1, 1 }
     frame.displayText:SetTextColor(textColor[1], textColor[2], textColor[3], 1)
     frame.displayText:SetText(string.format("%s » %.1f", data.name, data.time))
-    frame.displayText:SetPoint("LEFT", frame, "LEFT", iconSize + 4, 0)
-
-    -- Create soft outline
-    if useSoftOutline and NRSKNUI.CreateSoftOutline then
-        local outline = NRSKNUI:CreateSoftOutline(frame.displayText, {
-            thickness = 1,
-            color = { 0, 0, 0 },
-            alpha = 0.9,
-            fontPath = fontPath,
-            fontSize = fontSize,
-        })
-        if outline and outline.shadows then
-            for _, shadow in ipairs(outline.shadows) do
-                shadow:SetWidth(textWidth)
-                shadow:SetJustifyH(textAlign)
-            end
-            outline:SetShown(true)
-        end
-    end
 
     return frame
 end
@@ -2258,21 +2319,20 @@ end
 ----------------------------------------------------------------
 -- Ordered list of dungeons for Import/Export UI
 local DUNGEON_ORDER = {
-    { key = "MagistersTerrace",   name = "Magisters' Terrace" },
-    { key = "MaisaraCaverns",     name = "Maisara Caverns" },
-    { key = "NexusPointXenas",    name = "Nexus-Point Xenas" },
-    { key = "WindrunnerSpire",    name = "Windrunner Spire" },
-    { key = "AlgetharAcademy",    name = "Algeth'ar Academy" },
-    { key = "PitOfSaron",         name = "Pit of Saron" },
-    { key = "SeatOfTriumvirate",  name = "Seat of the Triumvirate" },
-    { key = "Skyreach",           name = "Skyreach" },
+    { key = "MagistersTerrace",  name = "Magisters' Terrace" },
+    { key = "MaisaraCaverns",    name = "Maisara Caverns" },
+    { key = "NexusPointXenas",   name = "Nexus-Point Xenas" },
+    { key = "WindrunnerSpire",   name = "Windrunner Spire" },
+    { key = "AlgetharAcademy",   name = "Algeth'ar Academy" },
+    { key = "PitOfSaron",        name = "Pit of Saron" },
+    { key = "SeatOfTriumvirate", name = "Seat of the Triumvirate" },
+    { key = "Skyreach",          name = "Skyreach" },
 }
 
 local function RenderGeneralTab(scrollChild, yOffset, activeCards)
     local db = GetSettingsDB()
     if not db then return yOffset end
 
-    local Theme = NRSKNUI.Theme or {}
     local DT = NorskenUI:GetModule("DungeonTimers", true)
 
     -- Helper to apply module state
@@ -2293,13 +2353,14 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
     table_insert(activeCards, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Dungeon Timers", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Dungeon Timers", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
         end,
-        true, "Dungeon Timers", "On", "Off"
-    )
+        msgPopup = true, msgText = "Dungeon Timers", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
     yOffset = yOffset + card1:GetContentHeight() + (Theme.paddingSmall or 8)
@@ -2333,7 +2394,8 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
         labelAll:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
     end
     labelAll:SetText("All Dungeons")
-    labelAll:SetTextColor((Theme.textPrimary or {1,1,1})[1], (Theme.textPrimary or {1,1,1})[2], (Theme.textPrimary or {1,1,1})[3], 1)
+    labelAll:SetTextColor((Theme.textPrimary or { 1, 1, 1 })[1], (Theme.textPrimary or { 1, 1, 1 })[2],
+        (Theme.textPrimary or { 1, 1, 1 })[3], 1)
     labelAll:SetPoint("LEFT", rowAll, "LEFT", padding, 0)
 
     -- Export All button
@@ -2439,7 +2501,8 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
     sep:SetHeight(1)
     sep:SetPoint("LEFT", sepRow, "LEFT", padding, 0)
     sep:SetPoint("RIGHT", sepRow, "RIGHT", -padding, 0)
-    sep:SetColorTexture((Theme.border or {0.3,0.3,0.3,1})[1], (Theme.border or {0.3,0.3,0.3,1})[2], (Theme.border or {0.3,0.3,0.3,1})[3], 0.5)
+    sep:SetColorTexture((Theme.border or { 0.3, 0.3, 0.3, 1 })[1], (Theme.border or { 0.3, 0.3, 0.3, 1 })[2],
+        (Theme.border or { 0.3, 0.3, 0.3, 1 })[3], 0.5)
     card2:AddRow(sepRow, 12)
 
     -- Per-dungeon rows
@@ -2456,7 +2519,8 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
             dungeonLabel:SetFont(NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
         end
         dungeonLabel:SetText(dungeonName)
-        dungeonLabel:SetTextColor((Theme.textSecondary or {0.8,0.8,0.8})[1], (Theme.textSecondary or {0.8,0.8,0.8})[2], (Theme.textSecondary or {0.8,0.8,0.8})[3], 1)
+        dungeonLabel:SetTextColor((Theme.textSecondary or { 0.8, 0.8, 0.8 })[1],
+            (Theme.textSecondary or { 0.8, 0.8, 0.8 })[2], (Theme.textSecondary or { 0.8, 0.8, 0.8 })[3], 1)
         dungeonLabel:SetPoint("LEFT", dungeonRow, "LEFT", padding, 0)
 
         -- Export button
@@ -2568,8 +2632,6 @@ end
 local function RenderBarsTab(scrollChild, yOffset, activeCards)
     local db = GetSettingsDB()
     if not db then return yOffset end
-
-    local Theme = NRSKNUI.Theme or {}
     local padding = Theme.paddingSmall or 8
 
     -- Build texture options from LSM
@@ -2581,7 +2643,7 @@ local function RenderBarsTab(scrollChild, yOffset, activeCards)
             table_insert(TEXTURE_OPTIONS, { key = name, text = name })
         end
     else
-        TEXTURE_OPTIONS = {{ key = "NorskenUI", text = "NorskenUI" }}
+        TEXTURE_OPTIONS = { { key = "NorskenUI", text = "NorskenUI" } }
     end
 
     -- Build font list from LSM
@@ -2607,68 +2669,94 @@ local function RenderBarsTab(scrollChild, yOffset, activeCards)
 
     -- Row 1: Bar Width + Bar Height
     local row1 = GUIFrame:CreateRow(displayCard.content, 40)
-    local widthSlider = GUIFrame:CreateSlider(row1, "Bar Width", 100, 400, 1,
-        db.BarDisplay.barWidth or 200, 60,
-        function(val)
+    local widthSlider = GUIFrame:CreateSlider(row1, "Bar Width", {
+        min = 100,
+        max = 400,
+        step = 1,
+        value = db.BarDisplay.barWidth or 200,
+        labelWidth = 60,
+        callback = function(val)
             db.BarDisplay.barWidth = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     row1:AddWidget(widthSlider, 0.5)
 
-    local heightSlider = GUIFrame:CreateSlider(row1, "Bar Height", 12, 40, 1,
-        db.BarDisplay.barHeight or 20, 60,
-        function(val)
+    local heightSlider = GUIFrame:CreateSlider(row1, "Bar Height", {
+        min = 12,
+        max = 40,
+        step = 1,
+        value = db.BarDisplay.barHeight or 20,
+        labelWidth = 60,
+        callback = function(val)
             db.BarDisplay.barHeight = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     row1:AddWidget(heightSlider, 0.5)
     displayCard:AddRow(row1, 40)
 
     -- Row 2: Font + Font Size
     local row2 = GUIFrame:CreateRow(displayCard.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", fontList,
-        db.BarDisplay.fontFace or "Expressway", 60,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", {
+        options = fontList,
+        value = db.BarDisplay.fontFace or "Expressway",
+        callback = function(key)
             db.BarDisplay.fontFace = key
             ApplyAndUpdate()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row2:AddWidget(fontDropdown, 0.5)
 
-    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", 8, 24, 1,
-        db.BarDisplay.fontSize or 12, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = db.BarDisplay.fontSize or 12,
+        labelWidth = 60,
+        callback = function(val)
             db.BarDisplay.fontSize = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     row2:AddWidget(fontSizeSlider, 0.5)
     displayCard:AddRow(row2, 40)
 
     -- Row 3: Font Outline + Bar Texture
     local row3 = GUIFrame:CreateRow(displayCard.content, 40)
-    local outlineDropdown = GUIFrame:CreateDropdown(row3, "Font Outline", SETTINGS_BAR_OUTLINE_OPTIONS,
-        db.BarDisplay.fontOutline or "OUTLINE", 80,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3, "Font Outline", {
+        options = SETTINGS_TEXT_OUTLINE_OPTIONS,
+        value = db.BarDisplay.fontOutline or "OUTLINE",
+        callback = function(key)
             db.BarDisplay.fontOutline = key
             ApplyAndUpdate()
-        end)
+        end
+    })
     row3:AddWidget(outlineDropdown, 0.5)
 
-    local textureDropdown = GUIFrame:CreateDropdown(row3, "Bar Texture", TEXTURE_OPTIONS,
-        db.BarDisplay.barTexture or "NorskenUI", 120,
-        function(key)
+    local textureDropdown = GUIFrame:CreateDropdown(row3, "Bar Texture", {
+        options = TEXTURE_OPTIONS,
+        value = db.BarDisplay.barTexture or "NorskenUI",
+        callback = function(key)
             db.BarDisplay.barTexture = key
             ApplyAndUpdate()
-        end, { searchable = true })
+        end,
+        searchable = true
+    })
     row3:AddWidget(textureDropdown, 0.5)
     displayCard:AddRow(row3, 40)
 
     -- Row 4: Show Icon (last row)
     local row4 = GUIFrame:CreateRow(displayCard.content, 36)
-    local iconCheck = GUIFrame:CreateCheckbox(row4, "Show Icon", db.BarDisplay.iconEnabled ~= false,
-        function(checked)
+    local iconCheck = GUIFrame:CreateCheckbox(row4, "Show Icon", {
+        value = db.BarDisplay.iconEnabled ~= false,
+        callback = function(checked)
             db.BarDisplay.iconEnabled = checked
             ApplyAndUpdate()
-        end)
+        end
+    })
     row4:AddWidget(iconCheck, 1)
     displayCard:AddRow(row4, 36)
 
@@ -2681,20 +2769,27 @@ local function RenderBarsTab(scrollChild, yOffset, activeCards)
     table_insert(activeCards, barGroupCard)
 
     local barRow1 = GUIFrame:CreateRow(barGroupCard.content, 40)
-    local barGrowthDropdown = GUIFrame:CreateDropdown(barRow1, "Growth Direction", SETTINGS_GROWTH_OPTIONS,
-        db.BarGroup.GrowthDirection or "DOWN", 100,
-        function(key)
+    local barGrowthDropdown = GUIFrame:CreateDropdown(barRow1, "Growth Direction", {
+        options = SETTINGS_GROWTH_OPTIONS,
+        value = db.BarGroup.GrowthDirection or "DOWN",
+        callback = function(key)
             db.BarGroup.GrowthDirection = key
             ApplyAndUpdate()
-        end)
+        end
+    })
     barRow1:AddWidget(barGrowthDropdown, 0.5)
 
-    local barSpacingSlider = GUIFrame:CreateSlider(barRow1, "Spacing", 0, 20, 1,
-        db.BarGroup.Spacing or 2, 50,
-        function(val)
+    local barSpacingSlider = GUIFrame:CreateSlider(barRow1, "Spacing", {
+        min = 0,
+        max = 20,
+        step = 1,
+        value = db.BarGroup.Spacing or 2,
+        labelWidth = 50,
+        callback = function(val)
             db.BarGroup.Spacing = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     barRow1:AddWidget(barSpacingSlider, 0.5)
     barGroupCard:AddRow(barRow1, 40)
 
@@ -2706,12 +2801,6 @@ local function RenderBarsTab(scrollChild, yOffset, activeCards)
     local barPosCard, barPosYOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Bar Group Position",
         db = db.BarGroup.Position,
-        dbKeys = {
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-        },
         defaults = {
             xOffset = 0,
             yOffset = 100,
@@ -2738,8 +2827,6 @@ local function RenderTextsTab(scrollChild, yOffset, activeCards)
 
     -- Ensure TextDisplay exists
     if not db.TextDisplay then db.TextDisplay = {} end
-
-    local Theme = NRSKNUI.Theme or {}
     local padding = Theme.paddingSmall or 8
 
     local function ApplyAndUpdate()
@@ -2766,42 +2853,55 @@ local function RenderTextsTab(scrollChild, yOffset, activeCards)
 
     -- Row 1: Font + Font Size
     local row1 = GUIFrame:CreateRow(displayCard.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row1, "Font", fontList,
-        db.TextDisplay.fontFace or "Expressway", 60,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row1, "Font", {
+        options = fontList,
+        value = db.TextDisplay.fontFace or "Expressway",
+        callback = function(key)
             db.TextDisplay.fontFace = key
             ApplyAndUpdate()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row1:AddWidget(fontDropdown, 0.5)
 
-    local fontSizeSlider = GUIFrame:CreateSlider(row1, "Font Size", 8, 32, 1,
-        db.TextDisplay.fontSize or 14, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row1, "Font Size", {
+        min = 8,
+        max = 32,
+        step = 1,
+        value = db.TextDisplay.fontSize or 14,
+        labelWidth = 60,
+        callback = function(val)
             db.TextDisplay.fontSize = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     row1:AddWidget(fontSizeSlider, 0.5)
     displayCard:AddRow(row1, 40)
 
     -- Row 2: Font Outline + Text Align
     local row2 = GUIFrame:CreateRow(displayCard.content, 36)
-    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Font Outline", SETTINGS_TEXT_OUTLINE_OPTIONS,
-        db.TextDisplay.fontOutline or "SOFTOUTLINE", 80,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Font Outline", {
+        options = SETTINGS_TEXT_OUTLINE_OPTIONS,
+        value = db.TextDisplay.fontOutline or "SOFTOUTLINE",
+        callback = function(key)
             db.TextDisplay.fontOutline = key
             ApplyAndUpdate()
-        end)
+        end
+    })
     row2:AddWidget(outlineDropdown, 0.5)
 
-    local alignDropdown = GUIFrame:CreateDropdown(row2, "Text Align", SETTINGS_TEXT_ALIGN_OPTIONS,
-        db.TextDisplay.textAlign or "LEFT", 80,
-        function(key)
+    local alignDropdown = GUIFrame:CreateDropdown(row2, "Text Align", {
+        options = SETTINGS_TEXT_ALIGN_OPTIONS,
+        value = db.TextDisplay.textAlign or "LEFT",
+        callback = function(key)
             local freshDb = GetSettingsDB()
             if freshDb and freshDb.TextDisplay then
                 freshDb.TextDisplay.textAlign = key
             end
             ApplyAndUpdate()
-        end)
+        end
+    })
     row2:AddWidget(alignDropdown, 0.5)
     displayCard:AddRow(row2, 36)
 
@@ -2814,20 +2914,27 @@ local function RenderTextsTab(scrollChild, yOffset, activeCards)
     table_insert(activeCards, textGroupCard)
 
     local textRow1 = GUIFrame:CreateRow(textGroupCard.content, 40)
-    local textGrowthDropdown = GUIFrame:CreateDropdown(textRow1, "Growth Direction", SETTINGS_GROWTH_OPTIONS,
-        db.TextGroup.GrowthDirection or "DOWN", 100,
-        function(key)
+    local textGrowthDropdown = GUIFrame:CreateDropdown(textRow1, "Growth Direction", {
+        options = SETTINGS_GROWTH_OPTIONS,
+        value = db.TextGroup.GrowthDirection or "DOWN",
+        callback = function(key)
             db.TextGroup.GrowthDirection = key
             ApplyAndUpdate()
-        end)
+        end
+    })
     textRow1:AddWidget(textGrowthDropdown, 0.5)
 
-    local textSpacingSlider = GUIFrame:CreateSlider(textRow1, "Spacing", 0, 20, 1,
-        db.TextGroup.Spacing or 2, 50,
-        function(val)
+    local textSpacingSlider = GUIFrame:CreateSlider(textRow1, "Spacing", {
+        min = 0,
+        max = 20,
+        step = 1,
+        value = db.TextGroup.Spacing or 2,
+        labelWidth = 50,
+        callback = function(val)
             db.TextGroup.Spacing = val
             ApplyAndUpdate()
-        end)
+        end
+    })
     textRow1:AddWidget(textSpacingSlider, 0.5)
     textGroupCard:AddRow(textRow1, 40)
 
@@ -2839,12 +2946,6 @@ local function RenderTextsTab(scrollChild, yOffset, activeCards)
     local textPosCard, textPosYOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Text Group Position",
         db = db.TextGroup.Position,
-        dbKeys = {
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-        },
         defaults = {
             xOffset = 0,
             yOffset = -100,
@@ -2881,141 +2982,23 @@ local function CreateSettingsPanel(container)
         db.TextGroup.Position = { AnchorFrom = "CENTER", AnchorTo = "CENTER", XOffset = 0, YOffset = -100 }
     end
 
-    local Theme = NRSKNUI.Theme or {}
+    -- Forward reference for tabPanel
+    local tabPanel
 
-    -- Full-size frame to take over content area
-    local panel = CreateFrame("Frame", nil, container)
-    panel:SetAllPoints()
+    -- Render content for selected tab
+    local function RenderContent(tabId)
+        if not tabPanel then return end
 
-    -- Tab bar at top
-    local tabBar = CreateFrame("Frame", nil, panel)
-    tabBar:SetHeight(SETTINGS_TAB_BAR_HEIGHT)
-    tabBar:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
-    tabBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", 0, 0)
+        -- Clear panel content
+        tabPanel:ClearContent()
 
-    -- Tab bar background
-    local tabBarBg = tabBar:CreateTexture(nil, "BACKGROUND")
-    tabBarBg:SetAllPoints()
-    tabBarBg:SetColorTexture(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
-
-    -- Tab bar bottom border
-    local tabBarBorder = tabBar:CreateTexture(nil, "ARTWORK")
-    tabBarBorder:SetHeight(1)
-    tabBarBorder:SetPoint("BOTTOMLEFT", tabBar, "BOTTOMLEFT", 0, 0)
-    tabBarBorder:SetPoint("BOTTOMRIGHT", tabBar, "BOTTOMRIGHT", 0, 0)
-    tabBarBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-
-    -- Cache tab bar
-    settingsCachedTabBar = tabBar
-
-    -- Scroll frame below tab bar
-    local scrollbarWidth = Theme.scrollbarWidth or 16
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -1)
-    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
-
-    -- Style scrollbar
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        sb:ClearAllPoints()
-        sb:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -3, -(SETTINGS_TAB_BAR_HEIGHT + Theme.paddingSmall + 13))
-        sb:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -3, Theme.paddingSmall + 13)
-        sb:SetWidth(scrollbarWidth - 4)
-
-        if sb.Background then sb.Background:Hide() end
-        if sb.Top then sb.Top:Hide() end
-        if sb.Middle then sb.Middle:Hide() end
-        if sb.Bottom then sb.Bottom:Hide() end
-        if sb.trackBG then sb.trackBG:Hide() end
-        if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-        if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-        sb:SetAlpha(0)
-
-        local isSnapping = false
-        local PIXEL_STEP = 8 / 15
-        sb:HookScript("OnValueChanged", function(self, value)
-            if isSnapping then return end
-            local scale = scrollFrame:GetEffectiveScale()
-            local screenPixels = value * scale
-            local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-            local snappedValue = snappedPixels / scale
-            if math.abs(value - snappedValue) > 0.001 then
-                isSnapping = true
-                self:SetValue(snappedValue)
-                isSnapping = false
-            end
-        end)
-    end
-
-    -- Scroll child
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    local scrollbarVisible = false
-    local baseWidth = Theme.contentWidth
-
-    local function UpdateScrollChildWidth()
-        if scrollbarVisible then
-            scrollChild:SetWidth(baseWidth - scrollbarWidth)
-        else
-            scrollChild:SetWidth(baseWidth)
-        end
-    end
-
-    local function UpdateScrollBarVisibility()
-        if scrollFrame.ScrollBar then
-            local contentHeight = scrollChild:GetHeight()
-            local frameHeight = scrollFrame:GetHeight()
-            local needsScrollbar = contentHeight > frameHeight
-            scrollbarVisible = needsScrollbar
-            scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-            UpdateScrollChildWidth()
-        end
-    end
-
-    UpdateScrollChildWidth()
-
-    scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
-    scrollChild:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-    scrollFrame:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateScrollBarVisibility)
-    end)
-
-    local activeCards = {}
-
-    local function UpdateCardWidths()
-        local newWidth = scrollChild:GetWidth()
-        for _, card in ipairs(activeCards) do
-            if card and card.SetWidth then
-                card:SetWidth(newWidth)
-            end
-        end
-    end
-
-    scrollChild:HookScript("OnSizeChanged", function(self, width, height)
-        UpdateCardWidths()
-    end)
-
-    -- Render content into scroll child
-    local function RenderContentIntoScrollChild(tabId)
-        wipe(activeCards)
-
-        for _, child in ipairs({ scrollChild:GetChildren() }) do
-            child:Hide()
-            child:SetParent(nil)
-        end
-
-        for _, region in ipairs({ scrollChild:GetRegions() }) do
-            if region:GetObjectType() == "FontString" or region:GetObjectType() == "Texture" then
-                region:Hide()
-            end
-        end
-
+        local scrollChild = tabPanel.scrollChild
         local yOffset = Theme.paddingMedium
 
+        -- Collect cards for width updates
+        local activeCards = {}
+
+        -- Render selected tab content
         if tabId == "general" then
             yOffset = RenderGeneralTab(scrollChild, yOffset, activeCards)
         elseif tabId == "bars" then
@@ -3024,132 +3007,35 @@ local function CreateSettingsPanel(container)
             yOffset = RenderTextsTab(scrollChild, yOffset, activeCards)
         end
 
-        scrollChild:SetHeight(yOffset + Theme.paddingLarge)
+        -- Register cards for width updates
+        for _, card in ipairs(activeCards) do
+            tabPanel:RegisterCard(card)
+        end
+
+        -- Update scroll child height
+        tabPanel:SetContentHeight(yOffset + Theme.paddingLarge)
 
         -- Update previews after rendering
         UpdateSettingsPreviews()
     end
 
-    -- Helper to update tab button visuals
-    local function UpdateTabVisuals(buttons, selectedId)
-        for _, btn in ipairs(buttons) do
-            if btn.tabId == selectedId then
-                btn.label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-                btn.underline:Show()
-                btn.selectedOverlay:Show()
-            else
-                btn.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-                btn.underline:Hide()
-                btn.selectedOverlay:Hide()
-            end
+    -- Create sub-tab panel using the widget
+    tabPanel = NRSKNUI.GUI.CreateSubTabPanel(container, SETTINGS_SUB_TABS, {
+        tabBarHeight = SETTINGS_TAB_BAR_HEIGHT,
+        defaultTab = settingsCurrentSubTab,
+        onTabChanged = function(tabId)
+            settingsCurrentSubTab = tabId
+            RenderContent(tabId)
         end
-    end
+    })
 
-    -- Create tab buttons
-    local tabButtons = {}
-    local minPadding = Theme.paddingMedium * 2
-    local totalTextWidth = 0
-
-    for i, tabDef in ipairs(SETTINGS_SUB_TABS) do
-        local btn = CreateFrame("Button", nil, tabBar)
-        btn:SetHeight(SETTINGS_TAB_BAR_HEIGHT)
-        btn.tabId = tabDef.id
-        btn.tabIndex = i
-
-        local hoverBg = btn:CreateTexture(nil, "BACKGROUND", nil, 1)
-        hoverBg:SetAllPoints()
-        hoverBg:SetColorTexture(1, 1, 1, 0.05)
-        hoverBg:Hide()
-        btn.hoverBg = hoverBg
-
-        local selectedOverlay = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
-        selectedOverlay:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
-        selectedOverlay:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        selectedOverlay:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.1)
-        selectedOverlay:Hide()
-        btn.selectedOverlay = selectedOverlay
-
-        local label = btn:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        if NRSKNUI.ApplyThemeFont then
-            NRSKNUI:ApplyThemeFont(label, "small")
-        else
-            label:SetFontObject("GameFontNormalSmall")
-        end
-        label:SetText(tabDef.text)
-        label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-        btn.label = label
-
-        local textWidth = label:GetStringWidth()
-        btn.textWidth = textWidth
-        totalTextWidth = totalTextWidth + textWidth
-
-        local underline = btn:CreateTexture(nil, "OVERLAY")
-        underline:SetHeight(2)
-        underline:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 0, 0)
-        underline:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        underline:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        underline:Hide()
-        btn.underline = underline
-
-        btn:SetScript("OnEnter", function(self)
-            if settingsCurrentSubTab ~= self.tabId then
-                self.hoverBg:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self.hoverBg:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if settingsCurrentSubTab ~= self.tabId then
-                settingsCurrentSubTab = self.tabId
-                UpdateTabVisuals(settingsCachedTabButtons, settingsCurrentSubTab)
-                RenderContentIntoScrollChild(settingsCurrentSubTab)
-            end
-        end)
-
-        table_insert(tabButtons, btn)
-    end
-
-    settingsCachedTabButtons = tabButtons
-
-    local function LayoutTabs(barWidth)
-        if barWidth <= 0 then return end
-
-        local numTabs = #tabButtons
-        local totalMinWidth = totalTextWidth + (minPadding * numTabs)
-        local extraSpace = math.max(0, barWidth - totalMinWidth)
-        local extraPerTab = extraSpace / numTabs
-
-        local xOffset = 0
-        for _, btn in ipairs(tabButtons) do
-            local tabWidth = btn.textWidth + minPadding + extraPerTab
-
-            btn:ClearAllPoints()
-            btn:SetPoint("TOP", tabBar, "TOP", 0, 0)
-            btn:SetPoint("BOTTOM", tabBar, "BOTTOM", 0, 0)
-            btn:SetPoint("LEFT", tabBar, "LEFT", xOffset, 0)
-            btn:SetWidth(tabWidth)
-
-            xOffset = xOffset + tabWidth
-        end
-    end
-
-    LayoutTabs(tabBar:GetWidth())
-
-    tabBar:SetScript("OnSizeChanged", function(self, width, height)
-        LayoutTabs(width)
-    end)
-
-    UpdateTabVisuals(tabButtons, settingsCurrentSubTab)
-    RenderContentIntoScrollChild(settingsCurrentSubTab)
+    -- Render initial content
+    RenderContent(settingsCurrentSubTab)
 
     -- Hide previews when panel is hidden
-    panel:HookScript("OnHide", HideSettingsPreviews)
+    tabPanel.panel:HookScript("OnHide", HideSettingsPreviews)
 
-    return panel
+    return tabPanel.panel
 end
 
 -- Register global settings panel

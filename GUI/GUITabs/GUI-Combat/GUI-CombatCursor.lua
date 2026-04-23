@@ -343,16 +343,18 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Enable checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 37)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Cursor Circle", db.Enabled == true, function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Cursor Circle", {
+        value = db.Enabled == true,
+        callback = function(checked)
             db.Enabled = checked
             ApplyCursorCircleState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Cursor Circle",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Cursor Circle",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
 
     -- GCD Mode dropdown
@@ -377,20 +379,27 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Throttle toggle
     local row5a = GUIFrame:CreateRow(card1.content, 27)
-    local throttleCheck = GUIFrame:CreateCheckbox(row5a, "Limit Update Rate (Saves CPU)",
-        db.UseUpdateInterval == true, function(checked)
+    local throttleCheck = GUIFrame:CreateCheckbox(row5a, "Limit Update Rate (Saves CPU)", {
+        value = db.UseUpdateInterval == true,
+        callback = function(checked)
             db.UseUpdateInterval = checked
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row5a:AddWidget(throttleCheck, 0.5)
     table_insert(allWidgets, throttleCheck)
 
     -- Update interval slider (only enabled when throttling is on)
-    local intervalSlider = GUIFrame:CreateSlider(row5a, "Update Interval (sec)", 0.01, 0.1, 0.001,
-        db.UpdateInterval or 0.016, 80,
-        function(val)
+    local intervalSlider = GUIFrame:CreateSlider(row5a, "Update Interval (sec)", {
+        min = 0.01,
+        max = 0.1,
+        step = 0.001,
+        value = db.UpdateInterval or 0.016,
+        labelWidth = 80,
+        callback = function(val)
             db.UpdateInterval = val
-        end)
+        end
+    })
     row5a:AddWidget(intervalSlider, 0.5)
     table_insert(allWidgets, intervalSlider)
     table_insert(throttleWidgets, intervalSlider) -- Also conditional on UseUpdateInterval
@@ -406,11 +415,17 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Size slider + Visibility Mode
     local row2a = GUIFrame:CreateRow(card2.content, 39)
-    local sizeSlider = GUIFrame:CreateSlider(row2a, "Size", 20, 150, 1, db.Size or 50, 60,
-        function(val)
+    local sizeSlider = GUIFrame:CreateSlider(row2a, "Size", {
+        min = 20,
+        max = 150,
+        step = 1,
+        value = db.Size or 50,
+        labelWidth = 60,
+        callback = function(val)
             db.Size = val
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(sizeSlider, 0.5)
     table_insert(allWidgets, sizeSlider)
 
@@ -438,11 +453,13 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
     table_insert(allWidgets, colorModeDropdown)
 
     -- Color picker (only applies when ColorMode = "custom")
-    local colorPicker = GUIFrame:CreateColorPicker(row4, "Custom Color", db.Color or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local colorPicker = GUIFrame:CreateColorPicker(row4, "Custom Color", {
+        color = db.Color or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             db.Color = { r, g, b, a }
             ApplyColor()
-        end)
+        end
+    })
     row4:AddWidget(colorPicker, 0.5)
     table_insert(allWidgets, colorPicker)
     table_insert(colorModeWidgets, colorPicker) -- Also conditional on ColorMode
@@ -500,12 +517,13 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
     table_insert(gcdWidgets, gcdSwipeColorModeDropdown)
 
     -- GCD Swipe Color picker (only applies when SwipeColorMode = "custom")
-    local gcdSwipeColorPicker = GUIFrame:CreateColorPicker(row9a, "Custom Color",
-        gcd.SwipeColor or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local gcdSwipeColorPicker = GUIFrame:CreateColorPicker(row9a, "Custom Color", {
+        color = gcd.SwipeColor or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             gcd.SwipeColor = { r, g, b, a }
             ApplyGCDSettings()
-        end)
+        end
+    })
     row9a:AddWidget(gcdSwipeColorPicker, 0.5)
     table_insert(allWidgets, gcdSwipeColorPicker)
     table_insert(gcdWidgets, gcdSwipeColorPicker)
@@ -514,21 +532,25 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Reverse direction checkbox
     local row10a = GUIFrame:CreateRow(card6.content, 37)
-    local reverseCheck = GUIFrame:CreateCheckbox(row10a, "Reverse Swipe Direction",
-        gcd.Reverse == true, function(checked)
+    local reverseCheck = GUIFrame:CreateCheckbox(row10a, "Reverse Swipe Direction", {
+        value = gcd.Reverse == true,
+        callback = function(checked)
             gcd.Reverse = checked
             ApplyGCDSettings()
-        end)
+        end
+    })
     row10a:AddWidget(reverseCheck, 0.5)
     table_insert(allWidgets, reverseCheck)
     table_insert(gcdWidgets, reverseCheck)
 
     -- Hide out of combat checkbox
-    local hideOOCCheck = GUIFrame:CreateCheckbox(row10a, "Only Show In Combat",
-        gcd.HideOutOfCombat == true, function(checked)
+    local hideOOCCheck = GUIFrame:CreateCheckbox(row10a, "Only Show In Combat", {
+        value = gcd.HideOutOfCombat == true,
+        callback = function(checked)
             gcd.HideOutOfCombat = checked
             ApplyGCDSettings()
-        end)
+        end
+    })
     row10a:AddWidget(hideOOCCheck, 0.5)
     table_insert(allWidgets, hideOOCCheck)
     table_insert(gcdWidgets, hideOOCCheck)
@@ -580,11 +602,17 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Size slider (only for separate mode)
     local row6b = GUIFrame:CreateRow(card8.content, 37)
-    local gcdSizeSlider = GUIFrame:CreateSlider(row6b, "Ring Size", 10, 150, 1, gcd.Size or 60, 60,
-        function(val)
+    local gcdSizeSlider = GUIFrame:CreateSlider(row6b, "Ring Size", {
+        min = 10,
+        max = 150,
+        step = 1,
+        value = gcd.Size or 60,
+        labelWidth = 60,
+        callback = function(val)
             gcd.Size = val
             ApplyGCDSettings()
-        end)
+        end
+    })
     row6b:AddWidget(gcdSizeSlider, 1)
     table_insert(allWidgets, gcdSizeSlider)
     table_insert(gcdWidgets, gcdSizeSlider)
@@ -609,15 +637,16 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
     table_insert(gcdSeparateWidgets, gcdRingColorModeDropdown)
 
     -- GCD Ring Color picker (only applies when RingColorMode = "custom")
-    local gcdRingColorPicker = GUIFrame:CreateColorPicker(row8a, "Custom Color",
-        gcd.RingColor or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local gcdRingColorPicker = GUIFrame:CreateColorPicker(row8a, "Custom Color", {
+        color = gcd.RingColor or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             gcd.RingColor = { r, g, b, a }
             ApplyGCDSettings()
             if gcdTextureSelector and gcdTextureSelector.RefreshColors then
                 gcdTextureSelector:RefreshColors()
             end
-        end)
+        end
+    })
     row8a:AddWidget(gcdRingColorPicker, 0.5)
     table_insert(allWidgets, gcdRingColorPicker)
     table_insert(gcdWidgets, gcdRingColorPicker)
@@ -629,6 +658,6 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
 
     -- Apply initial widget states
     UpdateAllWidgetStates()
-    yOffset = yOffset - (Theme.paddingSmall * 9)
+    yOffset = yOffset - (Theme.paddingSmall * 5)
     return yOffset
 end)

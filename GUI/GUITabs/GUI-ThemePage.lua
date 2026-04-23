@@ -30,7 +30,7 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
 
     -- Get current theme settings
     local currentMode = NRSKNUI:GetThemeMode() or "preset"
-    local currentPreset = NRSKNUI:GetThemePreset() or "Echo"
+    local currentPreset = NRSKNUI:GetThemePreset() or "NUI v2"
 
     ----------------------------------------------------------------
     -- Card 1: Theme Mode Selection
@@ -39,11 +39,14 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
 
     -- Theme mode dropdown
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local modeDropdown = GUIFrame:CreateDropdown(row1, "Theme Mode", NRSKNUI.ThemeModeOptions, currentMode, 100,
-        function(key)
+    local modeDropdown = GUIFrame:CreateDropdown(row1, "Theme Mode", {
+        options = NRSKNUI.ThemeModeOptions,
+        value = currentMode,
+        callback = function(key)
             NRSKNUI:SetThemeMode(key)
             ApplyTheme()
-        end)
+        end
+    })
     row1:AddWidget(modeDropdown, 1)
     card1:AddRow(row1, 40)
 
@@ -71,11 +74,14 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
         end
 
         local row2 = GUIFrame:CreateRow(card2.content, 40)
-        local presetDropdown = GUIFrame:CreateDropdown(row2, "Theme", presetOptions, currentPreset, 100,
-            function(key)
+        local presetDropdown = GUIFrame:CreateDropdown(row2, "Theme", {
+            options = presetOptions,
+            value = currentPreset,
+            callback = function(key)
                 NRSKNUI:SetThemePreset(key)
                 ApplyTheme()
-            end)
+            end
+        })
         row2:AddWidget(presetDropdown, 1)
         card2:AddRow(row2, 40)
 
@@ -199,10 +205,12 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
                     local customColor = NRSKNUI:GetCustomColor(colorDef.key)
 
                     local colorRow = GUIFrame:CreateRow(catCard.content, 39)
-                    local colorPicker = GUIFrame:CreateColorPicker(colorRow, colorDef.name, customColor,
-                        function(r, g, b, a)
+                    local colorPicker = GUIFrame:CreateColorPicker(colorRow, colorDef.name, {
+                        color = customColor,
+                        callback = function(r, g, b, a)
                             NRSKNUI:SetCustomColor(colorDef.key, r, g, b, a)
-                        end)
+                        end
+                    })
                     colorRow:AddWidget(colorPicker, 1)
                     table_insert(customColorWidgets, colorPicker)
                     catCard:AddRow(colorRow, 39)
@@ -225,11 +233,14 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
         end
 
         local copyRow = GUIFrame:CreateRow(copyCard.content, 40)
-        local copyDropdown = GUIFrame:CreateDropdown(copyRow, "Copy From", presetOptions, "", 100,
-            function(key)
+        local copyDropdown = GUIFrame:CreateDropdown(copyRow, "Copy From", {
+            options = presetOptions,
+            value = "",
+            callback = function(key)
                 NRSKNUI:CopyPresetToCustom(key)
                 ApplyTheme()
-            end)
+            end
+        })
         copyRow:AddWidget(copyDropdown, 0.5)
 
         -- Reset button
@@ -263,7 +274,7 @@ GUIFrame:RegisterContent("ThemePage", function(scrollChild, yOffset)
     resetRow:AddWidget(resetAllBtn, 1)
     resetCard:AddRow(resetRow, 36)
 
-    local resetNote = resetCard:AddLabel("This will reset theme mode to 'Preset' with the Echo theme.")
+    local resetNote = resetCard:AddLabel("This will reset theme mode to 'Preset' with the NUI v2 theme.")
     resetNote:SetTextColor(Theme.textMuted[1], Theme.textMuted[2], Theme.textMuted[3], 1)
 
     yOffset = yOffset + resetCard:GetContentHeight() + Theme.paddingSmall

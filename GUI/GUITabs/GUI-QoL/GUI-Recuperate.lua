@@ -60,36 +60,39 @@ GUIFrame:RegisterContent("Recuperate", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Recuperate Button", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Recuperate Button", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Recuperate Button", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Recuperate Button", "On", "Off"
-    )
+        msgPopup = true, msgText = "Recuperate Button", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
     -- Load conditions row
     local row1b = GUIFrame:CreateRow(card1.content, 36)
-    local loadInRaidCheck = GUIFrame:CreateCheckbox(row1b, "Load in Raid", db.LoadInRaid ~= false,
-        function(checked)
+    local loadInRaidCheck = GUIFrame:CreateCheckbox(row1b, "Load in Raid", {
+        value = db.LoadInRaid ~= false,
+        callback = function(checked)
             db.LoadInRaid = checked
             if REC then REC:UpdateStateDriver() end
         end,
-        true, "Load in Raid", "On", "Off"
-    )
+        msgPopup = true, msgText = "Load in Raid", msgOn = "On", msgOff = "Off"
+    })
     row1b:AddWidget(loadInRaidCheck, 0.5)
     table_insert(allWidgets, loadInRaidCheck)
 
-    local loadInPartyCheck = GUIFrame:CreateCheckbox(row1b, "Load in Party", db.LoadInParty == true,
-        function(checked)
+    local loadInPartyCheck = GUIFrame:CreateCheckbox(row1b, "Load in Party", {
+        value = db.LoadInParty == true,
+        callback = function(checked)
             db.LoadInParty = checked
             if REC then REC:UpdateStateDriver() end
         end,
-        true, "Load in Party", "On", "Off"
-    )
+        msgPopup = true, msgText = "Load in Party", msgOn = "On", msgOff = "Off"
+    })
     row1b:AddWidget(loadInPartyCheck, 0.5)
     table_insert(allWidgets, loadInPartyCheck)
     card1:AddRow(row1b, 36)
@@ -104,11 +107,17 @@ GUIFrame:RegisterContent("Recuperate", function(scrollChild, yOffset)
 
     -- Size slider
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local SizeSlider = GUIFrame:CreateSlider(card2.content, "Button Size", 1, 1000, 1, db.Size or 24, 60,
-        function(val)
+    local SizeSlider = GUIFrame:CreateSlider(card2.content, "Button Size", {
+        min = 1,
+        max = 1000,
+        step = 1,
+        value = db.Size or 24,
+        labelWidth = 60,
+        callback = function(val)
             db.Size = val
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(SizeSlider, 1)
     table_insert(allWidgets, SizeSlider)
     card2:AddRow(row2, 40)
@@ -120,15 +129,6 @@ GUIFrame:RegisterContent("Recuperate", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card3, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = false,
         showStrata = true,
         onChangeCallback = ApplySettings,

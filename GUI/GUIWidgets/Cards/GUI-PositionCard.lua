@@ -1,25 +1,20 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Style inspired by weakauras
-
--- Localization Setup
 local table_insert = table.insert
 local CreateFrame = CreateFrame
 local ipairs = ipairs
 local pairs = pairs
 
--- Direction order (matches visual layout)
 local ANCHOR_DIRECTIONS = {
     "TOPLEFT", "TOP", "TOPRIGHT",
     "LEFT", "CENTER", "RIGHT",
     "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"
 }
 
--- Direction display names for tooltips
 local DIRECTION_NAMES = {
     TOPLEFT = "Top Left",
     TOP = "Top",
@@ -32,16 +27,12 @@ local DIRECTION_NAMES = {
     BOTTOMRIGHT = "Bottom Right",
 }
 
--- Anchor frame type options
 local ANCHOR_FRAME_TYPES = {
     { key = "SCREEN",      text = "Screen Center" },
     { key = "UIPARENT",    text = "Screen (UIParent)" },
     { key = "SELECTFRAME", text = "Select Frame" },
 }
 
-----------------------------------------------------------------
--- Create Anchor Buttons Widget (9-point selector)
-----------------------------------------------------------------
 local function CreateAnchorButtons(parent, labelText, value, callback)
     local buttonSize = 10
     local frameWidth = 101
@@ -52,7 +43,6 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
     local container = CreateFrame("Frame", nil, parent)
     container:SetSize(frameWidth + buttonSize, frameHeight + buttonSize + titleHeight + spacing + 4)
 
-    -- Title label
     local label = container:CreateFontString(nil, "OVERLAY")
     label:SetPoint("TOP", container, "TOP", 0, 2)
     label:SetHeight(titleHeight)
@@ -66,7 +56,6 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
     label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     container.label = label
 
-    -- Background with border
     local background = CreateFrame("Frame", nil, container, "BackdropTemplate")
     background:SetSize(frameWidth, frameHeight)
     background:SetPoint("TOP", container, "TOP", 0, -(titleHeight + spacing))
@@ -78,11 +67,8 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
     background:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
     background:SetBackdropBorderColor(Theme.textMuted[1], Theme.textMuted[2], Theme.textMuted[3], 1)
     container.background = background
-
-    -- Current value
     container.value = value or "CENTER"
 
-    -- Create the 9 anchor buttons
     local buttons = {}
     for _, direction in ipairs(ANCHOR_DIRECTIONS) do
         local button = CreateFrame("Button", nil, container)
@@ -97,7 +83,6 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
         button.tex = tex
         button.value = direction
 
-        -- Update color based on selection
         local function UpdateButtonColor()
             if container.value == direction then
                 tex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
@@ -108,7 +93,6 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
 
         button:SetScript("OnClick", function()
             container.value = direction
-            -- Update all buttons
             for _, btn in pairs(buttons) do
                 if container.value == btn.value then
                     btn.tex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
@@ -144,7 +128,6 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
     end
     container.buttons = buttons
 
-    -- SetValue method
     function container:SetValue(val)
         self.value = val
         for direction, btn in pairs(self.buttons) do
@@ -156,12 +139,10 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
         end
     end
 
-    -- GetValue method
     function container:GetValue()
         return self.value
     end
 
-    -- SetEnabled method
     function container:SetEnabled(enabled)
         self.disabled = not enabled
         if enabled then
@@ -180,9 +161,24 @@ local function CreateAnchorButtons(parent, labelText, value, callback)
     return container
 end
 
-----------------------------------------------------------------
--- Create Position Settings Card
-----------------------------------------------------------------
+---9-point anchor selector + offset sliders
+---```lua
+---config = {
+---    title = string,              -- Card header (default: "Position Settings")
+---    db = table,                  -- Database table to read/write (required)
+---    dbKeys = table,              -- Custom keys for db fields
+---    defaults = table,            -- Default position values
+---    onChangeCallback = function, -- Called when any value changes
+---    showAnchorFrameType = boolean, -- Show anchor type dropdown (default: true)
+---    showStrata = boolean,        -- Show strata dropdown (default: false)
+---    sliderRange = {min, max},    -- X/Y slider range (default: {-1000, 1000})
+---}
+---```
+---@param scrollChild Frame
+---@param yOffset number
+---@param config NUIPositionCardConfig
+---@return NUICard card
+---@return number newYOffset
 function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
     config = config or {}
     local title = config.title or "Position Settings"
@@ -194,10 +190,9 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
     local showStrata = config.showStrata == true
     local sliderRange = config.sliderRange or { -1000, 1000 }
 
-    -- Map field names to actual db keys
     local keys = {
         anchorFrameType = dbKeys.anchorFrameType or "anchorFrameType",
-        anchorFrameFrame = dbKeys.anchorFrameFrame or "anchorFrameFrame",
+        anchorFrameFrame = dbKeys.anchorFrameFrame or "ParentFrame",
         selfPoint = dbKeys.selfPoint or "AnchorFrom",
         anchorPoint = dbKeys.anchorPoint or "AnchorTo",
         xOffset = dbKeys.xOffset or "XOffset",
@@ -205,23 +200,19 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
         strata = dbKeys.strata or "Strata",
     }
 
-    -- Keys that are stored at root level (not in Position table)
     local rootKeys = {
         [keys.anchorFrameType] = true,
         [keys.anchorFrameFrame] = true,
         [keys.strata] = true,
     }
 
-    -- Helper to get value from db (handles nested Position table or flat)
     local function getValue(key, default)
-        -- Root-level keys are always at db root
         if rootKeys[key] then
             if db[key] ~= nil then
                 return db[key]
             end
             return default
         end
-        -- Position-related keys check Position table first, then root
         if db.Position and db.Position[key] ~= nil then
             return db.Position[key]
         elseif db[key] ~= nil then
@@ -230,13 +221,10 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
         return default
     end
 
-    -- Helper to set value in db
     local function setValue(key, val)
-        -- Root-level keys are always saved at db root
         if rootKeys[key] then
             db[key] = val
         elseif db.Position then
-            -- Position-related keys go in Position table if it exists
             db.Position[key] = val
         else
             db[key] = val
@@ -244,16 +232,11 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
         if onChange then onChange() end
     end
 
-    -- Track widgets for enable/disable
     local widgets = {}
     local AnchorButtonwidgets = {}
-
     local card = GUIFrame:CreateCard(scrollChild, title, yOffset)
-
-    -- Get current anchor type for conditional UI
     local currentType = getValue(keys.anchorFrameType, defaults.anchorFrameType or "SCREEN")
 
-    -- Row 1: Anchored To dropdown
     if showAnchorFrameType then
         local row1 = GUIFrame:CreateRow(card.content, 40)
 
@@ -262,25 +245,29 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
             anchorTypeList[opt.key] = opt.text
         end
 
-        local anchorTypeDropdown = GUIFrame:CreateDropdown(row1, "Anchored To", anchorTypeList, currentType, 70,
-            function(key)
+        local anchorTypeDropdown = GUIFrame:CreateDropdown(row1, "Anchored To", {
+            options = anchorTypeList,
+            value = currentType,
+            callback = function(key)
                 setValue(keys.anchorFrameType, key)
-                -- Refresh to show/hide frame input
                 C_Timer.After(0.25, function()
                     GUIFrame:RefreshContent()
                 end)
-            end)
+            end
+        })
         row1:AddWidget(anchorTypeDropdown, 1)
         table_insert(widgets, anchorTypeDropdown)
         card:AddRow(row1, 40)
 
-        -- Row 2: Frame input + Select Frame button (only if SELECTFRAME)
         if currentType == "SELECTFRAME" then
             local row2 = GUIFrame:CreateRow(card.content, 40)
 
-            local frameInput = GUIFrame:CreateEditBox(row2, "Frame", getValue(keys.anchorFrameFrame, ""), function(val)
-                setValue(keys.anchorFrameFrame, val ~= "" and val or nil)
-            end)
+            local frameInput = GUIFrame:CreateEditBox(row2, "Frame", {
+                value = getValue(keys.anchorFrameFrame, ""),
+                callback = function(val)
+                    setValue(keys.anchorFrameFrame, val ~= "" and val or nil)
+                end
+            })
             row2:AddWidget(frameInput, 0.5)
             table_insert(widgets, frameInput)
 
@@ -306,7 +293,6 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
         end
     end
 
-    -- Row 3: Anchor point selectors
     local row3 = GUIFrame:CreateRow(card.content, 80)
 
     local selfPointValue = getValue(keys.selfPoint, defaults.selfPoint or "CENTER")
@@ -329,30 +315,37 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
     table_insert(AnchorButtonwidgets, anchorPointWidget)
     card:AddRow(row3, 80)
 
-    -- Row 4: X and Y offset sliders
     local row4 = GUIFrame:CreateRow(card.content, 40)
 
-    local xSlider = GUIFrame:CreateSlider(row4, "X Offset", sliderRange[1], sliderRange[2], 0.1,
-        getValue(keys.xOffset, defaults.xOffset or 0), 55,
-        function(val)
+    local xSlider = GUIFrame:CreateSlider(row4, "X Offset", {
+        min = sliderRange[1],
+        max = sliderRange[2],
+        step = 0.1,
+        value = getValue(keys.xOffset, defaults.xOffset or 0),
+        labelWidth = 55,
+        callback = function(val)
             setValue(keys.xOffset, val)
-        end)
+        end
+    })
     row4:AddWidget(xSlider, 0.5)
     table_insert(widgets, xSlider)
 
-    local ySlider = GUIFrame:CreateSlider(row4, "Y Offset", sliderRange[1], sliderRange[2], 0.1,
-        getValue(keys.yOffset, defaults.yOffset or 0), 55,
-        function(val)
+    local ySlider = GUIFrame:CreateSlider(row4, "Y Offset", {
+        min = sliderRange[1],
+        max = sliderRange[2],
+        step = 0.1,
+        value = getValue(keys.yOffset, defaults.yOffset or 0),
+        labelWidth = 55,
+        callback = function(val)
             setValue(keys.yOffset, val)
-        end)
+        end
+    })
     row4:AddWidget(ySlider, 0.5)
     table_insert(widgets, ySlider)
-    card:AddRow(row4, 40)
+    card:AddRow(row4, 40, showStrata and nil or 0)
 
-    -- Row 5: Strata dropdown (optional, below offsets)
     if showStrata then
-        local row5 = GUIFrame:CreateRow(card.content, 37)
-        -- Ordered from highest to lowest strata
+        local row5 = GUIFrame:CreateRow(card.content, Theme.rowHeightLast)
         local strataList = {
             { key = "TOOLTIP",           text = "Tooltip" },
             { key = "FULLSCREEN_DIALOG", text = "Fullscreen Dialog" },
@@ -364,22 +357,22 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
             { key = "BACKGROUND",        text = "Background" },
         }
         local currentStrata = getValue(keys.strata, defaults.strata or "HIGH")
-        local strataDropdown = GUIFrame:CreateDropdown(row5, "Strata", strataList, currentStrata, 39,
-            function(key)
+        local strataDropdown = GUIFrame:CreateDropdown(row5, "Strata", {
+            options = strataList,
+            value = currentStrata,
+            callback = function(key)
                 setValue(keys.strata, key)
-            end)
+            end
+        })
         row5:AddWidget(strataDropdown, 1)
         table_insert(widgets, strataDropdown)
-        card:AddRow(row5, 37)
+        card:AddRow(row5, Theme.rowHeightLast, 0)
     end
 
-    -- Store widgets for external enable/disable
     card.positionWidgets = widgets
     card.AnchorButtonWidgets = AnchorButtonwidgets
 
-    -- SetEnabled method for the card
     function card:SetEnabled(enabled)
-        -- Apply visual disabled state to the card itself
         if enabled then
             self:SetAlpha(1)
             if self.header then self.header:SetAlpha(1) end
@@ -390,7 +383,6 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
             if self.titleText then self.titleText:SetAlpha(0.5) end
         end
 
-        -- Disable all internal widgets
         for _, widget in ipairs(self.positionWidgets) do
             if widget.SetEnabled then
                 widget:SetEnabled(enabled)
@@ -399,9 +391,11 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
             end
         end
     end
+
     function card:SetPositionWidgetsEnabled(enabled)
         self:SetEnabled(enabled)
     end
+
     function card:SetAnchorsOnlyEnabled(enabled)
         for _, widget in ipairs(self.AnchorButtonWidgets) do
             if widget.SetEnabled then
@@ -410,5 +404,5 @@ function GUIFrame:CreatePositionCard(scrollChild, yOffset, config)
         end
     end
 
-    return card, yOffset + card:GetContentHeight() + Theme.paddingSmall
+    return card, card:GetNextOffset()
 end

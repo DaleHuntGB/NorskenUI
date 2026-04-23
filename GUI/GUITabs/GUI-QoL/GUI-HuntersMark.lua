@@ -61,14 +61,15 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Hunters Mark Tracking", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Hunters Mark Tracking", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Hunters Mark Tracking", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Hunters Mark Tracking", "On", "Off"
-    )
+        msgPopup = true, msgText = "Hunters Mark Tracking", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
 
@@ -82,11 +83,13 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
 
     -- Color picker
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local colorPicker = GUIFrame:CreateColorPicker(row2a, "Alert Color", db.Color or { 0, 1, 0, 1 },
-        function(r, g, b, a)
+    local colorPicker = GUIFrame:CreateColorPicker(row2a, "Alert Color", {
+        color = db.Color or { 0, 1, 0, 1 },
+        callback = function(r, g, b, a)
             db.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(colorPicker, 1)
     table_insert(allWidgets, colorPicker)
     card2:AddRow(row2a, 40)
@@ -109,19 +112,30 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
 
     -- Font Face and Size
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
-    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", 8, 72, 1, db.FontSize or 24, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", {
+        min = 8,
+        max = 72,
+        step = 1,
+        value = db.FontSize or 24,
+        labelWidth = 60,
+        callback = function(val)
             db.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(fontSizeSlider, 0.5)
     table_insert(allWidgets, fontSizeSlider)
     card3:AddRow(row3a, 40)
@@ -134,11 +148,14 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE", text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", outlineList, db.FontOutline or "SOFTOUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "SOFTOUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(outlineDropdown, 1)
     table_insert(allWidgets, outlineDropdown)
     card3:AddRow(row3b, 37)
@@ -150,15 +167,6 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card4, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = false,
         showStrata = true,
         onChangeCallback = ApplySettings,

@@ -2,7 +2,6 @@
 ---@class NRSKNUI
 ---@diagnostic disable: undefined-field
 local NRSKNUI = select(2, ...)
-local addonName = select(1, ...)
 
 -- Localization
 local ipairs = ipairs
@@ -19,9 +18,7 @@ NRSKNUI.LDB = LibStub("LibDataBroker-1.1")
 NRSKNUI.LDBIcon = LibStub("LibDBIcon-1.0")
 NRSKNUI.LDS = LibStub("LibDualSpec-1.0")
 
--- Standard addon font and statusbar
-NRSKNUI.PATH = ([[Interface\AddOns\%s\Media\]]):format(addonName)
-NRSKNUI.FONT = NRSKNUI.PATH .. [[Fonts\]] .. 'Expressway.TTF'
+-- Standard addon statusbar (PATH and FONT defined in AddonTheme.lua)
 NRSKNUI.SB = NRSKNUI.PATH .. [[Statusbars\]] .. 'NorskenUI.blp'
 
 -- Register LSM media
@@ -30,6 +27,60 @@ if NRSKNUI.LSM then
     NRSKNUI.LSM:Register('statusbar', 'NorskenUI', NRSKNUI.SB)
     NRSKNUI.LSM:Register('sound', '|cffe51039NorskenWhisper|r', [[Interface\AddOns\NorskenUI\Media\Sounds\Whisper.ogg]])
     NRSKNUI.LSM:Register('border', 'WHITE8X8', [[Interface\Buttons\WHITE8X8]])
+end
+
+local function PreloadLSMMedia()
+    if not NRSKNUI.LSM then return end
+    local mediaTypes = { "font", "statusbar", "sound", "border" }
+    for _, mediaType in ipairs(mediaTypes) do
+        local media = NRSKNUI.LSM:HashTable(mediaType)
+        if media then
+            for name in pairs(media) do
+                NRSKNUI.LSM:Fetch(mediaType, name)
+            end
+        end
+    end
+end
+
+local preloadFrame = CreateFrame("Frame")
+preloadFrame:RegisterEvent("PLAYER_LOGIN")
+preloadFrame:SetScript("OnEvent", function(self)
+    self:UnregisterAllEvents()
+    C_Timer.After(1.5, PreloadLSMMedia)
+end)
+
+local DEFAULT_FONT = "Expressway"
+
+local function IsFontKey(key)
+    if type(key) ~= "string" then return false end
+    return key == "Font" or key == "FontFace" or key:match("FontFace$")
+end
+
+local function ValidateFontsRecursive(tbl, defaults)
+    if type(tbl) ~= "table" then return end
+    local LSM = NRSKNUI.LSM
+    if not LSM then return end
+
+    for key, value in pairs(tbl) do
+        if IsFontKey(key) and type(value) == "string" then
+            if not LSM:IsValid("font", value) then
+                local defaultVal = defaults and defaults[key] or DEFAULT_FONT
+                if not LSM:IsValid("font", defaultVal) then
+                    defaultVal = DEFAULT_FONT
+                end
+                tbl[key] = defaultVal
+            end
+        elseif type(value) == "table" then
+            local subDefaults = defaults and defaults[key]
+            ValidateFontsRecursive(value, subDefaults)
+        end
+    end
+end
+
+function NRSKNUI:ValidateProfileFonts()
+    if not self.db or not self.db.profile then return end
+    local defaults = self.db.defaults and self.db.defaults.profile
+    ValidateFontsRecursive(self.db.profile, defaults)
 end
 
 -- Helper to get Font Path from Name
@@ -189,7 +240,7 @@ local PREVIEW_MODULES = {
     "MissingBuffs", "CombatCross", "CombatMessage", "CombatRes",
     "CombatTimer", "PetTexts", "XPBar", "Durability", "DragonRiding", "RaidAlerts",
     "FocusCastbar", "Gateway", "HuntersMark", "BlizzardRM", "RangeChecker", "TimeSpiral", "Recuperate",
-    "BloodlustTracker", "DungeonCasts"
+    "DungeonCasts"
 }
 
 -- State tracking

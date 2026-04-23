@@ -15,10 +15,6 @@ local CreateFrame = CreateFrame
 -- Store current sub-tab
 local currentSubTab = "global"
 
--- Cached tab bar reference
-local cachedTabBar = nil
-local cachedTabButtons = nil
-
 -- Widget tracking tables
 local allWidgets = {}
 local barWidgets = {}
@@ -184,15 +180,16 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
     table_insert(activeCards, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Action Bars Skinning", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Action Bars Skinning", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyActionBarsState(checked)
             UpdateAllWidgetStates()
             NRSKNUI:CreateReloadPrompt("Enabling/Disabling Action Bars requires a reload to take full effect.")
         end,
-        true, "Action Bars", "On", "Off"
-    )
+        msgPopup = true, msgText = "Action Bars", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
 
@@ -207,21 +204,23 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
 
     -- Hide Profession Texture and Hide Macro Text
     local row2 = GUIFrame:CreateRow(card2.content, 36)
-    local hideProfCheck = GUIFrame:CreateCheckbox(row2, "Hide Profession Texture",
-        db.HideProfTexture == true,
-        function(checked)
+    local hideProfCheck = GUIFrame:CreateCheckbox(row2, "Hide Profession Texture", {
+        value = db.HideProfTexture == true,
+        callback = function(checked)
             db.HideProfTexture = checked
             ApplyProfTextures()
-        end)
+        end
+    })
     row2:AddWidget(hideProfCheck, 0.5)
     table_insert(allWidgets, hideProfCheck)
 
-    local hideMacroCheck = GUIFrame:CreateCheckbox(row2, "Hide Macro Text",
-        db.HideMacroText == true,
-        function(checked)
+    local hideMacroCheck = GUIFrame:CreateCheckbox(row2, "Hide Macro Text", {
+        value = db.HideMacroText == true,
+        callback = function(checked)
             db.HideMacroText = checked
             ApplyFonts()
-        end)
+        end
+    })
     row2:AddWidget(hideMacroCheck, 0.5)
     table_insert(allWidgets, hideMacroCheck)
     card2:AddRow(row2, 36)
@@ -240,20 +239,28 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
 
     -- Font Face and Outline
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace, 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace,
+        callback = function(key)
             db.FontFace = key
             ApplyFonts()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick" }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplyFonts()
-        end)
+        end
+    })
     row3a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card3:AddRow(row3a, 40)
@@ -265,42 +272,58 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
 
     -- Keybind and Cooldown Size
     local row3b = GUIFrame:CreateRow(card3.content, 40)
-    local keybindSize = GUIFrame:CreateSlider(row3b, "Keybind Size", 6, 24, 1,
-        db.FontSizes.KeybindSize or 12, nil,
-        function(val)
+    local keybindSize = GUIFrame:CreateSlider(row3b, "Keybind Size", {
+        min = 6,
+        max = 24,
+        step = 1,
+        value = db.FontSizes.KeybindSize or 12,
+        callback = function(val)
             db.FontSizes.KeybindSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row3b:AddWidget(keybindSize, 0.5)
     table_insert(allWidgets, keybindSize)
 
-    local cooldownSize = GUIFrame:CreateSlider(row3b, "Cooldown Size", 6, 24, 1,
-        db.FontSizes.CooldownSize or 14, nil,
-        function(val)
+    local cooldownSize = GUIFrame:CreateSlider(row3b, "Cooldown Size", {
+        min = 6,
+        max = 24,
+        step = 1,
+        value = db.FontSizes.CooldownSize or 14,
+        callback = function(val)
             db.FontSizes.CooldownSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row3b:AddWidget(cooldownSize, 0.5)
     table_insert(allWidgets, cooldownSize)
     card3:AddRow(row3b, 40)
 
     -- Charge and Macro Size
     local row3c = GUIFrame:CreateRow(card3.content, 40)
-    local chargeSize = GUIFrame:CreateSlider(row3c, "Charge Size", 6, 24, 1,
-        db.FontSizes.ChargeSize or 12, nil,
-        function(val)
+    local chargeSize = GUIFrame:CreateSlider(row3c, "Charge Size", {
+        min = 6,
+        max = 24,
+        step = 1,
+        value = db.FontSizes.ChargeSize or 12,
+        callback = function(val)
             db.FontSizes.ChargeSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row3c:AddWidget(chargeSize, 0.5)
     table_insert(allWidgets, chargeSize)
 
-    local macroSize = GUIFrame:CreateSlider(row3c, "Macro Size", 6, 24, 1,
-        db.FontSizes.MacroSize or 10, nil,
-        function(val)
+    local macroSize = GUIFrame:CreateSlider(row3c, "Macro Size", {
+        min = 6,
+        max = 24,
+        step = 1,
+        value = db.FontSizes.MacroSize or 10,
+        callback = function(val)
             db.FontSizes.MacroSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row3c:AddWidget(macroSize, 0.5)
     table_insert(allWidgets, macroSize)
     card3:AddRow(row3c, 40)
@@ -315,23 +338,25 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card4)
 
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local globalMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Enable Global Mouseover",
-        db.Mouseover and db.Mouseover.Enabled == true,
-        function(checked)
+    local globalMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Enable Global Mouseover", {
+        value = db.Mouseover and db.Mouseover.Enabled == true,
+        callback = function(checked)
             db.Mouseover = db.Mouseover or {}
             db.Mouseover.Enabled = checked
             ApplyAllBars()
-        end)
+        end
+    })
     row4a:AddWidget(globalMouseoverCheck, 0.5)
     table_insert(allWidgets, globalMouseoverCheck)
 
-    local mouseoverOverrideCheck = GUIFrame:CreateCheckbox(row4a, "Override When Mounted/Vehicle",
-        db.MouseoverOverride == true,
-        function(checked)
+    local mouseoverOverrideCheck = GUIFrame:CreateCheckbox(row4a, "Override When Mounted/Vehicle", {
+        value = db.MouseoverOverride == true,
+        callback = function(checked)
             db.MouseoverOverride = checked
             local ACB = GetActionBarsModule()
             if ACB then ACB:UpdateBonusBarOverride() end
-        end)
+        end
+    })
     row4a:AddWidget(mouseoverOverrideCheck, 0.5)
     table_insert(allWidgets, mouseoverOverrideCheck)
     card4:AddRow(row4a, 36)
@@ -343,36 +368,48 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
 
     -- Global Mouseover Alpha
     local row4b = GUIFrame:CreateRow(card4.content, 40)
-    local globalAlpha = GUIFrame:CreateSlider(row4b, "Fade Out Alpha", 0, 1, 0.05,
-        db.Mouseover and db.Mouseover.Alpha or 0, nil,
-        function(val)
+    local globalAlpha = GUIFrame:CreateSlider(row4b, "Fade Out Alpha", {
+        min = 0,
+        max = 1,
+        step = 0.05,
+        value = db.Mouseover and db.Mouseover.Alpha or 0,
+        callback = function(val)
             db.Mouseover = db.Mouseover or {}
             db.Mouseover.Alpha = val
             ApplyAllBars()
-        end)
+        end
+    })
     row4b:AddWidget(globalAlpha, 1)
     table_insert(allWidgets, globalAlpha)
     card4:AddRow(row4b, 40)
 
     -- Fade Durations
     local row4c = GUIFrame:CreateRow(card4.content, 40)
-    local fadeIn = GUIFrame:CreateSlider(row4c, "Fade In Duration", 0, 2, 0.1,
-        db.Mouseover and db.Mouseover.FadeInDuration or 0.3, nil,
-        function(val)
+    local fadeIn = GUIFrame:CreateSlider(row4c, "Fade In Duration", {
+        min = 0,
+        max = 2,
+        step = 0.1,
+        value = db.Mouseover and db.Mouseover.FadeInDuration or 0.3,
+        callback = function(val)
             db.Mouseover = db.Mouseover or {}
             db.Mouseover.FadeInDuration = val
             ApplyAllBars()
-        end)
+        end
+    })
     row4c:AddWidget(fadeIn, 0.5)
     table_insert(allWidgets, fadeIn)
 
-    local fadeOut = GUIFrame:CreateSlider(row4c, "Fade Out Duration", 0, 2, 0.1,
-        db.Mouseover and db.Mouseover.FadeOutDuration or 1, nil,
-        function(val)
+    local fadeOut = GUIFrame:CreateSlider(row4c, "Fade Out Duration", {
+        min = 0,
+        max = 2,
+        step = 0.1,
+        value = db.Mouseover and db.Mouseover.FadeOutDuration or 1,
+        callback = function(val)
             db.Mouseover = db.Mouseover or {}
             db.Mouseover.FadeOutDuration = val
             ApplyAllBars()
-        end)
+        end
+    })
     row4c:AddWidget(fadeOut, 0.5)
     table_insert(allWidgets, fadeOut)
     card4:AddRow(row4c, 40)
@@ -396,9 +433,9 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
         local bar1 = BAR_LIST[barIndex]
         if bar1 then
             local barDB1 = db.Bars[bar1.key]
-            local check1 = GUIFrame:CreateCheckbox(row, bar1.text,
-                barDB1 and barDB1.Enabled ~= false,
-                function(checked)
+            local check1 = GUIFrame:CreateCheckbox(row, bar1.text, {
+                value = barDB1 and barDB1.Enabled ~= false,
+                callback = function(checked)
                     if db.Bars[bar1.key] then
                         db.Bars[bar1.key].Enabled = checked
                         local ACB = GetActionBarsModule()
@@ -407,7 +444,8 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
                             NRSKNUI:CreateReloadPrompt("Enabling bars requires a reload to take full effect.")
                         end
                     end
-                end)
+                end
+            })
             row:AddWidget(check1, 0.5)
             table_insert(allWidgets, check1)
         end
@@ -417,9 +455,9 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
         local bar2 = BAR_LIST[barIndex]
         if bar2 then
             local barDB2 = db.Bars[bar2.key]
-            local check2 = GUIFrame:CreateCheckbox(row, bar2.text,
-                barDB2 and barDB2.Enabled ~= false,
-                function(checked)
+            local check2 = GUIFrame:CreateCheckbox(row, bar2.text, {
+                value = barDB2 and barDB2.Enabled ~= false,
+                callback = function(checked)
                     if db.Bars[bar2.key] then
                         db.Bars[bar2.key].Enabled = checked
                         local ACB = GetActionBarsModule()
@@ -428,11 +466,12 @@ local function RenderGlobalTab(scrollChild, yOffset, activeCards)
                             NRSKNUI:CreateReloadPrompt("Enabling bars requires a reload to take full effect.")
                         end
                     end
-                end)
+                end
+            })
             row:AddWidget(check2, 0.5)
             table_insert(allWidgets, check2)
         else
-            row:AddWidget(GUIFrame:CreateSpacer(row), 0.5)
+            row:AddWidget(CreateFrame("Frame", nil, row), 0.5)
         end
 
         card5:AddRow(row, rowHeight)
@@ -464,13 +503,16 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", BAR_LIST_KV, curEdit, nil,
-        function(key)
+    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", {
+        options = BAR_LIST_KV,
+        value = curEdit,
+        callback = function(key)
             db.currentEdit = key
             C_Timer.After(0.2, function()
                 GUIFrame:RefreshContent()
             end)
-        end)
+        end
+    })
     row1:AddWidget(barDropdown, 1)
     table_insert(allWidgets, barDropdown)
     card1:AddRow(row1, 40)
@@ -488,24 +530,32 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
 
     -- Button Size and Spacing
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local buttonSizeSlider = GUIFrame:CreateSlider(row2a, "Button Size", 20, 80, 1,
-        barDB and barDB.ButtonSize or 40, nil,
-        function(val)
+    local buttonSizeSlider = GUIFrame:CreateSlider(row2a, "Button Size", {
+        min = 20,
+        max = 80,
+        step = 1,
+        value = barDB and barDB.ButtonSize or 40,
+        callback = function(val)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.ButtonSize = val end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2a:AddWidget(buttonSizeSlider, 0.5)
     table_insert(allWidgets, buttonSizeSlider)
     table_insert(barWidgets, buttonSizeSlider)
 
-    local spacingSlider = GUIFrame:CreateSlider(row2a, "Spacing", 0, 20, 1,
-        barDB and barDB.Spacing or 1, nil,
-        function(val)
+    local spacingSlider = GUIFrame:CreateSlider(row2a, "Spacing", {
+        min = 0,
+        max = 20,
+        step = 1,
+        value = barDB and barDB.Spacing or 1,
+        callback = function(val)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.Spacing = val end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2a:AddWidget(spacingSlider, 0.5)
     table_insert(allWidgets, spacingSlider)
     table_insert(barWidgets, spacingSlider)
@@ -513,24 +563,32 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
 
     -- Total Buttons and Buttons Per Line
     local row2b = GUIFrame:CreateRow(card2.content, 40)
-    local totalButtonsSlider = GUIFrame:CreateSlider(row2b, "Total Buttons", 1, 12, 1,
-        barDB and barDB.TotalButtons or 12, nil,
-        function(val)
+    local totalButtonsSlider = GUIFrame:CreateSlider(row2b, "Total Buttons", {
+        min = 1,
+        max = 12,
+        step = 1,
+        value = barDB and barDB.TotalButtons or 12,
+        callback = function(val)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.TotalButtons = val end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2b:AddWidget(totalButtonsSlider, 0.5)
     table_insert(allWidgets, totalButtonsSlider)
     table_insert(barWidgets, totalButtonsSlider)
 
-    local buttonsPerLineSlider = GUIFrame:CreateSlider(row2b, "Buttons Per Line", 1, 12, 1,
-        barDB and barDB.ButtonsPerLine or 12, nil,
-        function(val)
+    local buttonsPerLineSlider = GUIFrame:CreateSlider(row2b, "Buttons Per Line", {
+        min = 1,
+        max = 12,
+        step = 1,
+        value = barDB and barDB.ButtonsPerLine or 12,
+        callback = function(val)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.ButtonsPerLine = val end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2b:AddWidget(buttonsPerLineSlider, 0.5)
     table_insert(allWidgets, buttonsPerLineSlider)
     table_insert(barWidgets, buttonsPerLineSlider)
@@ -539,25 +597,29 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
     -- Layout Direction and Growth Direction
     local row2c = GUIFrame:CreateRow(card2.content, 40)
     local layoutList = { ["HORIZONTAL"] = "Horizontal", ["VERTICAL"] = "Vertical" }
-    local layoutDropdown = GUIFrame:CreateDropdown(row2c, "Layout Direction", layoutList,
-        barDB and barDB.Layout or "HORIZONTAL", nil,
-        function(key)
+    local layoutDropdown = GUIFrame:CreateDropdown(row2c, "Layout Direction", {
+        options = layoutList,
+        value = barDB and barDB.Layout or "HORIZONTAL",
+        callback = function(key)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.Layout = key end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2c:AddWidget(layoutDropdown, 0.5)
     table_insert(allWidgets, layoutDropdown)
     table_insert(barWidgets, layoutDropdown)
 
     local growthList = { ["RIGHT"] = "Grow Right", ["LEFT"] = "Grow Left" }
-    local growthDropdown = GUIFrame:CreateDropdown(row2c, "Growth Direction", growthList,
-        barDB and barDB.GrowthDirection or "RIGHT", nil,
-        function(key)
+    local growthDropdown = GUIFrame:CreateDropdown(row2c, "Growth Direction", {
+        options = growthList,
+        value = barDB and barDB.GrowthDirection or "RIGHT",
+        callback = function(key)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.GrowthDirection = key end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2c:AddWidget(growthDropdown, 0.5)
     table_insert(allWidgets, growthDropdown)
     table_insert(barWidgets, growthDropdown)
@@ -571,12 +633,6 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
     local card3, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         title = "Position: " .. "|cffFFFFFF" .. (BAR_LIST_KV[curEdit] or curEdit) .. "|r",
         db = barDB and barDB.Position or {},
-        dbKeys = {
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-        },
         showAnchorFrameType = false,
         showStrata = false,
         onChangeCallback = ApplyBarSettings,
@@ -605,9 +661,9 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
     if barDB then barDB.Mouseover = barDB.Mouseover or {} end
 
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local useGlobalMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Use Global Mouseover",
-        barDB and barDB.Mouseover and barDB.Mouseover.GlobalOverride == true,
-        function(checked)
+    local useGlobalMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Use Global Mouseover", {
+        value = barDB and barDB.Mouseover and barDB.Mouseover.GlobalOverride == true,
+        callback = function(checked)
             local bdb = GetCurrentBarDB()
             if bdb then
                 bdb.Mouseover = bdb.Mouseover or {}
@@ -615,21 +671,23 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
             end
             ApplyBarSettings()
             C_Timer.After(0.2, function() GUIFrame:RefreshContent() end)
-        end)
+        end
+    })
     row4a:AddWidget(useGlobalMouseoverCheck, 0.5)
     table_insert(allWidgets, useGlobalMouseoverCheck)
     table_insert(barWidgets, useGlobalMouseoverCheck)
 
-    local barMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Enable Mouseover",
-        barDB and barDB.Mouseover and barDB.Mouseover.Enabled == true,
-        function(checked)
+    local barMouseoverCheck = GUIFrame:CreateCheckbox(row4a, "Enable Mouseover", {
+        value = barDB and barDB.Mouseover and barDB.Mouseover.Enabled == true,
+        callback = function(checked)
             local bdb = GetCurrentBarDB()
             if bdb then
                 bdb.Mouseover = bdb.Mouseover or {}
                 bdb.Mouseover.Enabled = checked
             end
             ApplyBarSettings()
-        end)
+        end
+    })
     row4a:AddWidget(barMouseoverCheck, 0.5)
     table_insert(allWidgets, barMouseoverCheck)
     table_insert(barWidgets, barMouseoverCheck)
@@ -643,16 +701,20 @@ local function RenderPositionTab(scrollChild, yOffset, activeCards)
         card4:AddRow(row4sep, 8)
 
         local row4b = GUIFrame:CreateRow(card4.content, 40)
-        local barAlpha = GUIFrame:CreateSlider(row4b, "Fade Out Alpha", 0, 1, 0.05,
-            barDB and barDB.Mouseover and barDB.Mouseover.Alpha or 0, nil,
-            function(val)
+        local barAlpha = GUIFrame:CreateSlider(row4b, "Fade Out Alpha", {
+            min = 0,
+            max = 1,
+            step = 0.05,
+            value = barDB and barDB.Mouseover and barDB.Mouseover.Alpha or 0,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.Mouseover = bdb.Mouseover or {}
                     bdb.Mouseover.Alpha = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4b:AddWidget(barAlpha, 1)
         table_insert(allWidgets, barAlpha)
         table_insert(barWidgets, barAlpha)
@@ -684,13 +746,16 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", BAR_LIST_KV, curEdit, nil,
-        function(key)
+    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", {
+        options = BAR_LIST_KV,
+        value = curEdit,
+        callback = function(key)
             db.currentEdit = key
             C_Timer.After(0.2, function()
                 GUIFrame:RefreshContent()
             end)
-        end)
+        end
+    })
     row1:AddWidget(barDropdown, 1)
     table_insert(allWidgets, barDropdown)
     card1:AddRow(row1, 40)
@@ -714,9 +779,9 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
     -- Use Global toggles
     local row2a = GUIFrame:CreateRow(card2.content, 36)
-    local useGlobalFontCheck = GUIFrame:CreateCheckbox(row2a, "Use Global Font Sizes",
-        barDB and barDB.FontSizes and barDB.FontSizes.GlobalOverride == true,
-        function(checked)
+    local useGlobalFontCheck = GUIFrame:CreateCheckbox(row2a, "Use Global Font Sizes", {
+        value = barDB and barDB.FontSizes and barDB.FontSizes.GlobalOverride == true,
+        callback = function(checked)
             local bdb = GetCurrentBarDB()
             if bdb then
                 bdb.FontSizes = bdb.FontSizes or {}
@@ -724,14 +789,15 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
             end
             ApplyBarSettings()
             C_Timer.After(0.2, function() GUIFrame:RefreshContent() end)
-        end)
+        end
+    })
     row2a:AddWidget(useGlobalFontCheck, 0.5)
     table_insert(allWidgets, useGlobalFontCheck)
     table_insert(barWidgets, useGlobalFontCheck)
 
-    local useGlobalPosCheck = GUIFrame:CreateCheckbox(row2a, "Use Global Text Positions",
-        barDB and barDB.TextPositions and barDB.TextPositions.GlobalOverride == true,
-        function(checked)
+    local useGlobalPosCheck = GUIFrame:CreateCheckbox(row2a, "Use Global Text Positions", {
+        value = barDB and barDB.TextPositions and barDB.TextPositions.GlobalOverride == true,
+        callback = function(checked)
             local bdb = GetCurrentBarDB()
             if bdb then
                 bdb.TextPositions = bdb.TextPositions or {}
@@ -739,7 +805,8 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
             end
             ApplyBarSettings()
             C_Timer.After(0.2, function() GUIFrame:RefreshContent() end)
-        end)
+        end
+    })
     row2a:AddWidget(useGlobalPosCheck, 0.5)
     table_insert(allWidgets, useGlobalPosCheck)
     table_insert(barWidgets, useGlobalPosCheck)
@@ -760,30 +827,38 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
         -- Keybind and Cooldown Size
         local row3a = GUIFrame:CreateRow(card3.content, 40)
-        local barKeybindSize = GUIFrame:CreateSlider(row3a, "Keybind Size", 6, 24, 1,
-            barDB and barDB.FontSizes and barDB.FontSizes.KeybindSize or 12, nil,
-            function(val)
+        local barKeybindSize = GUIFrame:CreateSlider(row3a, "Keybind Size", {
+            min = 6,
+            max = 24,
+            step = 1,
+            value = barDB and barDB.FontSizes and barDB.FontSizes.KeybindSize or 12,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.FontSizes = bdb.FontSizes or {}
                     bdb.FontSizes.KeybindSize = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row3a:AddWidget(barKeybindSize, 0.5)
         table_insert(allWidgets, barKeybindSize)
         table_insert(barWidgets, barKeybindSize)
 
-        local barCooldownSize = GUIFrame:CreateSlider(row3a, "Cooldown Size", 6, 24, 1,
-            barDB and barDB.FontSizes and barDB.FontSizes.CooldownSize or 14, nil,
-            function(val)
+        local barCooldownSize = GUIFrame:CreateSlider(row3a, "Cooldown Size", {
+            min = 6,
+            max = 24,
+            step = 1,
+            value = barDB and barDB.FontSizes and barDB.FontSizes.CooldownSize or 14,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.FontSizes = bdb.FontSizes or {}
                     bdb.FontSizes.CooldownSize = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row3a:AddWidget(barCooldownSize, 0.5)
         table_insert(allWidgets, barCooldownSize)
         table_insert(barWidgets, barCooldownSize)
@@ -791,30 +866,38 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
         -- Charge and Macro Size
         local row3b = GUIFrame:CreateRow(card3.content, 40)
-        local barChargeSize = GUIFrame:CreateSlider(row3b, "Charge Size", 6, 24, 1,
-            barDB and barDB.FontSizes and barDB.FontSizes.ChargeSize or 12, nil,
-            function(val)
+        local barChargeSize = GUIFrame:CreateSlider(row3b, "Charge Size", {
+            min = 6,
+            max = 24,
+            step = 1,
+            value = barDB and barDB.FontSizes and barDB.FontSizes.ChargeSize or 12,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.FontSizes = bdb.FontSizes or {}
                     bdb.FontSizes.ChargeSize = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row3b:AddWidget(barChargeSize, 0.5)
         table_insert(allWidgets, barChargeSize)
         table_insert(barWidgets, barChargeSize)
 
-        local barMacroSize = GUIFrame:CreateSlider(row3b, "Macro Size", 6, 24, 1,
-            barDB and barDB.FontSizes and barDB.FontSizes.MacroSize or 10, nil,
-            function(val)
+        local barMacroSize = GUIFrame:CreateSlider(row3b, "Macro Size", {
+            min = 6,
+            max = 24,
+            step = 1,
+            value = barDB and barDB.FontSizes and barDB.FontSizes.MacroSize or 10,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.FontSizes = bdb.FontSizes or {}
                     bdb.FontSizes.MacroSize = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row3b:AddWidget(barMacroSize, 0.5)
         table_insert(allWidgets, barMacroSize)
         table_insert(barWidgets, barMacroSize)
@@ -838,42 +921,53 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
         -- Keybind Position
         local row4a = GUIFrame:CreateRow(card4.content, 40)
-        local keybindAnchor = GUIFrame:CreateDropdown(row4a, "Keybind Anchor", ANCHOR_OPTIONS,
-            tp.KeybindAnchor or "TOPRIGHT", 80,
-            function(key)
+        local keybindAnchor = GUIFrame:CreateDropdown(row4a, "Keybind Anchor", {
+            options = ANCHOR_OPTIONS,
+            value = tp.KeybindAnchor or "TOPRIGHT",
+            labelWidth = 80,
+            callback = function(key)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.KeybindAnchor = key
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4a:AddWidget(keybindAnchor, 0.34)
         table_insert(allWidgets, keybindAnchor)
         table_insert(barWidgets, keybindAnchor)
 
-        local keybindX = GUIFrame:CreateSlider(row4a, "X", -20, 20, 1, tp.KeybindXOffset or -2, 30,
-            function(val)
+        local keybindX = GUIFrame:CreateSlider(row4a, "X", {
+            min = -20, max = 20, step = 1,
+            value = tp.KeybindXOffset or -2,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.KeybindXOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4a:AddWidget(keybindX, 0.33)
         table_insert(allWidgets, keybindX)
         table_insert(barWidgets, keybindX)
 
-        local keybindY = GUIFrame:CreateSlider(row4a, "Y", -20, 20, 1, tp.KeybindYOffset or -2, 30,
-            function(val)
+        local keybindY = GUIFrame:CreateSlider(row4a, "Y", {
+            min = -20, max = 20, step = 1,
+            value = tp.KeybindYOffset or -2,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.KeybindYOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4a:AddWidget(keybindY, 0.33)
         table_insert(allWidgets, keybindY)
         table_insert(barWidgets, keybindY)
@@ -886,42 +980,53 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
         -- Charge Position
         local row4b = GUIFrame:CreateRow(card4.content, 40)
-        local chargeAnchor = GUIFrame:CreateDropdown(row4b, "Charge Anchor", ANCHOR_OPTIONS,
-            tp.ChargeAnchor or "BOTTOMRIGHT", 80,
-            function(key)
+        local chargeAnchor = GUIFrame:CreateDropdown(row4b, "Charge Anchor", {
+            options = ANCHOR_OPTIONS,
+            value = tp.ChargeAnchor or "BOTTOMRIGHT",
+            labelWidth = 80,
+            callback = function(key)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.ChargeAnchor = key
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4b:AddWidget(chargeAnchor, 0.34)
         table_insert(allWidgets, chargeAnchor)
         table_insert(barWidgets, chargeAnchor)
 
-        local chargeX = GUIFrame:CreateSlider(row4b, "X", -20, 20, 1, tp.ChargeXOffset or -2, 30,
-            function(val)
+        local chargeX = GUIFrame:CreateSlider(row4b, "X", {
+            min = -20, max = 20, step = 1,
+            value = tp.ChargeXOffset or -2,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.ChargeXOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4b:AddWidget(chargeX, 0.33)
         table_insert(allWidgets, chargeX)
         table_insert(barWidgets, chargeX)
 
-        local chargeY = GUIFrame:CreateSlider(row4b, "Y", -20, 20, 1, tp.ChargeYOffset or 2, 30,
-            function(val)
+        local chargeY = GUIFrame:CreateSlider(row4b, "Y", {
+            min = -20, max = 20, step = 1,
+            value = tp.ChargeYOffset or 2,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.ChargeYOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4b:AddWidget(chargeY, 0.33)
         table_insert(allWidgets, chargeY)
         table_insert(barWidgets, chargeY)
@@ -934,42 +1039,53 @@ local function RenderTextTab(scrollChild, yOffset, activeCards)
 
         -- Macro Position
         local row4c = GUIFrame:CreateRow(card4.content, 40)
-        local macroAnchor = GUIFrame:CreateDropdown(row4c, "Macro Anchor", ANCHOR_OPTIONS,
-            tp.MacroAnchor or "BOTTOM", 80,
-            function(key)
+        local macroAnchor = GUIFrame:CreateDropdown(row4c, "Macro Anchor", {
+            options = ANCHOR_OPTIONS,
+            value = tp.MacroAnchor or "BOTTOM",
+            labelWidth = 80,
+            callback = function(key)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.MacroAnchor = key
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4c:AddWidget(macroAnchor, 0.34)
         table_insert(allWidgets, macroAnchor)
         table_insert(barWidgets, macroAnchor)
 
-        local macroX = GUIFrame:CreateSlider(row4c, "X", -20, 20, 1, tp.MacroXOffset or 0, 30,
-            function(val)
+        local macroX = GUIFrame:CreateSlider(row4c, "X", {
+            min = -20, max = 20, step = 1,
+            value = tp.MacroXOffset or 0,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.MacroXOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4c:AddWidget(macroX, 0.33)
         table_insert(allWidgets, macroX)
         table_insert(barWidgets, macroX)
 
-        local macroY = GUIFrame:CreateSlider(row4c, "Y", -20, 20, 1, tp.MacroYOffset or -2, 30,
-            function(val)
+        local macroY = GUIFrame:CreateSlider(row4c, "Y", {
+            min = -20, max = 20, step = 1,
+            value = tp.MacroYOffset or -2,
+            labelWidth = 30,
+            callback = function(val)
                 local bdb = GetCurrentBarDB()
                 if bdb then
                     bdb.TextPositions = bdb.TextPositions or {}
                     bdb.TextPositions.MacroYOffset = val
                 end
                 ApplyBarSettings()
-            end)
+            end
+        })
         row4c:AddWidget(macroY, 0.33)
         table_insert(allWidgets, macroY)
         table_insert(barWidgets, macroY)
@@ -1001,13 +1117,16 @@ local function RenderBackdropTab(scrollChild, yOffset, activeCards)
     table_insert(allWidgets, card1)
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", BAR_LIST_KV, curEdit, nil,
-        function(key)
+    local barDropdown = GUIFrame:CreateDropdown(row1, "Select Bar to Edit", {
+        options = BAR_LIST_KV,
+        value = curEdit,
+        callback = function(key)
             db.currentEdit = key
             C_Timer.After(0.2, function()
                 GUIFrame:RefreshContent()
             end)
-        end)
+        end
+    })
     row1:AddWidget(barDropdown, 1)
     table_insert(allWidgets, barDropdown)
     card1:AddRow(row1, 40)
@@ -1025,13 +1144,14 @@ local function RenderBackdropTab(scrollChild, yOffset, activeCards)
 
     -- Hide Empty Backdrops
     local row2a = GUIFrame:CreateRow(card2.content, 36)
-    local hideEmptyCheck = GUIFrame:CreateCheckbox(row2a, "Hide Empty Backdrops",
-        barDB and barDB.HideEmptyBackdrops == true,
-        function(checked)
+    local hideEmptyCheck = GUIFrame:CreateCheckbox(row2a, "Hide Empty Backdrops", {
+        value = barDB and barDB.HideEmptyBackdrops == true,
+        callback = function(checked)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.HideEmptyBackdrops = checked end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2a:AddWidget(hideEmptyCheck, 1)
     table_insert(allWidgets, hideEmptyCheck)
     table_insert(barWidgets, hideEmptyCheck)
@@ -1044,25 +1164,27 @@ local function RenderBackdropTab(scrollChild, yOffset, activeCards)
 
     -- Backdrop Color
     local row2b = GUIFrame:CreateRow(card2.content, 39)
-    local backdropColor = GUIFrame:CreateColorPicker(row2b, "Backdrop Color",
-        barDB and barDB.BackdropColor or { 0, 0, 0, 0.8 },
-        function(r, g, b, a)
+    local backdropColor = GUIFrame:CreateColorPicker(row2b, "Backdrop Color", {
+        color = barDB and barDB.BackdropColor or { 0, 0, 0, 0.8 },
+        callback = function(r, g, b, a)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.BackdropColor = { r, g, b, a } end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2b:AddWidget(backdropColor, 0.5)
     table_insert(allWidgets, backdropColor)
     table_insert(barWidgets, backdropColor)
 
     -- Border Color
-    local borderColor = GUIFrame:CreateColorPicker(row2b, "Border Color",
-        barDB and barDB.BorderColor or { 0, 0, 0, 1 },
-        function(r, g, b, a)
+    local borderColor = GUIFrame:CreateColorPicker(row2b, "Border Color", {
+        color = barDB and barDB.BorderColor or { 0, 0, 0, 1 },
+        callback = function(r, g, b, a)
             local bdb = GetCurrentBarDB()
             if bdb then bdb.BorderColor = { r, g, b, a } end
             ApplyBarSettings()
-        end)
+        end
+    })
     row2b:AddWidget(borderColor, 0.5)
     table_insert(allWidgets, borderColor)
     table_insert(barWidgets, borderColor)
@@ -1094,158 +1216,25 @@ local function CreateActionBarsPanel(container)
         GUIFrame.pendingContext = nil
     end
 
-    -- Full-size frame to take over content area
-    local panel = CreateFrame("Frame", nil, container)
-    panel:SetAllPoints()
+    -- Forward reference for tabPanel
+    local tabPanel
 
-    -- Tab bar at top
-    local tabBar = CreateFrame("Frame", nil, panel)
-    tabBar:SetHeight(TAB_BAR_HEIGHT)
-    tabBar:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
-    tabBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", 0, 0)
+    -- Render content for selected tab
+    local function RenderContent(tabId)
+        if not tabPanel then return end
 
-    -- Tab bar background
-    local tabBarBg = tabBar:CreateTexture(nil, "BACKGROUND")
-    tabBarBg:SetAllPoints()
-    tabBarBg:SetColorTexture(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
-
-    -- Tab bar bottom border
-    local tabBarBorder = tabBar:CreateTexture(nil, "ARTWORK")
-    tabBarBorder:SetHeight(1)
-    tabBarBorder:SetPoint("BOTTOMLEFT", tabBar, "BOTTOMLEFT", 0, 0)
-    tabBarBorder:SetPoint("BOTTOMRIGHT", tabBar, "BOTTOMRIGHT", 0, 0)
-    tabBarBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-
-    -- Cache tab bar
-    cachedTabBar = tabBar
-
-    -- Scroll frame below tab bar
-    local scrollbarWidth = Theme.scrollbarWidth or 16
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -1)
-    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
-
-    -- Style scrollbar
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        sb:ClearAllPoints()
-        sb:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -3, -(TAB_BAR_HEIGHT + Theme.paddingSmall + 13))
-        sb:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -3, Theme.paddingSmall + 13)
-        sb:SetWidth(scrollbarWidth - 4)
-
-        -- Hide default scrollbar decorations
-        if sb.Background then sb.Background:Hide() end
-        if sb.Top then sb.Top:Hide() end
-        if sb.Middle then sb.Middle:Hide() end
-        if sb.Bottom then sb.Bottom:Hide() end
-        if sb.trackBG then sb.trackBG:Hide() end
-        if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-        if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-        -- Hide thumb when not needed
-        sb:SetAlpha(0)
-
-        -- Force scroll values to snap to whole screen pixels
-        local isSnapping = false
-        local PIXEL_STEP = 8 / 15
-        sb:HookScript("OnValueChanged", function(self, value)
-            if isSnapping then return end
-            local scale = scrollFrame:GetEffectiveScale()
-            local screenPixels = value * scale
-            local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-            local snappedValue = snappedPixels / scale
-            if math.abs(value - snappedValue) > 0.001 then
-                isSnapping = true
-                self:SetValue(snappedValue)
-                isSnapping = false
-            end
-        end)
-    end
-
-    -- Scroll child (dynamic width based on scrollbar visibility)
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    -- Track scrollbar visibility state
-    local scrollbarVisible = false
-    local baseWidth = Theme.contentWidth
-
-    -- Update scrollChild width based on scrollbar visibility
-    local function UpdateScrollChildWidth()
-        if scrollbarVisible then
-            scrollChild:SetWidth(baseWidth - scrollbarWidth)
-        else
-            scrollChild:SetWidth(baseWidth)
-        end
-    end
-
-    -- Show/hide scrollbar and adjust content width based on content height
-    local function UpdateScrollBarVisibility()
-        if scrollFrame.ScrollBar then
-            local contentHeight = scrollChild:GetHeight()
-            local frameHeight = scrollFrame:GetHeight()
-            local needsScrollbar = contentHeight > frameHeight
-
-            scrollbarVisible = needsScrollbar
-            scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-            UpdateScrollChildWidth()
-        end
-    end
-
-    -- Initial width setup
-    UpdateScrollChildWidth()
-
-    -- Hook events for visibility updates
-    scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
-    scrollChild:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-    scrollFrame:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-
-    -- Also update on show
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateScrollBarVisibility)
-    end)
-
-    -- Track cards for width updates
-    local activeCards = {}
-
-    -- Update all card widths when scrollChild resizes
-    local function UpdateCardWidths()
-        local newWidth = scrollChild:GetWidth()
-        for _, card in ipairs(activeCards) do
-            if card and card.SetWidth then
-                card:SetWidth(newWidth)
-            end
-        end
-    end
-
-    -- Hook scrollChild resize to update card widths
-    scrollChild:HookScript("OnSizeChanged", function(self, width, height)
-        UpdateCardWidths()
-    end)
-
-    -- Render content into scroll child
-    local function RenderContentIntoScrollChild(tabId)
         -- Clear widget tracking tables
         wipe(allWidgets)
         wipe(barWidgets)
 
-        -- Clear active cards tracking
-        wipe(activeCards)
+        -- Clear panel content
+        tabPanel:ClearContent()
 
-        -- Clear all existing children
-        for _, child in ipairs({ scrollChild:GetChildren() }) do
-            child:Hide()
-            child:SetParent(nil)
-        end
-
-        -- Clear any regions (font strings, textures)
-        for _, region in ipairs({ scrollChild:GetRegions() }) do
-            if region:GetObjectType() == "FontString" or region:GetObjectType() == "Texture" then
-                region:Hide()
-            end
-        end
-
+        local scrollChild = tabPanel.scrollChild
         local yOffset = Theme.paddingMedium
+
+        -- Collect cards for width updates
+        local activeCards = {}
 
         -- Render selected tab content
         if tabId == "global" then
@@ -1258,143 +1247,31 @@ local function CreateActionBarsPanel(container)
             yOffset = RenderBackdropTab(scrollChild, yOffset, activeCards)
         end
 
+        -- Register cards for width updates
+        for _, card in ipairs(activeCards) do
+            tabPanel:RegisterCard(card)
+        end
+
         -- Update scroll child height
-        scrollChild:SetHeight(yOffset + Theme.paddingLarge)
+        tabPanel:SetContentHeight(yOffset + Theme.paddingLarge)
+
+        UpdateAllWidgetStates()
     end
 
-    -- Helper to update tab button visuals
-    local function UpdateTabVisuals(buttons, selectedId)
-        for _, btn in ipairs(buttons) do
-            if btn.tabId == selectedId then
-                btn.label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-                btn.underline:Show()
-                btn.selectedOverlay:Show()
-            else
-                btn.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-                btn.underline:Hide()
-                btn.selectedOverlay:Hide()
-            end
+    -- Create sub-tab panel using the widget
+    tabPanel = NRSKNUI.GUI.CreateSubTabPanel(container, SUB_TABS, {
+        tabBarHeight = TAB_BAR_HEIGHT,
+        defaultTab = currentSubTab,
+        onTabChanged = function(tabId)
+            currentSubTab = tabId
+            RenderContent(tabId)
         end
-    end
-
-    -- Create tab buttons
-    local tabButtons = {}
-    local minPadding = Theme.paddingMedium * 2
-    local totalTextWidth = 0
-
-    for i, tabDef in ipairs(SUB_TABS) do
-        local btn = CreateFrame("Button", nil, tabBar)
-        btn:SetHeight(TAB_BAR_HEIGHT)
-        btn.tabId = tabDef.id
-        btn.tabIndex = i
-
-        -- Background (for hover)
-        local hoverBg = btn:CreateTexture(nil, "BACKGROUND", nil, 1)
-        hoverBg:SetAllPoints()
-        hoverBg:SetColorTexture(1, 1, 1, 0.05)
-        hoverBg:Hide()
-        btn.hoverBg = hoverBg
-
-        -- Selected overlay
-        local selectedOverlay = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
-        selectedOverlay:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
-        selectedOverlay:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        selectedOverlay:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.1)
-        selectedOverlay:Hide()
-        btn.selectedOverlay = selectedOverlay
-
-        -- Label
-        local label = btn:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        if NRSKNUI.ApplyThemeFont then
-            NRSKNUI:ApplyThemeFont(label, "small")
-        else
-            label:SetFontObject("GameFontNormalSmall")
-        end
-        label:SetText(tabDef.text)
-        label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-        btn.label = label
-
-        -- Measure text width for proportional layout
-        local textWidth = label:GetStringWidth()
-        btn.textWidth = textWidth
-        totalTextWidth = totalTextWidth + textWidth
-
-        -- Underline (selected indicator)
-        local underline = btn:CreateTexture(nil, "OVERLAY")
-        underline:SetHeight(2)
-        underline:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 0, 0)
-        underline:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        underline:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        underline:Hide()
-        btn.underline = underline
-
-        -- Mouse events
-        btn:SetScript("OnEnter", function(self)
-            if currentSubTab ~= self.tabId then
-                self.hoverBg:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self.hoverBg:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if currentSubTab ~= self.tabId then
-                currentSubTab = self.tabId
-                UpdateTabVisuals(cachedTabButtons, currentSubTab)
-                RenderContentIntoScrollChild(currentSubTab)
-            end
-        end)
-
-        table_insert(tabButtons, btn)
-    end
-
-    -- Cache tab buttons for callbacks
-    cachedTabButtons = tabButtons
-
-    -- Function to layout tabs proportionally based on text width
-    local function LayoutTabs(barWidth)
-        if barWidth <= 0 then return end
-
-        local numTabs = #tabButtons
-        local totalMinWidth = totalTextWidth + (minPadding * numTabs)
-
-        -- Calculate extra space to distribute
-        local extraSpace = math.max(0, barWidth - totalMinWidth)
-        local extraPerTab = extraSpace / numTabs
-
-        local xOffset = 0
-        for _, btn in ipairs(tabButtons) do
-            local tabWidth = btn.textWidth + minPadding + extraPerTab
-
-            btn:ClearAllPoints()
-            btn:SetPoint("TOP", tabBar, "TOP", 0, 0)
-            btn:SetPoint("BOTTOM", tabBar, "BOTTOM", 0, 0)
-            btn:SetPoint("LEFT", tabBar, "LEFT", xOffset, 0)
-            btn:SetWidth(tabWidth)
-
-            xOffset = xOffset + tabWidth
-        end
-    end
-
-    -- Initial layout
-    LayoutTabs(tabBar:GetWidth())
-
-    -- Update tab positions when tabBar size changes
-    tabBar:SetScript("OnSizeChanged", function(self, width, height)
-        LayoutTabs(width)
-    end)
-
-    -- Initial tab selection and visuals
-    UpdateTabVisuals(tabButtons, currentSubTab)
+    })
 
     -- Render initial content
-    RenderContentIntoScrollChild(currentSubTab)
+    RenderContent(currentSubTab)
 
-    UpdateAllWidgetStates()
-    return panel
+    return tabPanel.panel
 end
 
 ----------------------------------------------------------------

@@ -87,16 +87,17 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local ElvUIrow = GUIFrame:CreateRow(ElvUIcard.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(ElvUIrow, "Use ElvUI Skinning", ElvUIDB.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(ElvUIrow, "Use ElvUI Skinning", {
+        value = ElvUIDB.Enabled ~= false,
+        callback = function(checked)
             ElvUIDB.Enabled = checked
             NRSKNUI:CreateReloadPrompt("Disabling/Enabling this requires a reload to take full effect.")
         end,
-        true,
-        "Use ElvUI",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Use ElvUI",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     ElvUIrow:AddWidget(enableCheck, 1)
     ElvUIcard:AddRow(ElvUIrow, 40)
 
@@ -108,14 +109,12 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
 
     local rowHeight = 50
     local row = GUIFrame:CreateRow(ElvUIcard.content, rowHeight)
-    local textWidget = GUIFrame:CreateText(
-        row,
-        NRSKNUI:ColorTextByTheme("Information"),
-        NRSKNUI:ColorTextByTheme("• ") ..
-        "Disables all skinning modules when ElvUI is loaded.\nThis way you can still use the non skinning features of the addon without conflict.",
-        rowHeight,
-        "hide"
-    )
+    local textWidget = GUIFrame:CreateText(row, NRSKNUI:ColorTextByTheme("Information"), {
+        text = NRSKNUI:ColorTextByTheme("• ") ..
+            "Disables all skinning modules when ElvUI is loaded.\nThis way you can still use the non skinning features of the addon without conflict.",
+        height = rowHeight,
+        bgMode = "hide"
+    })
     row:AddWidget(textWidget, 1)
     ElvUIcard:AddRow(row, rowHeight)
 
@@ -129,29 +128,31 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
 
     -- Hide Minimap Icon Checkbox
     local mapIconRow = GUIFrame:CreateRow(GeneralCard.content, 36)
-    local enableMapIcon = GUIFrame:CreateCheckbox(mapIconRow, "Hide Minimap Icon", MinimapDB.hide ~= false,
-        function(checked)
+    local enableMapIcon = GUIFrame:CreateCheckbox(mapIconRow, "Hide Minimap Icon", {
+        value = MinimapDB.hide ~= false,
+        callback = function(checked)
             MinimapDB.hide = checked
         end,
-        true,
-        "Hide Minimap Icon",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Hide Minimap Icon",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     mapIconRow:AddWidget(enableMapIcon, 1)
     GeneralCard:AddRow(mapIconRow, 36)
 
     -- Login Message Checkbox
     local loginMsgRow = GUIFrame:CreateRow(GeneralCard.content, 36)
-    local enableLoginMsg = GUIFrame:CreateCheckbox(loginMsgRow, "Show Login Message", MinimapDB.LoginMessage ~= false,
-        function(checked)
+    local enableLoginMsg = GUIFrame:CreateCheckbox(loginMsgRow, "Show Login Message", {
+        value = MinimapDB.LoginMessage ~= false,
+        callback = function(checked)
             MinimapDB.LoginMessage = checked
         end,
-        true,
-        "Login Message",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Login Message",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     loginMsgRow:AddWidget(enableLoginMsg, 1)
     GeneralCard:AddRow(loginMsgRow, 36)
 

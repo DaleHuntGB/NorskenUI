@@ -1,23 +1,68 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
 local CreateFrame = CreateFrame
+local Mixin = Mixin
 local ColorPickerFrame = ColorPickerFrame
 
--- ColorPicker widget
-function GUIFrame:CreateColorPicker(parent, labelText, color, callback)
-    local tooltip = nil
-    local customHeight = nil
-    local rowHeight = customHeight or 34
-    local ANIMATION_DURATION = 0.18
-    local texPath = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NUIcolorPickerBG.png"
+-- Custom made backdrop for the swatch by Norsken
+local NUI_BG = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NUIcolorPickerBG.png"
+
+---@class NUIColorPickerMixin : Frame
+---@field swatch NUIColorSwatch
+---@field hexText FontString
+---@field _callback? OnColorChanged
+local NUIColorPickerMixin = {}
+
+---@param r number
+---@param g number
+---@param b number
+---@param a? number
+function NUIColorPickerMixin:SetColor(r, g, b, a)
+    a = a or 1
+    self.swatch.r, self.swatch.g, self.swatch.b, self.swatch.a = r, g, b, a
+    self.swatch:SetBackdropColor(r, g, b, a)
+    self.hexText:SetText("#" .. NRSKNUI:RGBAToHex(r, g, b))
+    if self._callback then self._callback(r, g, b, a) end
+end
+
+---@return number, number, number, number
+function NUIColorPickerMixin:GetColor()
+    return self.swatch.r, self.swatch.g, self.swatch.b, self.swatch.a
+end
+
+---@param enabled boolean
+function NUIColorPickerMixin:SetEnabled(enabled)
+    if enabled then
+        self:SetAlpha(1)
+        self.swatch:EnableMouse(true)
+    else
+        self:SetAlpha(0.4)
+        self.swatch:EnableMouse(false)
+    end
+end
+
+---Color picker with swatch and hex display
+---```lua
+---config = {
+---    color = {r, g, b, a},   -- Initial RGBA color
+---    callback = function,    -- Called when color changes
+---}
+---```
+---@param parent Frame
+---@param labelText string
+---@param config NUIColorPickerConfig
+---@return NUIColorPicker
+function GUIFrame:CreateColorPicker(parent, labelText, config)
+    config = config or {}
+    local color = config.color or { 1, 1, 1, 1 }
+    local callback = config.callback
 
     local row = CreateFrame("Frame", nil, parent)
-    row:SetHeight(rowHeight)
+    row:SetHeight(34)
 
     local label = row:CreateFontString(nil, "OVERLAY")
     label:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 1)
@@ -27,11 +72,10 @@ function GUIFrame:CreateColorPicker(parent, labelText, color, callback)
     label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     row.label = label
 
-    -- Backdrop texture to easier see current alpha value
     local swatchBg = row:CreateTexture(nil, "BACKGROUND")
     swatchBg:SetSize(48, 24)
     swatchBg:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -14)
-    swatchBg:SetTexture(texPath)
+    swatchBg:SetTexture(NUI_BG)
     swatchBg:SetAlpha(0.8)
     swatchBg:SetTexelSnappingBias(0)
     swatchBg:SetSnapToPixelGrid(false)
@@ -44,37 +88,32 @@ function GUIFrame:CreateColorPicker(parent, labelText, color, callback)
         edgeFile = "Interface\\Buttons\\WHITE8X8",
         edgeSize = 1,
     })
-    color = color or { 1, 1, 1, 1 }
     swatch:SetBackdropColor(color[1], color[2], color[3], color[4] or 1)
     swatch:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
     swatch.r, swatch.g, swatch.b, swatch.a = color[1], color[2], color[3], color[4] or 1
+    row.swatch = swatch
 
-    -- Hex code display
     local hexText = row:CreateFontString(nil, "OVERLAY")
     hexText:SetPoint("LEFT", swatch, "RIGHT", 8, 0)
     NRSKNUI:ApplyThemeFont(hexText, "small")
     hexText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     hexText:SetText("#" .. NRSKNUI:RGBAToHex(color[1], color[2], color[3]))
-    hexText:SetShadowColor(0,0,0,0)
+    hexText:SetShadowColor(0, 0, 0, 0)
     row.hexText = hexText
 
-    local function UpdateColor(r, g, b, a)
-        swatch.r, swatch.g, swatch.b, swatch.a = r, g, b, a or 1
-        swatch:SetBackdropColor(r, g, b, a or 1)
-        hexText:SetText("#" .. NRSKNUI:RGBAToHex(r, g, b))
-        if callback then callback(r, g, b, a or 1) end
-    end
+    row._callback = callback
 
-    -- Hover fade animation for border color
+    Mixin(row, NUIColorPickerMixin)
+
     local hoverAnimGroup = swatch:CreateAnimationGroup()
     local hoverAnim = hoverAnimGroup:CreateAnimation("Animation")
-    hoverAnim:SetDuration(ANIMATION_DURATION)
+    hoverAnim:SetDuration(Theme.animDuration)
 
     local borderColorFrom = {}
     local borderColorTo = {}
 
-    hoverAnimGroup:SetScript("OnUpdate", function(self)
-        local progress = self:GetProgress() or 0
+    hoverAnimGroup:SetScript("OnUpdate", function(anim)
+        local progress = anim:GetProgress() or 0
         local r = borderColorFrom.r + (borderColorTo.r - borderColorFrom.r) * progress
         local g = borderColorFrom.g + (borderColorTo.g - borderColorFrom.g) * progress
         local b = borderColorFrom.b + (borderColorTo.b - borderColorFrom.b) * progress
@@ -102,24 +141,11 @@ function GUIFrame:CreateColorPicker(parent, labelText, color, callback)
             borderColorTo.g = Theme.border[2]
             borderColorTo.b = Theme.border[3]
         end
-
         hoverAnimGroup:Play()
     end
 
-    swatch:SetScript("OnEnter", function(self)
-        AnimateBorderColor(true)
-        if tooltip then
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(tooltip, 1, 1, 1, 1, true)
-            GameTooltip:Show()
-        end
-    end)
-
-    swatch:SetScript("OnLeave", function(self)
-        AnimateBorderColor(false)
-        GameTooltip:Hide()
-    end)
-
+    swatch:SetScript("OnEnter", function() AnimateBorderColor(true) end)
+    swatch:SetScript("OnLeave", function() AnimateBorderColor(false) end)
     swatch:SetScript("OnClick", function()
         local prevR, prevG, prevB, prevA = swatch.r, swatch.g, swatch.b, swatch.a
         local info = {
@@ -132,28 +158,13 @@ function GUIFrame:CreateColorPicker(parent, labelText, color, callback)
         info.swatchFunc = function()
             local r, g, b = ColorPickerFrame:GetColorRGB()
             local a = ColorPickerFrame:GetColorAlpha()
-            UpdateColor(r or 1, g or 1, b or 1, a or 1)
+            row:SetColor(r or 1, g or 1, b or 1, a or 1)
         end
         info.opacityFunc = info.swatchFunc
         info.cancelFunc = function()
-            UpdateColor(prevR, prevG, prevB, prevA)
+            row:SetColor(prevR, prevG, prevB, prevA)
         end
         ColorPickerFrame:SetupColorPickerAndShow(info)
     end)
-    function row:SetColor(r, g, b, a) UpdateColor(r, g, b, a) end
-
-    function row:GetColor() return swatch.r, swatch.g, swatch.b, swatch.a end
-
-    function row:SetEnabled(enabled)
-        if enabled then
-            row:SetAlpha(1)
-            swatch:EnableMouse(true)
-        else
-            row:SetAlpha(0.4)
-            swatch:EnableMouse(false)
-        end
-    end
-
-    row.swatch = swatch
     return row
 end

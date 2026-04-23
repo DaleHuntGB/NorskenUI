@@ -13,7 +13,7 @@ local Defaults = {
         -- All theme presets are defined in AddonTheme.lua
         Theme = {
             mode           = "preset", -- Theme mode: preset, class, or custom
-            selectedPreset = "Echo",   -- Selected preset theme name
+            selectedPreset = "NUI v2",   -- Selected preset theme name
             customColors   = {},       -- Custom color overrides (used in custom mode)
 
             -- Font settings (shared across all modes)
@@ -130,6 +130,7 @@ local Defaults = {
         -- Combat Timer Settings
         CombatTimer = {
             Enabled = true,                      -- Enable/disable combat timer
+            CombatOnly = false,                  -- Only show timer during combat
             Format = "MM:SS",                    -- Time format
             FontSize = 28,                       -- Font size
             FontFace = "Expressway",             -- Font face
@@ -229,68 +230,39 @@ local Defaults = {
 
         -- Battle Res Tracker Settings
         BattleRes = {
-            Enabled = true,               -- Enable/disable battle res tracker
-            DisplayMode = "text",         -- "icon" or "text"
-            PreviewMode = false,          -- Preview mode for testing outside M+
-            Strata = "HIGH",              -- Frame strata
-            anchorFrameType = "UIPARENT", -- Anchor frame type
-            ParentFrame = "UIParent",     -- Parent frame name
-            Position = {                  -- Position settings
-                AnchorFrom = "CENTER",    -- Anchor point from
-                AnchorTo = "CENTER",      -- Anchor point to
-                XOffset = 0.1,            -- X offset
-                YOffset = -430,           -- Y offset
+            Enabled = true,
+            Strata = "HIGH",
+            anchorFrameType = "UIPARENT",
+            ParentFrame = "UIParent",
+            Position = {
+                AnchorFrom = "CENTER",
+                AnchorTo = "CENTER",
+                XOffset = 0.1,
+                YOffset = -430,
             },
-
-            -- Text Mode Settings
-            TextMode = {
-                -- General text settings
-                FontFace = "Expressway",     -- Font face
-                FontSize = 18,               -- Font size
-                FontOutline = "SOFTOUTLINE", -- Font outline
-                TextSpacing = 4,             -- Spacing between timer and charges
-
-                -- Separator Settings
-                Separator = "|",                 -- Separator between timer and charges
-                SeparatorCharges = "CR:",
-                SeparatorColor = { 1, 1, 1, 1 }, -- Separator color
-                SeparatorShadow = {
-                    Enabled = false,             -- Enable shadow
-                    Color = { 0, 0, 0, 0 },      -- Shadow color
-                    OffsetX = 0,                 -- Shadow X offset (regular shadow only)
-                    OffsetY = 0,                 -- Shadow Y offset (regular shadow only)
-                },
-
-                -- Cooldown Timer Settings (uses Blizzard cooldown text - no soft outline support)
-                TimerColor = { 1, 1, 1, 1 }, -- Timer text color
-                TimerShadow = {
-                    Enabled = false,         -- Enable shadow
-                    Color = { 0, 0, 0, 0 },  -- Shadow color
-                    OffsetX = 0,             -- Shadow X offset
-                    OffsetY = 0,             -- Shadow Y offset
-                },
-
-                -- Charge Count Settings
-                ChargeAvailableColor = { 0.3, 1, 0.3, 1 },   -- Charge color when 1+ available
-                ChargeUnavailableColor = { 1, 0.3, 0.3, 1 }, -- Charge color when 0 available
-                ChargeShadow = {
-                    Enabled = false,                         -- Enable shadow
-                    Color = { 0, 0, 0, 0 },                  -- Shadow color
-                    OffsetX = 0,                             -- Shadow X offset (regular shadow only)
-                    OffsetY = 0,                             -- Shadow Y offset (regular shadow only)
-                },
-
-                -- Backdrop Settings
-                Backdrop = {                      -- Backdrop settings (text mode mainly)
-                    Enabled = true,               -- Enable backdrop
-                    Color = { 0, 0, 0, 0.8 },     -- Background color
-                    BorderColor = { 0, 0, 0, 1 }, -- Border color
-                    PaddingX = 8,                 -- Horizontal padding (visual only, not used for sizing)
-                    PaddingY = 4,                 -- Vertical padding (visual only, not used for sizing)
-                    FrameWidth = 112,             -- Fixed frame width
-                    FrameHeight = 26,             -- Fixed frame height
-                },
-                GrowthDirection = "RIGHT",        -- Growth direction: "LEFT", "RIGHT", "CENTER"
+            FontFace = "Expressway",
+            FontSize = 18,
+            FontOutline = "SOFTOUTLINE",
+            FontShadow = {
+                Enabled = false,
+                Color = { 0, 0, 0, 1 },
+                OffsetX = 1,
+                OffsetY = -1,
+            },
+            TextSpacing = 4,
+            GrowthDirection = "RIGHT",
+            Separator = "|",
+            SeparatorCharges = "CR:",
+            SeparatorColor = { 1, 1, 1, 1 },
+            TimerColor = { 1, 1, 1, 1 },
+            ChargeAvailableColor = { 0.3, 1, 0.3, 1 },
+            ChargeUnavailableColor = { 1, 0.3, 0.3, 1 },
+            Backdrop = {
+                Enabled = true,
+                Color = { 0, 0, 0, 0.8 },
+                BorderColor = { 0, 0, 0, 1 },
+                FrameWidth = 112,
+                FrameHeight = 26,
             },
         },
 
@@ -458,25 +430,6 @@ local Defaults = {
                     AnchorTo = "CENTER",      -- Anchor point to
                     XOffset = 0,              -- X offset
                     YOffset = 320,            -- Y offset
-                },
-            },
-
-            BloodlustTracker = {
-                Enabled = true,
-                Size = 40,
-                -- Font settings
-                FontFace = "Expressway",
-                FontSize = 18,
-                FontOutline = "SOFTOUTLINE",
-                -- Position settings
-                Strata = "HIGH",
-                anchorFrameType = "UIPARENT",
-                ParentFrame = "UIParent",
-                Position = {
-                    AnchorFrom = "CENTER",
-                    AnchorTo = "CENTER",
-                    XOffset = 0,
-                    YOffset = -200,
                 },
             },
 
@@ -649,10 +602,8 @@ local Defaults = {
                 },
             },
             CooldownStrings = {
-                Enabled = true,    -- Enable/disable CDM profile strings
-                FrameWidth = 350,  -- Width of the attached frame
-                FrameHeight = 400, -- Height of the attached frame
-                Profiles = {},     -- Saved profile strings { [name] = { String = "", Created = timestamp } }
+                Enabled = true,
+                Profiles = {},     -- { [name] = { String = "", Created = timestamp, SpecID = number } }
             },
             FocusCastbar = {
                 Enabled = true,

@@ -75,17 +75,15 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Healer Mana Tracker", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Healer Mana Tracker", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyEnableState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Healer Mana",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Healer Mana", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -99,10 +97,17 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     -- Icon Size
     local rowIcon = GUIFrame:CreateRow(card2.content, 36)
-    local iconSlider = GUIFrame:CreateSlider(rowIcon, "Icon Size", 16, 64, 1, db.IconSize, 30, function(value)
-        db.IconSize = value
-        Refresh()
-    end)
+    local iconSlider = GUIFrame:CreateSlider(rowIcon, "Icon Size", {
+        min = 16,
+        max = 64,
+        step = 1,
+        value = db.IconSize,
+        labelWidth = 30,
+        callback = function(value)
+            db.IconSize = value
+            Refresh()
+        end
+    })
     rowIcon:AddWidget(iconSlider, 1)
     table_insert(allWidgets, iconSlider)
     card2:AddRow(rowIcon, 36)
@@ -117,10 +122,17 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     -- Name Font Size + X Offset
     local rowName1 = GUIFrame:CreateRow(card3.content, 36)
-    local nameSizeSlider = GUIFrame:CreateSlider(rowName1, "Font Size", 8, 44, 1, db.NameFontSize, 30, function(value)
-        db.NameFontSize = value
-        Refresh()
-    end)
+    local nameSizeSlider = GUIFrame:CreateSlider(rowName1, "Font Size", {
+        min = 8,
+        max = 44,
+        step = 1,
+        value = db.NameFontSize,
+        labelWidth = 30,
+        callback = function(value)
+            db.NameFontSize = value
+            Refresh()
+        end
+    })
     rowName1:AddWidget(nameSizeSlider, 1)
     table_insert(allWidgets, nameSizeSlider)
     card3:AddRow(rowName1, 36)
@@ -132,18 +144,32 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
     card3:AddRow(sepRow, 8)
 
     local rowName3 = GUIFrame:CreateRow(card3.content, 36)
-    local nameXSlider = GUIFrame:CreateSlider(rowName3, "X Offset", -40, 40, 1, db.NameXOffset, 30, function(value)
-        db.NameXOffset = value
-        Refresh()
-    end)
+    local nameXSlider = GUIFrame:CreateSlider(rowName3, "X Offset", {
+        min = -40,
+        max = 40,
+        step = 1,
+        value = db.NameXOffset,
+        labelWidth = 30,
+        callback = function(value)
+            db.NameXOffset = value
+            Refresh()
+        end
+    })
     rowName3:AddWidget(nameXSlider, 0.5)
     table_insert(allWidgets, nameXSlider)
 
     -- Name Y Offset
-    local nameYSlider = GUIFrame:CreateSlider(rowName3, "Y Offset", -40, 40, 1, db.NameYOffset, 30, function(value)
-        db.NameYOffset = value
-        Refresh()
-    end)
+    local nameYSlider = GUIFrame:CreateSlider(rowName3, "Y Offset", {
+        min = -40,
+        max = 40,
+        step = 1,
+        value = db.NameYOffset,
+        labelWidth = 30,
+        callback = function(value)
+            db.NameYOffset = value
+            Refresh()
+        end
+    })
     rowName3:AddWidget(nameYSlider, 0.5)
     table_insert(allWidgets, nameYSlider)
     card3:AddRow(rowName3, 36)
@@ -158,10 +184,17 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     -- Mana Font Size + X Offset
     local rowMana1 = GUIFrame:CreateRow(card4.content, 36)
-    local manaSizeSlider = GUIFrame:CreateSlider(rowMana1, "Font Size", 8, 44, 1, db.ManaFontSize, 30, function(value)
-        db.ManaFontSize = value
-        Refresh()
-    end)
+    local manaSizeSlider = GUIFrame:CreateSlider(rowMana1, "Font Size", {
+        min = 8,
+        max = 44,
+        step = 1,
+        value = db.ManaFontSize,
+        labelWidth = 30,
+        callback = function(value)
+            db.ManaFontSize = value
+            Refresh()
+        end
+    })
     rowMana1:AddWidget(manaSizeSlider, 1)
     table_insert(allWidgets, manaSizeSlider)
     card4:AddRow(rowMana1, 36)
@@ -173,18 +206,32 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
     card4:AddRow(sepRow2, 8)
 
     local rowMana2 = GUIFrame:CreateRow(card4.content, 36)
-    local manaXSlider = GUIFrame:CreateSlider(rowMana2, "X Offset", -40, 40, 1, db.ManaXOffset, 30, function(value)
-        db.ManaXOffset = value
-        Refresh()
-    end)
+    local manaXSlider = GUIFrame:CreateSlider(rowMana2, "X Offset", {
+        min = -40,
+        max = 40,
+        step = 1,
+        value = db.ManaXOffset,
+        labelWidth = 30,
+        callback = function(value)
+            db.ManaXOffset = value
+            Refresh()
+        end
+    })
     rowMana2:AddWidget(manaXSlider, 0.5)
     table_insert(allWidgets, manaXSlider)
 
     -- Mana Y Offset
-    local manaYSlider = GUIFrame:CreateSlider(rowMana2, "Y Offset", -40, 40, 1, db.ManaYOffset, 30, function(value)
-        db.ManaYOffset = value
-        Refresh()
-    end)
+    local manaYSlider = GUIFrame:CreateSlider(rowMana2, "Y Offset", {
+        min = -40,
+        max = 40,
+        step = 1,
+        value = db.ManaYOffset,
+        labelWidth = 30,
+        callback = function(value)
+            db.ManaYOffset = value
+            Refresh()
+        end
+    })
     rowMana2:AddWidget(manaYSlider, 0.5)
     table_insert(allWidgets, manaYSlider)
     card4:AddRow(rowMana2, 36)
@@ -199,11 +246,13 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     -- Mana Color
     local rowColor = GUIFrame:CreateRow(card5.content, 37)
-    local manaColorPicker = GUIFrame:CreateColorPicker(rowColor, "Mana Text Color", db.HighManaColor,
-        function(r, g, b, a)
+    local manaColorPicker = GUIFrame:CreateColorPicker(rowColor, "Mana Text Color", {
+        color = db.HighManaColor,
+        callback = function(r, g, b, a)
             db.HighManaColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     rowColor:AddWidget(manaColorPicker, 0.5)
     table_insert(allWidgets, manaColorPicker)
     card5:AddRow(rowColor, 37)
@@ -225,11 +274,16 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
     end
 
     local rowFont = GUIFrame:CreateRow(card6.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(rowFont, "Font", fontList, db.FontFace or "Expressway", 30,
-        function(value)
+    local fontDropdown = GUIFrame:CreateDropdown(rowFont, "Font", {
+        options = fontList,
+        value = db.FontFace or "Expressway",
+        callback = function(value)
             db.FontFace = value
             Refresh()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     rowFont:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
@@ -239,11 +293,14 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE",  text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(rowFont, "Outline", outlineList, db.FontOutline or "SOFTOUTLINE", 30,
-        function(value)
+    local outlineDropdown = GUIFrame:CreateDropdown(rowFont, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "SOFTOUTLINE",
+        callback = function(value)
             db.FontOutline = value
             Refresh()
-        end)
+        end
+    })
     rowFont:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card6:AddRow(rowFont, 40)
@@ -255,15 +312,6 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card7, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = ApplySettings,

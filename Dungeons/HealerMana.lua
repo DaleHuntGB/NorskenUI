@@ -26,6 +26,7 @@ local IsInRaid = IsInRaid
 local IsInGroup = IsInGroup
 local pairs = pairs
 local wipe = wipe
+local issecretvalue = issecretvalue
 
 -- Module state
 HM.healerFrames = {}
@@ -48,12 +49,12 @@ end
 
 -- Healing spec icon fallbacks by class
 local HEALER_SPEC_ICONS = {
-    DRUID = 136041,      -- Restoration
-    MONK = 608952,       -- Mistweaver
-    PALADIN = 135920,    -- Holy
-    PRIEST = 135940,     -- Discipline
-    SHAMAN = 136052,     -- Restoration
-    EVOKER = 4622476,    -- Preservation
+    DRUID = 136041,   -- Restoration
+    MONK = 608952,    -- Mistweaver
+    PALADIN = 135920, -- Holy
+    PRIEST = 135940,  -- Discipline
+    SHAMAN = 136052,  -- Restoration
+    EVOKER = 4622476, -- Preservation
 }
 
 -- Get spec icon for a spec ID
@@ -72,7 +73,7 @@ end
 -- Display mana percent in the frame
 local function DisplayManaPercent(fontString, unit)
     local pct = UnitPowerPercent(unit, Enum.PowerType.Mana, true, CurveConstants.ScaleTo100)
-    fontString:SetFormattedText("%.0f%%", pct)
+    fontString:SetText(string.format("%.0f%%", pct))
 end
 
 -- Create a healer frame
@@ -98,25 +99,16 @@ function HM:CreateHealerFrame(index)
     frame.icon:SetPoint("BOTTOMRIGHT", -1, 1)
 
     -- Name
-    local fontPath = NRSKNUI:GetFontPath(self.db.FontFace)
-    local fontOutline = self.db.FontOutline or "OUTLINE"
-    local useSoftOutline = fontOutline == "SOFTOUTLINE"
-    local actualOutline = useSoftOutline and "" or (fontOutline == "NONE" and "" or fontOutline)
-
     frame.name = frame:CreateFontString(nil, "OVERLAY")
-    frame.name:SetFont(fontPath, self.db.NameFontSize, actualOutline)
     frame.name:SetPoint("LEFT", frame.iconFrame, "RIGHT", self.db.NameXOffset, self.db.NameYOffset)
     frame.name:SetJustifyH("LEFT")
+    NRSKNUI:ApplyFontToText(frame.name, self.db.FontFace, self.db.NameFontSize, self.db.FontOutline or "OUTLINE")
 
-    if useSoftOutline and NRSKNUI.CreateSoftOutline then
-        frame.nameSoftOutline = NRSKNUI:CreateSoftOutline(frame.name, { size = 2 })
-    end
-
-    local manaOutline = (fontOutline == "NONE") and "" or "OUTLINE"
+    -- Mana
     frame.mana = frame:CreateFontString(nil, "OVERLAY")
-    frame.mana:SetFont(fontPath, self.db.ManaFontSize, manaOutline)
     frame.mana:SetPoint("LEFT", frame.iconFrame, "RIGHT", self.db.ManaXOffset, self.db.ManaYOffset)
     frame.mana:SetJustifyH("LEFT")
+    NRSKNUI:ApplyFontToText(frame.mana, self.db.FontFace, self.db.ManaFontSize, self.db.FontOutline or "OUTLINE")
 
     frame:Hide()
     return frame
@@ -132,20 +124,16 @@ end
 
 -- Update healer frame appearance
 function HM:UpdateFrameAppearance(frame)
-    local fontPath = NRSKNUI:GetFontPath(self.db.FontFace)
-    local fontOutline = self.db.FontOutline
-    local useSoftOutline = fontOutline == "SOFTOUTLINE"
-    local actualOutline = useSoftOutline and "" or (fontOutline == "NONE" and "" or fontOutline)
-    local manaOutline = (fontOutline == "NONE") and "" or "OUTLINE"
-
     frame:SetSize(self.db.FrameWidth, self.db.IconSize)
     frame.iconFrame:SetSize(self.db.IconSize, self.db.IconSize)
-    frame.name:SetFont(fontPath, self.db.NameFontSize, actualOutline)
+
     frame.name:ClearAllPoints()
-    frame.name:SetPoint("BOTTOMLEFT", frame.iconFrame, "TOPRIGHT", self.db.NameXOffset, self.db.NameYOffset)
-    frame.mana:SetFont(fontPath, self.db.ManaFontSize, manaOutline)
+    frame.name:SetPoint("LEFT", frame.iconFrame, "RIGHT", self.db.NameXOffset, self.db.NameYOffset)
+    NRSKNUI:ApplyFontToText(frame.name, self.db.FontFace, self.db.NameFontSize, self.db.FontOutline)
+
     frame.mana:ClearAllPoints()
-    frame.mana:SetPoint("TOPLEFT", frame.iconFrame, "BOTTOMRIGHT", self.db.ManaXOffset, self.db.ManaYOffset)
+    frame.mana:SetPoint("LEFT", frame.iconFrame, "RIGHT", self.db.ManaXOffset, self.db.ManaYOffset)
+    NRSKNUI:ApplyFontToText(frame.mana, self.db.FontFace, self.db.ManaFontSize, self.db.FontOutline)
 end
 
 -- Create container frame
@@ -219,8 +207,11 @@ function HM:FindHealer()
         return
     end
 
-    -- Cache healer info
+    -- Cache healer info (UnitName can return secret in M+)
     healerName = UnitName(healerUnit)
+    if issecretvalue and issecretvalue(healerName) then
+        healerName = "Healer"
+    end
     healerSpecID = GetInspectSpecialization(healerUnit)
     _, healerClass = UnitClass(healerUnit)
 
@@ -287,7 +278,7 @@ function HM:UpdateMana()
     local frame = self.healerFrames[1]
     if not frame or not frame:IsShown() then return end
 
-    DisplayManaPercent(frame.mana, healer.unit)
+   DisplayManaPercent(frame.mana, healer.unit)
 end
 
 -- Apply settings
@@ -308,6 +299,11 @@ function HM:ApplySettings()
     self.containerFrame:ClearAllPoints()
     self.containerFrame:SetPoint(pos.AnchorFrom, UIParent, pos.AnchorTo, pos.XOffset, pos.YOffset)
     self.containerFrame:SetFrameStrata(self.db.Strata or "HIGH")
+
+    -- Update existing frame appearances
+    for _, frame in pairs(self.healerFrames) do
+        self:UpdateFrameAppearance(frame)
+    end
 
     -- Force update
     self:FindHealer()

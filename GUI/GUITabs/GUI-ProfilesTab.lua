@@ -40,8 +40,10 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     local noGlobal = useGlobal == false
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local profileDropdown = GUIFrame:CreateDropdown(row1, "Active Profile", profileOptions, currentProfile, 100,
-        function(key)
+    local profileDropdown = GUIFrame:CreateDropdown(row1, "Active Profile", {
+        options = profileOptions,
+        value = currentProfile,
+        callback = function(key)
             if key == currentProfile then return end
 
             local success, err = PM:SetProfile(key)
@@ -60,7 +62,8 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
                     "Later"
                 )
             end
-        end)
+        end
+    })
     row1:AddWidget(profileDropdown, 1)
     card1:AddRow(row1, 40)
 
@@ -80,8 +83,9 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
 
     -- Toggle for global mode
     local row2a = GUIFrame:CreateRow(card2.content, 36)
-    local globalToggle = GUIFrame:CreateCheckbox(row2a, "Use Global Profile", useGlobal,
-        function(newState)
+    local globalToggle = GUIFrame:CreateCheckbox(row2a, "Use Global Profile", {
+        value = useGlobal,
+        callback = function(newState)
             local success = PM:SetUseGlobalProfile(newState)
             if success then
                 if newState then
@@ -105,14 +109,17 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
                     end)
                 end
             end
-        end)
+        end
+    })
     row2a:AddWidget(globalToggle, 1)
     card2:AddRow(row2a, 36)
 
     -- Global profile selection
     local row2b = GUIFrame:CreateRow(card2.content, 40)
-    local globalDropdown = GUIFrame:CreateDropdown(row2b, "Global Profile", profileOptions, globalProfile, 100,
-        function(key)
+    local globalDropdown = GUIFrame:CreateDropdown(row2b, "Global Profile", {
+        options = profileOptions,
+        value = globalProfile,
+        callback = function(key)
             local success, err = PM:SetGlobalProfile(key)
             if not success then
                 NRSKNUI:Print("Failed to set global profile: " .. (err or "Unknown error"))
@@ -134,7 +141,8 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
                     NRSKNUI:Print("Global profile set to: " .. key)
                 end
             end
-        end)
+        end
+    })
     row2b:AddWidget(globalDropdown, 1)
     card2:AddRow(row2b, 40)
 
@@ -156,7 +164,7 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     card3:AddLabel("Create New Profile")
 
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local newProfileInput = GUIFrame:CreateEditBox(row3a, "Profile Name", "", function() end)
+    local newProfileInput = GUIFrame:CreateEditBox(row3a, "Profile Name", { value = "" })
     row3a:AddWidget(newProfileInput, 0.65)
 
     local createBtn = GUIFrame:CreateButton(row3a, "Create", {
@@ -195,7 +203,10 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     card3:AddLabel("Copy From Profile")
 
     local row3b = GUIFrame:CreateRow(card3.content, 40)
-    local copyDropdown = GUIFrame:CreateDropdown(row3b, "Source Profile", profileOptions, "", 100, function() end)
+    local copyDropdown = GUIFrame:CreateDropdown(row3b, "Source Profile", {
+        options = profileOptions,
+        value = ""
+    })
     row3b:AddWidget(copyDropdown, 0.65)
 
     local copyBtn = GUIFrame:CreateButton(row3b, "Copy", {
@@ -237,7 +248,10 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     card3:AddLabel("Delete Profile")
 
     local row3c = GUIFrame:CreateRow(card3.content, 40)
-    local deleteDropdown = GUIFrame:CreateDropdown(row3c, "Profile to Delete", profileOptions, "", 100, function() end)
+    local deleteDropdown = GUIFrame:CreateDropdown(row3c, "Profile to Delete", {
+        options = profileOptions,
+        value = ""
+    })
     row3c:AddWidget(deleteDropdown, 0.65)
 
     local deleteBtn = GUIFrame:CreateButton(row3c, "Delete", {
@@ -349,7 +363,7 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     card4:AddLabel("Import Profile")
 
     local row4b = GUIFrame:CreateRow(card4.content, 40)
-    local importNameInput = GUIFrame:CreateEditBox(row4b, "Profile Name (leave empty for default)", "", function() end)
+    local importNameInput = GUIFrame:CreateEditBox(row4b, "Profile Name (leave empty for default)", { value = "" })
     row4b:AddWidget(importNameInput, 1)
     card4:AddRow(row4b, 40)
 
@@ -398,12 +412,15 @@ GUIFrame:RegisterContent("ProfileManager", function(scrollChild, yOffset)
     local card5 = GUIFrame:CreateCard(scrollChild, "Rename Profile", yOffset)
 
     local row5a = GUIFrame:CreateRow(card5.content, 40)
-    local renameDropdown = GUIFrame:CreateDropdown(row5a, "Profile to Rename", profileOptions, "", 100, function() end)
+    local renameDropdown = GUIFrame:CreateDropdown(row5a, "Profile to Rename", {
+        options = profileOptions,
+        value = ""
+    })
     row5a:AddWidget(renameDropdown, 1)
     card5:AddRow(row5a, 40)
 
     local row5b = GUIFrame:CreateRow(card5.content, 40)
-    local newNameInput = GUIFrame:CreateEditBox(row5b, "New Name", "", function() end)
+    local newNameInput = GUIFrame:CreateEditBox(row5b, "New Name", { value = "" })
     row5b:AddWidget(newNameInput, 0.65)
 
     local renameBtn = GUIFrame:CreateButton(row5b, "Rename", {

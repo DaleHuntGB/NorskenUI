@@ -7,10 +7,8 @@ local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 local addonVersion = NRSKNUI.Version
 
--- GUI state
 NRSKNUI.GUIOpen = false
 
--- Localization
 local pcall = pcall
 local select = select
 local ShowUIPanel = ShowUIPanel
@@ -22,130 +20,14 @@ local pairs = pairs
 local ipairs = ipairs
 local ReloadUI = ReloadUI
 local CreateColor = CreateColor
-local print = print
 local InCombatLockdown = InCombatLockdown
 local _G = _G
 local C_AddOns = C_AddOns
 
--- Sidebar Configuration with collapsible sections
 GUIFrame.selectedTab = "systems"
 GUIFrame.selectedSidebarItem = nil
 GUIFrame.sidebarExpanded = GUIFrame.sidebarExpanded or {}
-GUIFrame.SidebarConfig = {
-    systems = {
-        {
-            id = "profiles_section",
-            type = "header",
-            text = "Profiles",
-            defaultExpanded = false,
-            items = {
-                { id = "ProfileManager", text = "Profile Manager" },
-            }
-        },
-        {
-            id = "combat_section",
-            type = "header",
-            text = "Combat Util",
-            defaultExpanded = false,
-            items = {
-                { id = "combatTimer",   text = "Combat Timer" },
-                { id = "combatCross",   text = "Combat Cross" },
-                { id = "battleRes",     text = "Combat Res" },
-                { id = "cursorCircle",  text = "Cursor Circle" },
-                { id = "combatMessage", text = "Combat Texts" },
-                { id = "PetTexts",      text = "Pet Status Texts" },
-                { id = "gateway",       text = "Gateway Alert" },
-                { id = "FocusCastbar",  text = "Focus Castbar" },
-                { id = "RangeChecker",  text = "Range Checker Text" },
-                { id = "TimeSpiral",    text = "Time Spiral" },
-                { id = "missingBuffs",  text = "Missing Buffs" },
-            }
-        },
-        {
-            id = "miscellaneous_section",
-            type = "header",
-            text = "Class Util",
-            defaultExpanded = false,
-            items = {
-                { id = "IncarnStacks", text = "Incarn Stacks" },
-            }
-        },
-        {
-            id = "qol_section",
-            type = "header",
-            text = "Quality of Life",
-            defaultExpanded = false,
-            items = {
-                { id = "MiscVars",           text = "CVars" },
-                { id = "Automation",         text = "Automation" },
-                { id = "CopyAnything",       text = "Copy Anything" },
-                { id = "CooldownStrings",    text = "CDM Profile Strings" },
-                { id = "whisperSounds",      text = "Whisper Sounds" },
-                { id = "DragonRiding",       text = "Dragon Riding UI" },
-                { id = "XPBar",              text = "XP Bar" },
-                { id = "Durability",         text = "Durability Util" },
-                { id = "HuntersMark",        text = "Hunters Mark Missing" },
-                { id = "AuctionHouseFilter", text = "AH Filter" },
-                { id = "Recuperate",         text = "Recuperate Button" },
-                { id = "BloodlustTracker",   text = "Bloodlust Tracker" },
-            }
-        },
-        {
-            id = "skinning_section",
-            type = "header",
-            text = "Blizzard Skinning",
-            defaultExpanded = false,
-            elvUIDisabled = true,
-            items = {
-                { id = "UICleanup",         text = "General UI Cleanup" },
-                { id = "Chat",              text = "Chat" },
-                { id = "ActionBars",        text = "Action Bars" },
-                { id = "Minimap",           text = "Minimap" },
-                { id = "MicroMenu",         text = "Micro Menu" },
-                { id = "BlizzardMouseover", text = "Blizzard Mouseover" },
-                { id = "messages",          text = "Blizzard Texts" },
-                { id = "tooltips",          text = "Tooltips" },
-                { id = "DetailsBackdrop",   text = "Details Backdrop" },
-                { id = "BlizzardRM",        text = "Raid Manager" },
-                { id = "UIWidgets",         text = "UI Widgets" },
-            }
-        },
-        {
-            id = "customskin_section",
-            type = "header",
-            text = "Custom Skinning",
-            defaultExpanded = false,
-            elvUIDisabled = true,
-            items = {
-                { id = "CustomSkin_Buffs",     text = "Buffs" },
-                { id = "CustomSkin_Debuffs",   text = "Debuffs" },
-                { id = "CustomSkin_Externals", text = "External Buffs" },
-            }
-        },
-        {
-            id = "dungeons_section",
-            type = "header",
-            text = "Dungeon Util",
-            defaultExpanded = false,
-            items = {
-                { id = "InstanceReset",             text = "Instance Reset" },
-                { id = "HealerMana",                text = "Healer Mana" },
-                { id = "DungeonCasts",              text = "Dungeon Casts" },
-                { id = "Dungeon_Settings",          text = "Timers Settings" },
-                { id = "Dungeon_MagistersTerrace",  text = "Magisters' Terrace" },
-                { id = "Dungeon_MaisaraCaverns",    text = "Maisara Caverns" },
-                { id = "Dungeon_NexusPointXenas",   text = "Nexus-Point Xenas" },
-                { id = "Dungeon_WindrunnerSpire",   text = "Windrunner Spire" },
-                { id = "Dungeon_AlgetharAcademy",   text = "Algeth'ar Academy" },
-                { id = "Dungeon_PitOfSaron",        text = "Pit of Saron" },
-                { id = "Dungeon_SeatOfTriumvirate", text = "Seat of the Triumvirate" },
-                { id = "Dungeon_Skyreach",          text = "Skyreach" },
-            }
-        },
-    },
-}
 
--- Function to refresh fontstrings, part of pixelperf util
 local function RefreshAllFontStrings(frame)
     for i = 1, frame:GetNumRegions() do
         local region = select(i, frame:GetRegions())
@@ -158,7 +40,6 @@ local function RefreshAllFontStrings(frame)
         end
     end
 
-    -- Recursively refresh child frames
     for i = 1, frame:GetNumChildren() do
         local child = select(i, frame:GetChildren())
         if child then
@@ -167,15 +48,12 @@ local function RefreshAllFontStrings(frame)
     end
 end
 
--- Create Main Frame
 function GUIFrame:CreateMainFrame()
-    -- Return existing frame if already created
-    if self.MainFrame then
-        return self.MainFrame
+    if self.mainFrame then
+        return self.mainFrame
     end
 
-    -- Main window frame
-    local frame = CreateFrame("Frame", "NorskenAurasGUIFrame", UIParent, "BackdropTemplate")
+    local frame = CreateFrame("Frame", "NorskenUIGUIFrame", UIParent, "BackdropTemplate")
     frame:SetSize(900, 650)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
     frame:SetFrameStrata("DIALOG")
@@ -186,7 +64,6 @@ function GUIFrame:CreateMainFrame()
     frame:SetResizeBounds(900, 650)
     frame:EnableMouse(true)
 
-    -- Main frame backdrop
     frame:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
         edgeFile = "Interface\\Buttons\\WHITE8X8",
@@ -195,62 +72,47 @@ function GUIFrame:CreateMainFrame()
     frame:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], Theme.bgDark[4])
     frame:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
-    -- Create a dummy overlay that allows for dropdown to go beyond scrollframe
     NRSKNUI.GUIOverlay = CreateFrame("Frame", nil, UIParent)
     NRSKNUI.GUIOverlay:SetAllPoints(UIParent)
     NRSKNUI.GUIOverlay:SetFrameStrata("TOOLTIP")
     NRSKNUI.GUIOverlay:SetFrameLevel(1)
     NRSKNUI.GUIOverlay:EnableMouse(false)
 
-    -- Create header and footer
     self:CreateHeader(frame)
     self:CreateFooter(frame)
     self:CreateContentArea(frame)
     self:CreateSidebar(frame)
     self:CreateShortcutFrame(frame)
 
-    -- Create border frame
     local borderFrame = CreateFrame("Frame", nil, frame)
     borderFrame:SetAllPoints(frame)
     borderFrame:SetFrameStrata("TOOLTIP")
     borderFrame:SetFrameLevel(frame:GetFrameLevel() + 100)
 
-    -- Create top borderFrame
     local borderTop = borderFrame:CreateTexture(nil, "OVERLAY", nil, 7)
     borderTop:SetHeight(Theme.borderSize)
     borderTop:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     borderTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     borderTop:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-    frame.borderTop = borderTop
 
-    -- Create bottom borderFrame
     local borderBottom = borderFrame:CreateTexture(nil, "OVERLAY", nil, 7)
     borderBottom:SetHeight(Theme.borderSize)
     borderBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
     borderBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     borderBottom:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-    frame.borderBottom = borderBottom
 
-    -- Create left borderFrame
     local borderLeft = borderFrame:CreateTexture(nil, "OVERLAY", nil, 7)
     borderLeft:SetWidth(Theme.borderSize)
     borderLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     borderLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
     borderLeft:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-    frame.borderLeft = borderLeft
 
-    -- Create right borderFrame
     local borderRight = borderFrame:CreateTexture(nil, "OVERLAY", nil, 7)
     borderRight:SetWidth(Theme.borderSize)
     borderRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     borderRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
     borderRight:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-    frame.borderRight = borderRight
 
-    -- Store border references
-    frame.borderFrame = borderFrame
-
-    -- Close on ESC key
     frame:SetScript("OnKeyDown", function(self, key)
         if key == "ESCAPE" then
             self:SetPropagateKeyboardInput(false)
@@ -261,96 +123,61 @@ function GUIFrame:CreateMainFrame()
     end)
     frame:EnableKeyboard(true)
 
-    -- Ensure frame is on top when shown
     frame:SetToplevel(true)
 
-    -- Update GUI open state on show/hide
     frame:SetScript("OnHide", function()
         if NRSKNUI.GUIOpen then
-            -- Save position on hide
-            if GUIFrame.SaveFramePosition then
-                GUIFrame:SaveFramePosition()
-            end
-
-            -- Save session state
-            if GUIFrame.SaveSessionState then
-                GUIFrame:SaveSessionState()
-            end
-
-            -- Fire content cleanup callbacks
+            GUIFrame:SaveFramePosition()
+            GUIFrame:SaveSessionState()
             if GUIFrame.contentCleanupCallbacks then
                 for _, callback in pairs(GUIFrame.contentCleanupCallbacks) do
                     pcall(callback)
                 end
             end
-
-            -- Fire on-close callbacks
-            if GUIFrame.FireOnCloseCallbacks then
-                GUIFrame:FireOnCloseCallbacks()
-            end
-
-            -- Run content cleanup callbacks
-            if GUIFrame.contentCleanupCallbacks then
-                for _, callback in pairs(GUIFrame.contentCleanupCallbacks) do
-                    pcall(callback)
-                end
-            end
-
-            -- Fire on-close callbacks
-            if GUIFrame.FireOnCloseCallbacks then
-                GUIFrame:FireOnCloseCallbacks()
-            end
-
-            -- Update open state and notify preview manager
+            GUIFrame:FireOnCloseCallbacks()
             NRSKNUI.GUIOpen = false
             if NRSKNUI.PreviewManager then
                 NRSKNUI.PreviewManager:SetGUIOpen(false)
             end
         end
     end)
-    -- Initially hidden
     frame:Hide()
 
-    -- Store reference
     self.mainFrame = frame
     return frame
 end
 
--- Helper to apply theme coloring to the GUIFrames
 function GUIFrame:ApplyThemeColors()
     if not self.mainFrame then return end
     local frame = self.mainFrame
     local selBg = Theme.selectedBg or Theme.accent
     local selText = Theme.selectedText or Theme.accent
 
-    -- Main frame backdrop
     frame:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], Theme.bgDark[4])
     frame:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
-    -- Header
     if frame.header then
         frame.header:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
-        -- Update logo colors
         if frame.header.logoN then
             frame.header.logoN:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
         end
-        if frame.header.logoAuras then
-            frame.header.logoAuras:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3],
+        if frame.header.logoUI then
+            frame.header.logoUI:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3],
                 1)
         end
     end
 
-    -- Sidebar
     if self.sidebar then
         self.sidebar:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
+        if self.sidebar.scrollbar and self.sidebar.scrollbar.ApplyThemeColors then
+            self.sidebar.scrollbar:ApplyThemeColors()
+        end
     end
 
-    -- Update sidebar section headers
     if self.sidebarHeaderPool then
         local r, g, b = Theme.accent[1], Theme.accent[2], Theme.accent[3]
         for _, header in ipairs(self.sidebarHeaderPool) do
             if header.inUse then
-                -- Update label and arrow color (respect disabled state)
                 if header.disabled then
                     if header.label then
                         header.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3],
@@ -368,12 +195,10 @@ function GUIFrame:ApplyThemeColors()
                         header.arrow:SetVertexColor(r, g, b, 1)
                     end
                 end
-                -- Update hover background gradient
                 if header.background then
                     header.background:SetGradient("HORIZONTAL", CreateColor(0.3, 0.3, 0.3, 0.25),
                         CreateColor(0.3, 0.3, 0.3, 0))
                 end
-                -- Update selection colors
                 if header.selectedOverlay then
                     header.selectedOverlay:SetVertexColor(selBg[1], selBg[2], selBg[3], selBg[4] or 0.25)
                 end
@@ -384,25 +209,20 @@ function GUIFrame:ApplyThemeColors()
         end
     end
 
-    -- Update static sidebar items
     if self.staticSidebarItemPool then
         local r, g, b = Theme.accent[1], Theme.accent[2], Theme.accent[3]
         for _, item in ipairs(self.staticSidebarItemPool) do
-            -- Update selection overlay gradient
             if item.selectedOverlay then
                 item.selectedOverlay:SetGradient("HORIZONTAL", CreateColor(r, g, b, 0.25), CreateColor(r, g, b, 0))
             end
-            -- Update hover background gradient
             if item.background then
                 item.background:SetGradient("HORIZONTAL", CreateColor(r, g, b, 0.25), CreateColor(r, g, b, 0))
             end
             if item.selectedBar then
                 item.selectedBar:SetColorTexture(selText[1], selText[2], selText[3], selText[4] or 1)
             end
-            -- Update text color based on selection (skip disabled items)
             if item.inUse then
                 if item.disabled then
-                    -- Preserve greyed-out appearance for disabled items
                     item.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.35)
                 elseif item.id == self.selectedSidebarItem then
                     item.label:SetTextColor(selText[1], selText[2], selText[3], selText[4] or 1)
@@ -413,15 +233,15 @@ function GUIFrame:ApplyThemeColors()
         end
     end
 
-    -- Content area
     if frame.content then
         frame.content:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], Theme.bgDark[4])
+        if frame.content.scrollbar and frame.content.scrollbar.ApplyThemeColors then
+            frame.content.scrollbar:ApplyThemeColors()
+        end
     end
 
-    -- Footer
     if frame.footer then
         frame.footer:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
-        -- Update Twitch button colors
         if frame.footer.logoTwitchTexture then
             frame.footer.logoTwitchTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
         end
@@ -429,7 +249,6 @@ function GUIFrame:ApplyThemeColors()
             frame.footer.logoTwitchText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2],
                 Theme.textSecondary[3], 0.7)
         end
-        -- Update Discord button colors
         if frame.footer.logoDiscordTexture then
             frame.footer.logoDiscordTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
         end
@@ -439,7 +258,6 @@ function GUIFrame:ApplyThemeColors()
         end
     end
 
-    -- Shortcut dropdown
     if self.shortcutContent then
         self.shortcutContent:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
         self.shortcutContent:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
@@ -450,10 +268,8 @@ function GUIFrame:ApplyThemeColors()
             tex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
         end
     end
-    -- Update shortcut item button text colors
     if self.shortcutItemButtons then
         for _, btn in ipairs(self.shortcutItemButtons) do
-            -- Find the text fontstring (first child fontstring)
             for i = 1, btn:GetNumRegions() do
                 local region = select(i, btn:GetRegions())
                 if region and region:GetObjectType() == "FontString" then
@@ -463,7 +279,6 @@ function GUIFrame:ApplyThemeColors()
             end
         end
     end
-    -- Update shortcut scrollbar thumb
     if self.shortcutScrollbarThumb then
         self.shortcutScrollbarThumb:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.8)
     end
@@ -472,20 +287,16 @@ function GUIFrame:ApplyThemeColors()
     end
 end
 
--- Shortcut Frame
 function GUIFrame:CreateShortcutFrame(parent)
-    -- Configuration
     local ITEM_HEIGHT = 24
     local MAX_DROPDOWN_HEIGHT = 400
     local ANIMATION_DURATION = 0.18
 
-    -- Main shortcut button (always visible, top right outside frame)
     local shortcutBtn = CreateFrame("Button", nil, parent)
     shortcutBtn:SetSize(18, 22)
     shortcutBtn:SetPoint("TOPLEFT", parent, "TOPRIGHT", -50, -6)
     shortcutBtn:SetFrameStrata("TOOLTIP")
 
-    -- Shortcut button texture
     local shortcutBtnTex = shortcutBtn:CreateTexture(nil, "ARTWORK")
     shortcutBtnTex:SetAllPoints()
     shortcutBtnTex:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NorskenCustomBurger.png")
@@ -507,7 +318,6 @@ function GUIFrame:CreateShortcutFrame(parent)
     dropdownList:SetClipsChildren(true)
     dropdownList:Hide()
 
-    -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", nil, dropdownList)
     scrollFrame:SetPoint("TOPLEFT", dropdownList, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", dropdownList, "BOTTOMRIGHT", -11, 0)
@@ -515,7 +325,6 @@ function GUIFrame:CreateShortcutFrame(parent)
     local scrollChild = CreateFrame("Frame", nil, scrollFrame)
     scrollFrame:SetScrollChild(scrollChild)
 
-    -- Scrollbar
     local scrollbar = CreateFrame("Slider", nil, dropdownList, "BackdropTemplate")
     scrollbar:SetPoint("TOPRIGHT", dropdownList, "TOPRIGHT", 0, 0)
     scrollbar:SetPoint("BOTTOMRIGHT", dropdownList, "BOTTOMRIGHT", 0, 0)
@@ -569,7 +378,6 @@ function GUIFrame:CreateShortcutFrame(parent)
     thumb:HookScript("OnShow", function() thumbBorder:Show() end)
     thumb:HookScript("OnHide", function() thumbBorder:Hide() end)
 
-    -- State tracking
     local isOpen = false
     local itemButtons = {}
     local startHeight = 0
@@ -579,12 +387,9 @@ function GUIFrame:CreateShortcutFrame(parent)
     local mouseChecker = CreateFrame("Frame", nil, UIParent)
     mouseChecker:Hide()
 
-    -- Animation setup
     local animGroup = dropdownList:CreateAnimationGroup()
-    local heightAnim = animGroup:CreateAnimation("Animation")
-    heightAnim:SetDuration(ANIMATION_DURATION)
+    animGroup:CreateAnimation("Animation"):SetDuration(ANIMATION_DURATION)
 
-    -- Hover fade animation for border color
     local hoverAnimGroup = shortcutBtn:CreateAnimationGroup()
     local hoverAnim = hoverAnimGroup:CreateAnimation("Animation")
     hoverAnim:SetDuration(0.15)
@@ -703,21 +508,17 @@ function GUIFrame:CreateShortcutFrame(parent)
         end
     end)
 
-    -- Create shortcut items
     local function CreateItemButtons()
         for _, btn in ipairs(itemButtons) do
             btn:Hide()
             btn:SetParent(nil)
         end
         itemButtons     = {}
-        -- Addon logos
         local BCDMLogo  = "|TInterface\\AddOns\\NorskenUI\\Media\\AddonLogos\\Logo.png:16:16|t"
         local UUFLogo   = "|TInterface\\AddOns\\NorskenUI\\Media\\AddonLogos\\Logo:11:12|t"
         local MSLogo    = "|TInterface\\AddOns\\NorskenUI\\Media\\AddonLogos\\MinimapStats.png:16:16|t"
 
-        -- Define shortcuts
         local shortcuts = {
-            -- ReloadUI shortcut
             { text = "Reload UI", onClick = function() ReloadUI() end },
             {
                 text = "Edit Mode",
@@ -728,11 +529,9 @@ function GUIFrame:CreateShortcutFrame(parent)
                     ShowUIPanel(EditModeManagerFrame)
                 end
             },
-            -- Cooldown Manager shortcut
             {
                 text = "Cooldown Manager",
                 onClick = function()
-                    -- Open Blizzard CooldownViewerSettings
                     local frame = _G["CooldownViewerSettings"]
                     if frame then
                         frame:Show()
@@ -743,13 +542,12 @@ function GUIFrame:CreateShortcutFrame(parent)
                     end
                 end
             },
-            -- UnhaltedUnitFrames shortcut
             {
                 text = UUFLogo .. " " .. "|cFF8080FFUnhalted|r" .. "|cFFFFFFFFUnitFrames|r",
                 onClick = function()
                     local addonName = "UnhaltedUnitFrames"
                     if not C_AddOns.IsAddOnLoaded(addonName) then
-                        local loaded, reason = C_AddOns.LoadAddOn(addonName)
+                        local loaded = C_AddOns.LoadAddOn(addonName)
                         if not loaded then
                             NRSKNUI:Print("UnhaltedUnitFrames is disabled/missing")
                             return
@@ -762,13 +560,12 @@ function GUIFrame:CreateShortcutFrame(parent)
                     end
                 end
             },
-            -- BetterCooldownManager shortcut
             {
                 text = BCDMLogo .. " " .. "|cFF8080FFBetter|r" .. "|cFFFFFFFFCooldownManager|r",
                 onClick = function()
                     local addonName = "BetterCooldownManager"
                     if not C_AddOns.IsAddOnLoaded(addonName) then
-                        local loaded, reason = C_AddOns.LoadAddOn(addonName)
+                        local loaded = C_AddOns.LoadAddOn(addonName)
                         if not loaded then
                             NRSKNUI:Print("BetterCooldownManager is disabled/missing")
                             return
@@ -781,13 +578,12 @@ function GUIFrame:CreateShortcutFrame(parent)
                     end
                 end
             },
-            -- MinimapStats shortcut
             {
                 text = MSLogo .. " " .. "|cFF8080FFMinimap|r" .. "|cFFFFFFFFStats|r",
                 onClick = function()
                     local addonName = "MinimapStats"
                     if not C_AddOns.IsAddOnLoaded(addonName) then
-                        local loaded, reason = C_AddOns.LoadAddOn(addonName)
+                        local loaded = C_AddOns.LoadAddOn(addonName)
                         if not loaded then
                             NRSKNUI:Print("MinimapStats is disabled/missing")
                             return
@@ -899,10 +695,6 @@ function GUIFrame:CreateShortcutFrame(parent)
         end
     end
 
-    shortcutBtn:SetScript("OnClick", function()
-        --ToggleDropdown()
-    end)
-
     shortcutBtn:SetScript("OnEnter", function()
         AnimateBorderColor(true)
         if not isOpen then
@@ -937,14 +729,12 @@ function GUIFrame:CreateShortcutFrame(parent)
         CloseDropdown(true)
     end)
 
-    -- Initialize
     dropdownList:Show()
     dropdownList:SetHeight(MAX_DROPDOWN_HEIGHT)
     CreateItemButtons()
     dropdownList:SetHeight(1)
     dropdownList:Hide()
 
-    -- Store references
     self.shortcutBtn = shortcutBtn
     self.shortcutContent = dropdownList
     self.shortcutItemButtons = itemButtons
@@ -954,33 +744,27 @@ function GUIFrame:CreateShortcutFrame(parent)
     return shortcutBtn
 end
 
--- Create Header
 function GUIFrame:CreateHeader(parent)
-    -- Header frame
     local header = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     header:SetHeight(Theme.headerHeight)
     header:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     header:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
-    -- Header background
     header:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
     })
     header:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
 
-    -- Bottom border
     local bottomBorder = header:CreateTexture(nil, "BORDER")
     bottomBorder:SetHeight(Theme.borderSize)
     bottomBorder:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
     bottomBorder:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
     bottomBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], Theme.border[4])
 
-    -- Logo
     local logoContainer = CreateFrame("Frame", nil, header)
     logoContainer:SetSize(180, 32)
     logoContainer:SetPoint("LEFT", header, "LEFT", Theme.paddingLarge, -1)
 
-    -- "N" logo part
     local logoN = logoContainer:CreateTexture(nil, "ARTWORK")
     logoN:SetSize(64, 64)
     logoN:SetPoint("LEFT", logoContainer, "LEFT", -10, 1)
@@ -989,118 +773,80 @@ function GUIFrame:CreateHeader(parent)
     logoN:SetTexelSnappingBias(0)
     logoN:SetSnapToPixelGrid(false)
 
-    -- "UI" logo part
-    local logoAuras = logoContainer:CreateTexture(nil, "ARTWORK")
-    logoAuras:SetSize(128, 128)
-    logoAuras:SetPoint("LEFT", logoN, "RIGHT", -62, -4)
-    logoAuras:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\Logo\\logocookingsPT3128x128OT.png")
-    logoAuras:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    logoAuras:SetTexelSnappingBias(0)
-    logoAuras:SetSnapToPixelGrid(false)
+    local logoUI = logoContainer:CreateTexture(nil, "ARTWORK")
+    logoUI:SetSize(128, 128)
+    logoUI:SetPoint("LEFT", logoN, "RIGHT", -62, -4)
+    logoUI:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\Logo\\logocookingsPT3128x128OT.png")
+    logoUI:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    logoUI:SetTexelSnappingBias(0)
+    logoUI:SetSnapToPixelGrid(false)
 
-    -- Current version text
     local fontPath = "Fonts\\FRIZQT__.TTF"
     local fontSize = Theme.fontSizeSmall or 10
     local currentVersionText = header:CreateFontString(nil, "OVERLAY")
-    currentVersionText:SetPoint("LEFT", logoAuras, "RIGHT", -45, -3)
+    currentVersionText:SetPoint("LEFT", logoUI, "RIGHT", -45, -3)
     currentVersionText:SetFont(fontPath, fontSize, "")
     currentVersionText:SetText(addonVersion)
     currentVersionText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     currentVersionText:SetJustifyH("LEFT")
     currentVersionText:SetShadowColor(0, 0, 0, 0)
-    -- Create stacked shadow layers for separator
-    header.currentVersionTextShadow = NRSKNUI:CreateSoftOutline(currentVersionText, {
+    NRSKNUI:CreateSoftOutline(currentVersionText, {
         thickness = 1,
         color = { 0, 0, 0 },
         alpha = 0.9,
     })
 
-    -- Header element references
-    header.logoContainer = logoContainer
     header.logoN = logoN
-    header.logoAuras = logoAuras
-    header.currentVersionText = currentVersionText
+    header.logoUI = logoUI
 
-    -- Close button
-    local closeBtn = CreateFrame("Button", nil, header)
-    closeBtn:SetSize(22, 22)
-    closeBtn:SetPoint("RIGHT", header, "RIGHT", -6, 0)
+    local function CreateHeaderButton(config)
+        local btn = CreateFrame("Button", nil, header)
+        btn:SetSize(config.size, config.size)
+        btn:SetPoint("RIGHT", header, "RIGHT", config.xOffset, config.yOffset or 0)
 
-    -- Close button texture
-    local closeTex = closeBtn:CreateTexture(nil, "ARTWORK")
-    closeTex:SetAllPoints()
-    closeTex:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NorskenCustomCrossv3.png")
-    closeTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    closeBtn:SetNormalTexture(closeTex)
-    closeTex:SetRotation(math.rad(45))
-    closeTex:SetTexelSnappingBias(0)
-    closeTex:SetSnapToPixelGrid(true)
+        local tex = btn:CreateTexture(nil, "ARTWORK")
+        tex:SetAllPoints()
+        tex:SetTexture(config.texture)
+        tex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+        btn:SetNormalTexture(tex)
+        if config.rotation then
+            tex:SetRotation(math.rad(config.rotation))
+        end
+        tex:SetTexelSnappingBias(0)
+        tex:SetSnapToPixelGrid(true)
 
-    -- Close button scripts
-    closeBtn:SetScript("OnEnter", function()
-        closeTex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], Theme.accent[4])
-    end)
-    closeBtn:SetScript("OnLeave", function()
-        closeTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-    closeBtn:SetScript("OnClick", function()
-        GUIFrame:Hide()
-    end)
-    header.closeBtn = closeBtn
+        btn:SetScript("OnEnter", function()
+            tex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], Theme.accent[4])
+        end)
+        btn:SetScript("OnLeave", function()
+            tex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+        end)
+        btn:SetScript("OnClick", config.onClick)
+        return btn
+    end
 
-    -- Theme button
-    local themeBtn = CreateFrame("Button", nil, header)
-    themeBtn:SetSize(18, 18)
-    themeBtn:SetPoint("RIGHT", header, "RIGHT", -81, 0)
+    CreateHeaderButton({
+        size = 22,
+        xOffset = -6,
+        texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NorskenCustomCrossv3.png",
+        rotation = 45,
+        onClick = function() GUIFrame:Hide() end,
+    })
 
-    -- Theme button texture
-    local themeTex = themeBtn:CreateTexture(nil, "ARTWORK")
-    themeTex:SetAllPoints()
-    themeTex:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\fill.png")
-    themeTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    themeBtn:SetNormalTexture(themeTex)
-    themeTex:SetTexelSnappingBias(0)
-    themeTex:SetSnapToPixelGrid(true)
+    CreateHeaderButton({
+        size = 18,
+        xOffset = -81,
+        texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\fill.png",
+        onClick = function() GUIFrame:OpenPage("ThemePage") end,
+    })
 
-    -- Theme button scripts
-    themeBtn:SetScript("OnEnter", function()
-        themeTex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], Theme.accent[4])
-    end)
-    themeBtn:SetScript("OnLeave", function()
-        themeTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-    themeBtn:SetScript("OnClick", function()
-        GUIFrame:OpenPage("ThemePage")
-    end)
-    header.themeBtn = themeBtn
+    CreateHeaderButton({
+        size = 18,
+        xOffset = -56,
+        texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\HomeButtonv2.png",
+        onClick = function() GUIFrame:OpenPage("HomePage") end,
+    })
 
-    -- Settings button
-    local settingsBtn = CreateFrame("Button", nil, header)
-    settingsBtn:SetSize(18, 18)
-    settingsBtn:SetPoint("RIGHT", header, "RIGHT", -56, 0)
-
-    -- Settings button texture
-    local settingsTex = settingsBtn:CreateTexture(nil, "ARTWORK")
-    settingsTex:SetAllPoints()
-    settingsTex:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\HomeButtonv2.png")
-    settingsTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    settingsBtn:SetNormalTexture(settingsTex)
-    settingsTex:SetTexelSnappingBias(0)
-    settingsTex:SetSnapToPixelGrid(true)
-
-    -- Settings button scripts
-    settingsBtn:SetScript("OnEnter", function()
-        settingsTex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], Theme.accent[4])
-    end)
-    settingsBtn:SetScript("OnLeave", function()
-        settingsTex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-    settingsBtn:SetScript("OnClick", function()
-        GUIFrame:OpenPage("HomePage")
-    end)
-    header.settingsBtn = settingsBtn
-
-    -- Make header draggable for moving the frame
     header:EnableMouse(true)
     header:RegisterForDrag("LeftButton")
     header:SetScript("OnDragStart", function()
@@ -1116,304 +862,156 @@ function GUIFrame:CreateHeader(parent)
     return header
 end
 
--- Create Content Area
 function GUIFrame:CreateContentArea(parent)
-    local content = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    -- Fixed width content area anchored to right edge, leaving room for footer
-    content:SetWidth(Theme.contentWidth)
-    content:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -Theme.headerHeight)
-    content:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, Theme.footerHeight)
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetWidth(Theme.contentWidth)
+    container:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, -Theme.headerHeight)
+    container:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, Theme.footerHeight)
 
-    -- Content background
-    content:SetBackdrop({
-        bgFile = "Interface\\Buttons\\WHITE8X8",
+    local area = NRSKNUI.GUI.CreateBasicContentArea(container, {
+        contentWidth = Theme.contentWidth,
+        noScrollbarOffset = 1,
+        scrollbarOptions = {
+            width = 16,
+            thumbHeight = 40,
+            padding = { top = -1, bottom = -1, right = 0 },
+            scrollStep = 40,
+        },
     })
-    content:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], Theme.bgDark[4])
 
-    -- Scroll frame for content
-    local scrollFrame = CreateFrame("ScrollFrame", nil, content, "UIPanelScrollFrameTemplate")
-    local scrollbarWidth = Theme.scrollbarWidth or 16
-    scrollFrame:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
-    scrollFrame:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", 0, 0)
+    local content = area.frame
+    content.scrollFrame = area.scrollFrame
+    content.scrollChild = area.scrollChild
+    content.scrollbar = area.scrollbar
 
-    -- Style the scrollbar thumb
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        -- Position scrollbar inside the content area on the right edge
-        sb:ClearAllPoints()
-        sb:SetPoint("TOPRIGHT", content, "TOPRIGHT", -3, -Theme.paddingSmall - 12)
-        sb:SetPoint("BOTTOMRIGHT", content, "BOTTOMRIGHT", -3, Theme.paddingSmall + 12)
-        sb:SetWidth(scrollbarWidth - 4)
-
-        -- Custom scrollbar textures
-        if sb.Background then sb.Background:Hide() end
-        if sb.Top then sb.Top:Hide() end
-        if sb.Middle then sb.Middle:Hide() end
-        if sb.Bottom then sb.Bottom:Hide() end
-        if sb.trackBG then sb.trackBG:Hide() end
-        if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-        if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-        -- Hide thumb when not needed
-        sb:SetAlpha(0)
+    local baseUpdateVisibility = area.UpdateScrollBarVisibility
+    content.UpdateScrollBarVisibility = function()
+        if content._customPanel then
+            area.scrollbar:Hide()
+            return
+        end
+        baseUpdateVisibility()
     end
 
-    -- Scroll child
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    -- Track scrollbar visibility state
-    local scrollbarVisible = false
-
-    -- Update scrollChild width based on scrollbar visibility
-    local function UpdateScrollChildWidth()
-        local baseWidth = Theme.contentWidth
-        if scrollbarVisible then
-            scrollChild:SetWidth(baseWidth - scrollbarWidth)
-        else
-            scrollChild:SetWidth(baseWidth)
+    local lastValue = 0
+    area.scrollbar.onValueChanged = function(_, value)
+        if math.abs(value - lastValue) > 0.1 then
+            C_Timer.After(0, function()
+                RefreshAllFontStrings(area.scrollChild)
+            end)
+            lastValue = value
         end
     end
 
-    -- Show/hide scrollbar and adjust content width based on content height
-    local function UpdateScrollBarVisibility()
-        if scrollFrame.ScrollBar then
-            local contentHeight = scrollChild:GetHeight()
-            local frameHeight = scrollFrame:GetHeight()
-            local needsScrollbar = contentHeight > frameHeight
-
-            -- Always update visibility, don't track state
-            scrollbarVisible = needsScrollbar
-            scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-
-            --UpdateScrollbar()
-            UpdateScrollChildWidth()
-        end
-    end
-
-    -- Store function for external access
-    content.UpdateScrollBarVisibility = UpdateScrollBarVisibility
-
-    -- Initial width setup
-    UpdateScrollChildWidth()
-
-    -- Hook multiple events to ensure visibility updates properly
-    scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
-    scrollChild:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-    scrollFrame:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-
-    -- Also update on show
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateScrollBarVisibility)
-    end)
-
-    -- Store references
-    content.scrollFrame = scrollFrame
-    content.scrollChild = scrollChild
-
-    -- Snapping scrollbar to pixel grid for sharper rendering
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        local isSnapping = false
-        local PIXEL_STEP = NRSKNUI:PixelBestSize()
-        local lastValue = 0
-        sb:HookScript("OnValueChanged", function(self, value)
-            if isSnapping then return end
-
-            local scale = scrollFrame:GetEffectiveScale()
-            -- Convert to screen pixels, round to nearest step, convert back
-            local screenPixels = value * scale
-            local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-            local snappedValue = snappedPixels / scale
-
-            -- Only snap if we're not already at a step boundary
-            if math.abs(value - snappedValue) > 0.001 then
-                isSnapping = true
-                self:SetValue(snappedValue)
-                isSnapping = false
-            end
-
-            -- Only refresh if scroll actually changed significantly
-            if math.abs(value - lastValue) > 0.1 then
-                C_Timer.After(0, function()
-                    RefreshAllFontStrings(scrollChild)
-                end)
-                lastValue = value
-            end
-        end)
-    end
-
-    -- Store reference
     parent.content = content
     self.contentArea = content
     return content
 end
 
--- Create Footer
+local function CreateSocialButton(parent, config)
+    local btn = CreateFrame("Button", nil, parent)
+    btn:SetSize(config.width, 21)
+    btn:SetPoint(config.point, config.anchor, config.relativePoint, config.offsetX or 0, config.offsetY or 0)
+
+    local texture = btn:CreateTexture(nil, "ARTWORK")
+    texture:SetSize(21, 21)
+    texture:SetPoint("LEFT", btn, "LEFT", 0, 0)
+    texture:SetTexture(config.texturePath)
+    texture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
+    texture:SetTexelSnappingBias(0)
+    texture:SetSnapToPixelGrid(false)
+
+    local text = btn:CreateFontString(nil, "OVERLAY")
+    text:SetPoint("LEFT", texture, "RIGHT", Theme.paddingSmall, 1)
+    if NRSKNUI.ApplyThemeFont then
+        NRSKNUI:ApplyThemeFont(text, "normal")
+    else
+        text:SetFontObject("GameFontNormal")
+    end
+    text:SetText(config.text)
+    text:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
+    text:SetShadowColor(0, 0, 0, 0)
+
+    btn:RegisterForClicks("LeftButtonUp")
+    btn:SetScript("OnClick", function()
+        NRSKNUI:CreatePrompt(
+            config.promptTitle,
+            config.link,
+            true,
+            "Copy to clipboard by pressing CTRL + C",
+            true,
+            config.texturePath,
+            21, 21,
+            { r = Theme.accent[1], g = Theme.accent[2], b = Theme.accent[3] }
+        )
+    end)
+
+    btn:SetScript("OnEnter", function()
+        texture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+        text:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    end)
+    btn:SetScript("OnLeave", function()
+        texture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
+        text:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
+    end)
+
+    return btn, texture, text
+end
+
 function GUIFrame:CreateFooter(parent)
-    -- Footer frame
     local footer = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     footer:SetHeight(Theme.footerHeight)
     footer:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     footer:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
 
-    -- Footer background
     footer:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8X8",
     })
     footer:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
 
-    -- Top border
     local topBorder = footer:CreateTexture(nil, "BORDER")
     topBorder:SetHeight(Theme.borderSize)
     topBorder:SetPoint("TOPLEFT", footer, "TOPLEFT", 0, 0)
     topBorder:SetPoint("TOPRIGHT", footer, "TOPRIGHT", 0, 0)
     topBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], Theme.border[4])
-    footer.topBorder = topBorder
 
-    -- Container frame for all logos
     local supportLogoContainer = CreateFrame("Frame", nil, footer)
     supportLogoContainer:SetSize(180, 32)
     supportLogoContainer:SetPoint("LEFT", footer, "LEFT", 0, 0)
 
-    -- Create Twitch support button
-    local logoTwitchSizeX = 21
-    local logoTwitchSizeY = 21
-    local logoTwitchWidth = 62
-    local logoTwitchTextureColor = {
-        r = Theme.accent[1],
-        g = Theme.accent[2],
-        b = Theme.accent[3],
-    }
-
-    local logoTwitch = CreateFrame("Button", nil, supportLogoContainer)
-    logoTwitch:SetSize(logoTwitchWidth, logoTwitchSizeY)
-    logoTwitch:SetPoint("LEFT", supportLogoContainer, "LEFT", Theme.paddingMedium, 0)
-
-    -- Twitch Texture
-    local logoTwitchTexture = logoTwitch:CreateTexture(nil, "ARTWORK")
-    logoTwitchTexture:SetSize(logoTwitchSizeX, logoTwitchSizeY)
-    logoTwitchTexture:SetPoint("LEFT", logoTwitch, "LEFT", 0, 0)
-    logoTwitchTexture:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Twitchv2W.png")
-    logoTwitchTexture:SetVertexColor(logoTwitchTextureColor.r, logoTwitchTextureColor.g, logoTwitchTextureColor.b, 0.7)
-    logoTwitchTexture:SetTexelSnappingBias(0)
-    logoTwitchTexture:SetSnapToPixelGrid(false)
-
-    -- Twitch Text
-    local logoTwitchText = logoTwitch:CreateFontString(nil, "OVERLAY")
-    logoTwitchText:SetPoint("LEFT", logoTwitchTexture, "RIGHT", Theme.paddingSmall, 1)
-    if NRSKNUI.ApplyThemeFont then
-        NRSKNUI:ApplyThemeFont(logoTwitchText, "normal")
-    else
-        logoTwitchText:SetFontObject("GameFontNormal")
-    end
-    logoTwitchText:SetText("Twitch")
-    logoTwitchText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
-    logoTwitchText:SetShadowColor(0, 0, 0, 0)
-
-    -- Twitch dialog promt
-    logoTwitch:RegisterForClicks("LeftButtonUp")
-    logoTwitch:SetScript("OnClick", function()
-        NRSKNUI:CreatePrompt(
-            "Support My |cff9146FFTwitch|r",
-            "www.twitch.tv/norskenwow",
-            true,
-            "Copy to clipboard by pressing CTRL + C",
-            true,
-            "Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Twitchv2W.png",
-            logoTwitchSizeX,
-            logoTwitchSizeY,
-            { r = Theme.accent[1], g = Theme.accent[2], b = Theme.accent[3] }
-        )
-    end)
-
-    -- Store Twitch references on footer
+    local logoTwitch, logoTwitchTexture, logoTwitchText = CreateSocialButton(supportLogoContainer, {
+        text = "Twitch",
+        width = 62,
+        texturePath = "Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Twitchv2W.png",
+        promptTitle = "Support My |cff9146FFTwitch|r",
+        link = "www.twitch.tv/norskenwow",
+        point = "LEFT",
+        anchor = supportLogoContainer,
+        relativePoint = "LEFT",
+        offsetX = Theme.paddingMedium,
+    })
     footer.logoTwitchTexture = logoTwitchTexture
     footer.logoTwitchText = logoTwitchText
 
-    -- Twitch Mouseover stuff
-    logoTwitch:SetScript("OnEnter", function()
-        logoTwitchTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        logoTwitchText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-    logoTwitch:SetScript("OnLeave", function()
-        logoTwitchTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
-        logoTwitchText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
-    end)
-
-    -- Create Discord support button
-    local logoDiscordSizeX = 21
-    local logoDiscordSizeY = 21
-    local logoDiscordWidth = 68
-    local logoDiscordTextureColor = {
-        r = Theme.accent[1],
-        g = Theme.accent[2],
-        b = Theme.accent[3],
-    }
-
-    local logoDiscord = CreateFrame("Button", nil, supportLogoContainer)
-    logoDiscord:SetSize(logoDiscordWidth, logoDiscordSizeY)
-    logoDiscord:SetPoint("LEFT", logoTwitch, "RIGHT", Theme.paddingMedium, 0)
-
-    -- Discord Texture
-    local logoDiscordTexture = logoDiscord:CreateTexture(nil, "ARTWORK")
-    logoDiscordTexture:SetSize(logoDiscordSizeX, logoDiscordSizeY)
-    logoDiscordTexture:SetPoint("LEFT", logoDiscord, "LEFT", 0, 0)
-    logoDiscordTexture:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Discordv2W.png")
-    logoDiscordTexture:SetVertexColor(logoDiscordTextureColor.r, logoDiscordTextureColor.g, logoDiscordTextureColor.b,
-        0.7)
-    logoDiscordTexture:SetTexelSnappingBias(0)
-    logoDiscordTexture:SetSnapToPixelGrid(false)
-
-    -- Discord Text
-    local logoDiscordText = logoDiscord:CreateFontString(nil, "OVERLAY")
-    logoDiscordText:SetPoint("LEFT", logoDiscordTexture, "RIGHT", Theme.paddingSmall, 1)
-    if NRSKNUI.ApplyThemeFont then
-        NRSKNUI:ApplyThemeFont(logoDiscordText, "normal")
-    else
-        logoDiscordText:SetFontObject("GameFontNormal")
-    end
-    logoDiscordText:SetText("Discord")
-    logoDiscordText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
-    logoDiscordText:SetShadowColor(0, 0, 0, 0)
-
-    -- Discord dialog promt
-    logoDiscord:RegisterForClicks("LeftButtonUp")
-    logoDiscord:SetScript("OnClick", function()
-        NRSKNUI:CreatePrompt(
-            "Join My |cff5865F2Discord|r",
-            "https://discord.com/invite/23bS8pHfuX",
-            true,
-            "Copy to clipboard by pressing CTRL + C",
-            true,
-            "Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Discordv2W.png",
-            logoDiscordSizeX,
-            logoDiscordSizeY,
-            { r = Theme.accent[1], g = Theme.accent[2], b = Theme.accent[3] }
-        )
-    end)
-    -- Store Discord references on footer
+    local logoDiscord, logoDiscordTexture, logoDiscordText = CreateSocialButton(supportLogoContainer, {
+        text = "Discord",
+        width = 68,
+        texturePath = "Interface\\AddOns\\NorskenUI\\Media\\SupportLogos\\Discordv2W.png",
+        promptTitle = "Join My |cff5865F2Discord|r",
+        link = "https://discord.com/invite/23bS8pHfuX",
+        point = "LEFT",
+        anchor = logoTwitch,
+        relativePoint = "RIGHT",
+        offsetX = Theme.paddingMedium,
+    })
     footer.logoDiscordTexture = logoDiscordTexture
     footer.logoDiscordText = logoDiscordText
 
-    -- Discord Mouseover stuff
-    logoDiscord:SetScript("OnEnter", function()
-        logoDiscordTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        logoDiscordText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-    logoDiscord:SetScript("OnLeave", function()
-        logoDiscordTexture:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.7)
-        logoDiscordText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
-    end)
-
-    -- Resize handle
     local handle = CreateFrame("Button", nil, footer)
     handle:SetSize(23, 23)
     handle:SetPoint("BOTTOMRIGHT", footer, "BOTTOMRIGHT", -2, 2)
     handle:EnableMouse(true)
 
-    -- Resize handle textures
-    -- Uses my homecooked resize handle texture
     local tex = handle:CreateTexture(nil, "OVERLAY")
     tex:SetAllPoints()
     tex:SetTexture("Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NorskenCustomResizeHandle23px.png")
@@ -1421,7 +1019,6 @@ function GUIFrame:CreateFooter(parent)
     tex:SetTexelSnappingBias(0)
     tex:SetSnapToPixelGrid(false)
 
-    -- Resize handle scripts
     handle:SetScript("OnMouseDown", function(_, button)
         if button == "LeftButton" then
             tex:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
@@ -1435,7 +1032,6 @@ function GUIFrame:CreateFooter(parent)
             if GUIFrame.contentArea and GUIFrame.contentArea.UpdateScrollBarVisibility then
                 C_Timer.After(0.05, GUIFrame.contentArea.UpdateScrollBarVisibility)
             end
-            -- Also update sidebar scroll
             if GUIFrame.sidebar and GUIFrame.sidebar.UpdateScrollBarVisibility then
                 C_Timer.After(0.05, GUIFrame.sidebar.UpdateScrollBarVisibility)
             end
@@ -1444,7 +1040,6 @@ function GUIFrame:CreateFooter(parent)
         end
     end)
 
-    -- Hover effects
     handle:SetScript("OnEnter", function()
         tex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     end)
@@ -1452,7 +1047,6 @@ function GUIFrame:CreateFooter(parent)
         tex:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
     end)
 
-    -- Make footer draggable for moving the frame
     footer:EnableMouse(true)
     footer:RegisterForDrag("LeftButton")
     footer:SetScript("OnDragStart", function()
@@ -1464,35 +1058,31 @@ function GUIFrame:CreateFooter(parent)
         GUIFrame:SaveFramePosition()
     end)
 
-    -- Footer element references
-    footer.resizeHandle = handle
     parent.footer = footer
-    parent.resizeHandle = handle
     self.footer = footer
     return footer
 end
 
--- Refresh Content Area
 function GUIFrame:RefreshContent()
     if not self.contentArea then return end
 
-    -- Clean up custom panel if exists
     if self.contentArea._customPanel then
         self.contentArea._customPanel:Hide()
         self.contentArea._customPanel:SetParent(nil)
         self.contentArea._customPanel = nil
     end
 
-    -- Check if there's a panel builder for this item
     local itemId = self.selectedSidebarItem
     if not itemId then
         itemId = "HomePage"
     end
 
-    -- Check for panel builders
     if itemId and self.PanelBuilders and self.PanelBuilders[itemId] then
         if self.contentArea.scrollFrame then
             self.contentArea.scrollFrame:Hide()
+        end
+        if self.contentArea.scrollbar then
+            self.contentArea.scrollbar:Hide()
         end
 
         local ok, panel = pcall(self.PanelBuilders[itemId], self.contentArea)
@@ -1501,6 +1091,9 @@ function GUIFrame:RefreshContent()
         elseif not ok then
             if self.contentArea.scrollFrame then
                 self.contentArea.scrollFrame:Show()
+            end
+            if self.contentArea.scrollbar then
+                self.contentArea.scrollbar:Show()
             end
             local scrollChild = self.contentArea.scrollChild
             local errorCard = self:CreateCard(scrollChild, "Error", Theme.paddingMedium)
@@ -1511,31 +1104,28 @@ function GUIFrame:RefreshContent()
         return
     end
 
-    -- Show the outer scroll frame
     if self.contentArea.scrollFrame then
         self.contentArea.scrollFrame:Show()
     end
+    if self.contentArea.UpdateScrollBarVisibility then
+        self.contentArea.UpdateScrollBarVisibility()
+    end
 
-    -- Clear existing content
     local scrollChild = self.contentArea.scrollChild
 
-    -- Clear existing content
     for _, region in ipairs({ scrollChild:GetRegions() }) do
         if region:GetObjectType() == "FontString" or region:GetObjectType() == "Texture" then
             region:Hide()
         end
     end
 
-    -- Clear existing content
     for _, child in ipairs({ scrollChild:GetChildren() }) do
         child:Hide()
         child:SetParent(nil)
     end
 
-    -- Y offset for placing content
-    local yOffset = Theme.paddingMedium
+    local yOffset = Theme.paddingSmall
 
-    -- Check if there's a registered content builder for this sidebar item
     if itemId and self.ContentBuilders[itemId] then
         local ok, result = pcall(self.ContentBuilders[itemId], scrollChild, yOffset)
         if ok then
@@ -1547,36 +1137,25 @@ function GUIFrame:RefreshContent()
             local errorMsg = errorCard:AddLabel("Content builder failed: " .. tostring(result))
             errorMsg:SetTextColor(Theme.error[1], Theme.error[2], Theme.error[3], 1)
             errorCard:AddSpacing(Theme.paddingSmall)
-            yOffset = yOffset + errorCard:GetContentHeight() + Theme.paddingMedium
+            yOffset = errorCard:GetNextOffset()
         end
     else
-        -- No registered builder - show demo/placeholder content
-        yOffset = self:BuildDemoContent(scrollChild, yOffset)
+        local card = self:CreateCard(scrollChild, "Coming Soon", yOffset)
+        card:AddLabel("This section is under construction.")
+        card:AddSpacing(Theme.paddingSmall)
+        yOffset = card:GetNextOffset()
     end
 
-    scrollChild:SetHeight(yOffset + Theme.paddingLarge)
+    scrollChild:SetHeight(yOffset)
     if self.contentArea.UpdateScrollbar then
         self.contentArea.UpdateScrollbar()
     end
 end
 
--- Placeholder card
-function GUIFrame:BuildDemoContent(scrollChild, yOffset)
-    -- Card 1
-    local card1 = GUIFrame:CreateCard(scrollChild, "Coming Soon", yOffset)
-    card1:AddLabel("This section is under construction.")
-    card1:AddSpacing(Theme.paddingSmall)
-    yOffset = yOffset + card1:GetContentHeight() + Theme.paddingMedium
-    return yOffset
-end
-
--- Show GUI Frame
 function GUIFrame:Show()
-    -- Prevent recursion
     if self._isShowing then return end
     self._isShowing = true
 
-    -- Check combat lockdown
     if InCombatLockdown() then
         NRSKNUI:Print("Options will open after combat ends.")
         self.reopenAfterCombat = true
@@ -1584,38 +1163,31 @@ function GUIFrame:Show()
         return
     end
 
-    -- Create main frame if it doesn't exist
     local isFirstCreate = not self.mainFrame
     if isFirstCreate then
         self:CreateMainFrame()
         GUIFrame:InitializeSidebarExpansion()
     end
 
-    -- Restore position if not first create
     self:RestoreFramePosition()
     self.mainFrame:Show()
     self.mainFrame:Raise()
     NRSKNUI.GUIOpen = true
 
-    -- Notify preview manager that GUI is open
     if NRSKNUI.PreviewManager then
         NRSKNUI.PreviewManager:SetGUIOpen(true)
     end
 
-    -- Initialize sidebar and content for current tab
     self:RefreshSidebar()
 
-    if self.shortcutFrame then
-        self.shortcutFrame:Show()
+    if self.shortcutBtn then
+        self.shortcutBtn:Show()
     end
 
-    -- Clear recursion guard
     self._isShowing = false
 
-    -- Defer a refresh after frame layout completes to ensure correct widths
     C_Timer.After(0, function()
         if self.mainFrame and self.mainFrame:IsShown() then
-            -- Force sidebar scrollChild to get correct width
             if self.sidebar then
                 local sidebarWidth = self.sidebar:GetWidth()
                 if sidebarWidth and sidebarWidth > 0 and self.sidebar.scrollChild then
@@ -1632,28 +1204,10 @@ function GUIFrame:Show()
     end)
 end
 
--- Hide GUI Frame
 function GUIFrame:Hide()
     if self.mainFrame then
-        self:SaveFramePosition()
-
-        -- Save GUI state to session memory
-        if self.SaveSessionState then
-            self:SaveSessionState()
-        end
-
-        if self.shortcutFrame then
-            self.shortcutFrame:Hide()
-        end
-
-        -- Fire on-close callbacks, for previews registered via RegisterOnCloseCallback
-        if self.FireOnCloseCallbacks then
-            self:FireOnCloseCallbacks()
-        end
-
-        NRSKNUI.GUIOpen = false
-        if NRSKNUI.PreviewManager then
-            NRSKNUI.PreviewManager:SetGUIOpen(false)
+        if self.shortcutBtn then
+            self.shortcutBtn:Hide()
         end
         self.mainFrame:Hide()
     else
@@ -1664,7 +1218,6 @@ function GUIFrame:Hide()
     end
 end
 
--- Toggle GUI Frame
 function GUIFrame:Toggle()
     if self.mainFrame and self.mainFrame:IsShown() then
         self:Hide()
@@ -1673,53 +1226,39 @@ function GUIFrame:Toggle()
     end
 end
 
--- Is GUI Frame Shown
 function GUIFrame:IsShown()
     return self.mainFrame and self.mainFrame:IsShown()
 end
 
--- Session state
 GUIFrame.sessionState = GUIFrame.sessionState or {
     scrollPositions = {},
     selectedTab = "systems",
     selectedSidebarItem = nil,
 }
 
--- Get Session State
-function GUIFrame:GetSessionState()
-    return self.sessionState
-end
-
--- Save Session State
 function GUIFrame:SaveSessionState()
     if not self.mainFrame then return end
 
-    -- Save current scroll position for current tab
     if self.sidebar and self.sidebar.scrollFrame and self.selectedTab then
         local scrollValue = self.sidebar.scrollFrame:GetVerticalScroll()
         self.sessionState.scrollPositions[self.selectedTab] = scrollValue
     end
 
-    -- Save selected tab and sidebar item
     self.sessionState.selectedTab = self.selectedTab
     self.sessionState.selectedSidebarItem = self.selectedSidebarItem
 end
 
--- Restore Session State
 function GUIFrame:RestoreSessionState()
     if not self.sessionState then return end
 
-    -- Restore selected tab
     if self.sessionState.selectedTab then
         self.selectedTab = self.sessionState.selectedTab
     end
 
-    -- Restore selected sidebar item
     if self.sessionState.selectedSidebarItem then
         self.selectedSidebarItem = self.sessionState.selectedSidebarItem
     end
 
-    -- Restore scroll position
     C_Timer.After(0.01, function()
         if self.sidebar and self.sidebar.scrollFrame and self.selectedTab then
             local scrollValue = self.sessionState.scrollPositions[self.selectedTab]
@@ -1730,14 +1269,12 @@ function GUIFrame:RestoreSessionState()
     end)
 end
 
--- Save Frame Position to SavedVariables
 function GUIFrame:SaveFramePosition()
     if not self.mainFrame then return end
     if not NRSKNUI.db or not NRSKNUI.db.global then return end
 
     local point, _, relPoint, x, y = self.mainFrame:GetPoint()
 
-    -- Save to SavedVariables
     NRSKNUI.db.global.GUIState = NRSKNUI.db.global.GUIState or {}
     NRSKNUI.db.global.GUIState.frame = {
         point = point,
@@ -1747,30 +1284,13 @@ function GUIFrame:SaveFramePosition()
         width = self.mainFrame:GetWidth(),
         height = self.mainFrame:GetHeight(),
     }
-
-    -- Also keep in memory for session
-    self.savedPosition = NRSKNUI.db.global.GUIState.frame
-
-    -- Also save session state
     self:SaveSessionState()
 end
 
--- Restore Frame Position
 function GUIFrame:RestoreFramePosition()
     if not self.mainFrame then return end
 
-    -- Try to load from SavedVariables first
-    local pos = nil
-    if NRSKNUI.db and NRSKNUI.db.global and NRSKNUI.db.global.GUIState and NRSKNUI.db.global.GUIState.frame then
-        pos = NRSKNUI.db.global.GUIState.frame
-    end
-
-    -- Fall back to in-memory position
-    if not pos then
-        pos = self.savedPosition
-    end
-
-    -- Apply position if we have one
+    local pos = NRSKNUI.db and NRSKNUI.db.global and NRSKNUI.db.global.GUIState and NRSKNUI.db.global.GUIState.frame
     if pos then
         self.mainFrame:ClearAllPoints()
         self.mainFrame:SetPoint(pos.point or "CENTER", UIParent, pos.relativePoint or "CENTER", pos.xOffset or 0,
@@ -1780,23 +1300,19 @@ function GUIFrame:RestoreFramePosition()
         end
     end
 
-    -- Also restore session state
     self:RestoreSessionState()
 end
 
--- Combat handling: Close GUI on entering combat, reopen on leaving combat
 local combatFrame = CreateFrame("Frame")
 combatFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 combatFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 combatFrame:SetScript("OnEvent", function(_, event)
     if event == "PLAYER_REGEN_DISABLED" then
-        -- Entering combat - force close
         if GUIFrame:IsShown() then
             GUIFrame.reopenAfterCombat = true
             GUIFrame:Hide()
         end
     elseif event == "PLAYER_REGEN_ENABLED" then
-        -- Leaving combat - reopen if needed
         if GUIFrame.reopenAfterCombat then
             GUIFrame.reopenAfterCombat = nil
             GUIFrame:Show()

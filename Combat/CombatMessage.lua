@@ -105,7 +105,7 @@ function CM:GetMessageFrame(msgType)
     frame.generation = 0
 
     self.messageFrames[msgType] = frame
-    NRSKNUI:ApplyFontSettings(frame, self.db, nil)
+    NRSKNUI:ApplyFontToText(frame.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, self.db.FontShadow)
 
     return frame
 end
@@ -265,7 +265,7 @@ function CM:ApplySettings()
 
     -- Update font settings for all message frames
     for _, frame in pairs(self.messageFrames) do
-        NRSKNUI:ApplyFontSettings(frame, self.db, nil)
+        NRSKNUI:ApplyFontToText(frame.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, self.db.FontShadow)
     end
 
     -- Update preview content if in preview mode

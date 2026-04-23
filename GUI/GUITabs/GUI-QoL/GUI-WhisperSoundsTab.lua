@@ -71,17 +71,15 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Whisper Sounds", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Whisper Sounds", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyMiscState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Whisper Sounds",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Whisper Sounds", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -104,12 +102,15 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
 
     -- Whisper Sound dropdown
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local whisperDropdown = GUIFrame:CreateDropdown(row2a, "Whisper Sound", soundList, db.WhisperSound or "None",
-        60,
-        function(key)
+    local whisperDropdown = GUIFrame:CreateDropdown(row2a, "Whisper Sound", {
+        options = soundList,
+        value = db.WhisperSound or "None",
+        labelWidth = 60,
+        callback = function(key)
             db.WhisperSound = key
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(whisperDropdown, 0.6)
     table_insert(allWidgets, whisperDropdown)
 
@@ -131,12 +132,15 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
 
     -- Battle.net Sound dropdown
     local row2b = GUIFrame:CreateRow(card2.content, 37)
-    local bnetDropdown = GUIFrame:CreateDropdown(row2b, "Battle.net Whisper Sound", soundList,
-        db.BNetWhisperSound or "None", 60,
-        function(key)
+    local bnetDropdown = GUIFrame:CreateDropdown(row2b, "Battle.net Whisper Sound", {
+        options = soundList,
+        value = db.BNetWhisperSound or "None",
+        labelWidth = 60,
+        callback = function(key)
             db.BNetWhisperSound = key
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(bnetDropdown, 0.6)
     table_insert(allWidgets, bnetDropdown)
 

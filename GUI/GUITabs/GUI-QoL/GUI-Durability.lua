@@ -14,8 +14,6 @@ local CreateFrame = CreateFrame
 
 -- Store current sub-tab
 local currentSubTab = "general"
--- Cached tab bar reference (persists across content rebuilds)
-local cachedTabButtons = nil
 
 -- Sub-tab definitions
 local SUB_TABS = {
@@ -107,17 +105,15 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Durability Util", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Durability Util", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyDurabilityState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Durability Util",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Durability Util", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -130,20 +126,23 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
 
     -- Enable Checkbox
     local row1b = GUIFrame:CreateRow(card1.content, 36)
-    local enabledWarningText = GUIFrame:CreateCheckbox(row1b, "Enable Repair Now Warning",
-        db.WarningText.Enabled ~= false,
-        function(checked)
+    local enabledWarningText = GUIFrame:CreateCheckbox(row1b, "Enable Repair Now Warning", {
+        value = db.WarningText.Enabled ~= false,
+        callback = function(checked)
             db.WarningText.Enabled = checked
             ApplySettings()
-        end)
+        end
+    })
     row1b:AddWidget(enabledWarningText, 0.5)
     table_insert(allWidgets, enabledWarningText)
 
-    local enabledText = GUIFrame:CreateCheckbox(row1b, "Enable Data Text", db.Text.Enabled ~= false,
-        function(checked)
+    local enabledText = GUIFrame:CreateCheckbox(row1b, "Enable Data Text", {
+        value = db.Text.Enabled ~= false,
+        callback = function(checked)
             db.Text.Enabled = checked
             ApplySettings()
-        end)
+        end
+    })
     row1b:AddWidget(enabledText, 0.5)
     table_insert(allWidgets, enabledText)
     card1:AddRow(row1b, 36)
@@ -167,11 +166,16 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
 
     -- Font Face and Outline Dropdowns
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplyFonts()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row2:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
@@ -181,11 +185,14 @@ local function RenderGeneralTab(scrollChild, yOffset, activeCards)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE",  text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplyFonts()
-        end)
+        end
+    })
     row2:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card2:AddRow(row2, 40)
@@ -220,40 +227,49 @@ local function RenderDataTextTab(scrollChild, yOffset, activeCards)
 
     -- Use status coloring
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local statusColor = GUIFrame:CreateCheckbox(row1, statusColorEx, DT.UseStatusColor ~= false,
-        function(checked)
+    local statusColor = GUIFrame:CreateCheckbox(row1, statusColorEx, {
+        value = DT.UseStatusColor ~= false,
+        callback = function(checked)
             DT.UseStatusColor = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row1:AddWidget(statusColor, 0.5)
     table_insert(allWidgets, statusColor)
     table_insert(textWidgets, statusColor)
 
-    local DTcolor = GUIFrame:CreateColorPicker(row1, "Static Color", DT.Color,
-        function(r, g, b, a)
+    local DTcolor = GUIFrame:CreateColorPicker(row1, "Static Color", {
+        color = DT.Color,
+        callback = function(r, g, b, a)
             DT.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row1:AddWidget(DTcolor, 0.5)
     table_insert(allWidgets, DTcolor)
     table_insert(customColorWidgets, DTcolor)
     card1:AddRow(row1, 40)
 
     local row1a = GUIFrame:CreateRow(card1.content, 39)
-    local DurText = GUIFrame:CreateEditBox(row1a, "Prefix", DT.DurText, function(val)
-        DT.DurText = val
-        ApplySettings()
-    end)
+    local DurText = GUIFrame:CreateEditBox(row1a, "Prefix", {
+        value = DT.DurText,
+        callback = function(val)
+            DT.DurText = val
+            ApplySettings()
+        end
+    })
     row1a:AddWidget(DurText, 0.5)
     table_insert(allWidgets, DurText)
     table_insert(textWidgets, DurText)
 
-    local Durcolor = GUIFrame:CreateColorPicker(row1a, "Prefix Color", DT.DurColor,
-        function(r, g, b, a)
+    local Durcolor = GUIFrame:CreateColorPicker(row1a, "Prefix Color", {
+        color = DT.DurColor,
+        callback = function(r, g, b, a)
             DT.DurColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row1a:AddWidget(Durcolor, 0.5)
     table_insert(allWidgets, Durcolor)
     table_insert(textWidgets, Durcolor)
@@ -269,11 +285,17 @@ local function RenderDataTextTab(scrollChild, yOffset, activeCards)
 
     -- Font Size
     local row2 = GUIFrame:CreateRow(card1.content, 36)
-    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", 6, 80, 1, DT.FontSize, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", {
+        min = 6,
+        max = 80,
+        step = 1,
+        value = DT.FontSize,
+        labelWidth = 60,
+        callback = function(val)
             DT.FontSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row2:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     table_insert(textWidgets, fontSizeSlider)
@@ -286,15 +308,6 @@ local function RenderDataTextTab(scrollChild, yOffset, activeCards)
     ----------------------------------------------------------------
     local card2, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db.Text,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = ApplySettings,
@@ -330,41 +343,56 @@ local function RenderWarningTextTab(scrollChild, yOffset, activeCards)
 
     -- Use status coloring
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local WarningText = GUIFrame:CreateEditBox(row1, "Low Durability Text", WT.WarningText, function(val)
-        WT.WarningText = val
-        ApplySettings()
-    end)
+    local WarningText = GUIFrame:CreateEditBox(row1, "Low Durability Text", {
+        value = WT.WarningText,
+        callback = function(val)
+            WT.WarningText = val
+            ApplySettings()
+        end
+    })
     row1:AddWidget(WarningText, 0.5)
     table_insert(allWidgets, WarningText)
     table_insert(warningWidgets, WarningText)
 
-    local WTcolor = GUIFrame:CreateColorPicker(row1, "Color", WT.WarningColor or { 0, 0, 0, 0.6 },
-        function(r, g, b, a)
+    local WTcolor = GUIFrame:CreateColorPicker(row1, "Color", {
+        color = WT.WarningColor or { 0, 0, 0, 0.6 },
+        callback = function(r, g, b, a)
             WT.WarningColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row1:AddWidget(WTcolor, 0.5)
     table_insert(allWidgets, WTcolor)
     table_insert(warningWidgets, WTcolor)
     card1:AddRow(row1, 40)
 
     local row1a = GUIFrame:CreateRow(card1.content, 40)
-    local ShowPercent = GUIFrame:CreateSlider(row1a, "|cff4dff00Out of Combat|r Durability % Trigger", 1, 100, 1,
-        WT.ShowPercent, 60,
-        function(val)
+    local ShowPercent = GUIFrame:CreateSlider(row1a, "|cff4dff00Out of Combat|r Durability % Trigger", {
+        min = 1,
+        max = 100,
+        step = 1,
+        value = WT.ShowPercent,
+        labelWidth = 60,
+        callback = function(val)
             WT.ShowPercent = val
             ApplyFonts()
-        end)
+        end
+    })
     row1a:AddWidget(ShowPercent, 0.5)
     table_insert(allWidgets, ShowPercent)
     table_insert(warningWidgets, ShowPercent)
 
-    local CombatShowPercent = GUIFrame:CreateSlider(row1a, "|cffff0000In Combat|r Durability % Trigger", 0, 100, 1,
-        WT.CombatShowPercent, 60,
-        function(val)
+    local CombatShowPercent = GUIFrame:CreateSlider(row1a, "|cffff0000In Combat|r Durability % Trigger", {
+        min = 0,
+        max = 100,
+        step = 1,
+        value = WT.CombatShowPercent,
+        labelWidth = 60,
+        callback = function(val)
             WT.CombatShowPercent = val
             ApplyFonts()
-        end)
+        end
+    })
     row1a:AddWidget(CombatShowPercent, 0.5)
     table_insert(allWidgets, CombatShowPercent)
     table_insert(warningWidgets, CombatShowPercent)
@@ -380,11 +408,17 @@ local function RenderWarningTextTab(scrollChild, yOffset, activeCards)
 
     -- Font Size
     local row2 = GUIFrame:CreateRow(card1.content, 36)
-    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", 6, 80, 1, WT.FontSize, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", {
+        min = 6,
+        max = 80,
+        step = 1,
+        value = WT.FontSize,
+        labelWidth = 60,
+        callback = function(val)
             WT.FontSize = val
             ApplyFonts()
-        end)
+        end
+    })
     row2:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     table_insert(warningWidgets, fontSizeSlider)
@@ -397,15 +431,6 @@ local function RenderWarningTextTab(scrollChild, yOffset, activeCards)
     ----------------------------------------------------------------
     local card2, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db.WarningText,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = false,
         showStrata = true,
         onChangeCallback = ApplySettings,
@@ -429,155 +454,29 @@ end
 -- Create Durability Panel
 ----------------------------------------------------------------
 local function CreateDurabilityPanel(container)
-    -- Full-size frame to take over content area
-    local panel = CreateFrame("Frame", nil, container)
-    panel:SetAllPoints()
+    -- Forward reference for tabPanel
+    local tabPanel
 
-    -- Tab bar at top
-    local tabBar = CreateFrame("Frame", nil, panel)
-    tabBar:SetHeight(TAB_BAR_HEIGHT)
-    tabBar:SetPoint("TOPLEFT", panel, "TOPLEFT", 0, 0)
-    tabBar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", 0, 0)
+    -- Render content for selected tab
+    local function RenderContent(tabId)
+        if not tabPanel then return end
 
-    -- Tab bar background
-    local tabBarBg = tabBar:CreateTexture(nil, "BACKGROUND")
-    tabBarBg:SetAllPoints()
-    tabBarBg:SetColorTexture(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
+        -- Clear widget tracking tables
+        wipe(allWidgets)
+        wipe(customColorWidgets)
+        wipe(warningWidgets)
+        wipe(textWidgets)
 
-    -- Tab bar bottom border
-    local tabBarBorder = tabBar:CreateTexture(nil, "ARTWORK")
-    tabBarBorder:SetHeight(1)
-    tabBarBorder:SetPoint("BOTTOMLEFT", tabBar, "BOTTOMLEFT", 0, 0)
-    tabBarBorder:SetPoint("BOTTOMRIGHT", tabBar, "BOTTOMRIGHT", 0, 0)
-    tabBarBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+        -- Clear panel content
+        tabPanel:ClearContent()
 
-    -- Scroll frame below tab bar
-    local scrollbarWidth = Theme.scrollbarWidth or 16
-    local scrollFrame = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", tabBar, "BOTTOMLEFT", 0, -1)
-    scrollFrame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", 0, 0)
-
-    -- Style scrollbar
-    if scrollFrame.ScrollBar then
-        local sb = scrollFrame.ScrollBar
-        sb:ClearAllPoints()
-        sb:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -3, -(TAB_BAR_HEIGHT + Theme.paddingSmall + 13))
-        sb:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -3, Theme.paddingSmall + 13)
-        sb:SetWidth(scrollbarWidth - 4)
-
-        -- Hide default scrollbar decorations
-        if sb.Background then sb.Background:Hide() end
-        if sb.Top then sb.Top:Hide() end
-        if sb.Middle then sb.Middle:Hide() end
-        if sb.Bottom then sb.Bottom:Hide() end
-        if sb.trackBG then sb.trackBG:Hide() end
-        if sb.ScrollUpButton then sb.ScrollUpButton:Hide() end
-        if sb.ScrollDownButton then sb.ScrollDownButton:Hide() end
-        -- Hide thumb when not needed
-        sb:SetAlpha(0)
-
-        -- Force scroll values to snap to whole screen pixels (in steps of 3px)
-        -- This prevents texture jittering from fractional pixel positions
-        local isSnapping = false
-        local PIXEL_STEP = 8 / 15
-        sb:HookScript("OnValueChanged", function(self, value)
-            if isSnapping then return end
-            local scale = scrollFrame:GetEffectiveScale()
-            local screenPixels = value * scale
-            local snappedPixels = math.floor(screenPixels / PIXEL_STEP + 0.5) * PIXEL_STEP
-            local snappedValue = snappedPixels / scale
-            if math.abs(value - snappedValue) > 0.001 then
-                isSnapping = true
-                self:SetValue(snappedValue)
-                isSnapping = false
-            end
-        end)
-    end
-
-    -- Scroll child (dynamic width based on scrollbar visibility)
-    local scrollChild = CreateFrame("Frame", nil, scrollFrame)
-    scrollChild:SetHeight(1)
-    scrollFrame:SetScrollChild(scrollChild)
-
-    -- Track scrollbar visibility state
-    local scrollbarVisible = false
-    local baseWidth = Theme.contentWidth
-
-    -- Update scrollChild width based on scrollbar visibility
-    local function UpdateScrollChildWidth()
-        if scrollbarVisible then
-            scrollChild:SetWidth(baseWidth - scrollbarWidth)
-        else
-            scrollChild:SetWidth(baseWidth)
-        end
-    end
-
-    -- Show/hide scrollbar and adjust content width based on content height
-    local function UpdateScrollBarVisibility()
-        if scrollFrame.ScrollBar then
-            local contentHeight = scrollChild:GetHeight()
-            local frameHeight = scrollFrame:GetHeight()
-            local needsScrollbar = contentHeight > frameHeight
-
-            -- Always update visibility, don't track state (fixes edge cases)
-            scrollbarVisible = needsScrollbar
-            scrollFrame.ScrollBar:SetAlpha(needsScrollbar and 1 or 0)
-            UpdateScrollChildWidth()
-        end
-    end
-
-    -- Initial width setup
-    UpdateScrollChildWidth()
-
-    -- Hook events for visibility updates
-    scrollFrame:HookScript("OnScrollRangeChanged", UpdateScrollBarVisibility)
-    scrollChild:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-    scrollFrame:HookScript("OnSizeChanged", UpdateScrollBarVisibility)
-
-    -- Also update on show (in case content changed while hidden)
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateScrollBarVisibility)
-    end)
-
-    -- Track cards for width updates
-    local activeCards = {}
-
-    -- Update all card widths when scrollChild resizes
-    local function UpdateCardWidths()
-        local newWidth = scrollChild:GetWidth()
-        for _, card in ipairs(activeCards) do
-            if card and card.SetWidth then
-                card:SetWidth(newWidth)
-            end
-        end
-    end
-
-    -- Hook scrollChild resize to update card widths
-    scrollChild:HookScript("OnSizeChanged", function(self, width, height)
-        UpdateCardWidths()
-    end)
-
-    -- Render content into scroll child
-    local function RenderContentIntoScrollChild(tabId)
-        -- Clear active cards tracking
-        wipe(activeCards)
-
-        -- Clear all existing children
-        for _, child in ipairs({ scrollChild:GetChildren() }) do
-            child:Hide()
-            child:SetParent(nil)
-        end
-
-        -- Clear any regions (font strings, textures)
-        for _, region in ipairs({ scrollChild:GetRegions() }) do
-            if region:GetObjectType() == "FontString" or region:GetObjectType() == "Texture" then
-                region:Hide()
-            end
-        end
-
+        local scrollChild = tabPanel.scrollChild
         local yOffset = Theme.paddingMedium
 
-        -- Render selected tab content (pass activeCards for tracking)
+        -- Collect cards for width updates
+        local activeCards = {}
+
+        -- Render selected tab content
         if tabId == "general" then
             yOffset = RenderGeneralTab(scrollChild, yOffset, activeCards)
         elseif tabId == "datatext" then
@@ -586,143 +485,31 @@ local function CreateDurabilityPanel(container)
             yOffset = RenderWarningTextTab(scrollChild, yOffset, activeCards)
         end
 
+        -- Register cards for width updates
+        for _, card in ipairs(activeCards) do
+            tabPanel:RegisterCard(card)
+        end
+
         -- Update scroll child height
-        scrollChild:SetHeight(yOffset + Theme.paddingLarge)
+        tabPanel:SetContentHeight(yOffset + Theme.paddingLarge)
+
+        UpdateAllWidgetStates()
     end
 
-    -- Helper to update tab button visuals
-    local function UpdateTabVisuals(buttons, selectedId)
-        for _, btn in ipairs(buttons) do
-            if btn.tabId == selectedId then
-                btn.label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-                btn.underline:Show()
-                btn.selectedOverlay:Show()
-            else
-                btn.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-                btn.underline:Hide()
-                btn.selectedOverlay:Hide()
-            end
+    -- Create sub-tab panel using the widget
+    tabPanel = NRSKNUI.GUI.CreateSubTabPanel(container, SUB_TABS, {
+        tabBarHeight = TAB_BAR_HEIGHT,
+        defaultTab = currentSubTab,
+        onTabChanged = function(tabId)
+            currentSubTab = tabId
+            RenderContent(tabId)
         end
-    end
-
-    -- Create tab buttons
-    local tabButtons = {}
-    local minPadding = Theme.paddingMedium * 2
-    local totalTextWidth = 0
-
-    for i, tabDef in ipairs(SUB_TABS) do
-        local btn = CreateFrame("Button", nil, tabBar)
-        btn:SetHeight(TAB_BAR_HEIGHT)
-        btn.tabId = tabDef.id
-        btn.tabIndex = i
-
-        -- Background (for hover)
-        local hoverBg = btn:CreateTexture(nil, "BACKGROUND", nil, 1)
-        hoverBg:SetAllPoints()
-        hoverBg:SetColorTexture(1, 1, 1, 0.05)
-        hoverBg:Hide()
-        btn.hoverBg = hoverBg
-
-        -- Selected overlay
-        local selectedOverlay = btn:CreateTexture(nil, "BACKGROUND", nil, 2)
-        selectedOverlay:SetPoint("TOPLEFT", btn, "TOPLEFT", 0, 0)
-        selectedOverlay:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        selectedOverlay:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.1)
-        selectedOverlay:Hide()
-        btn.selectedOverlay = selectedOverlay
-
-        -- Label
-        local label = btn:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-        if NRSKNUI.ApplyThemeFont then
-            NRSKNUI:ApplyThemeFont(label, "small")
-        else
-            label:SetFontObject("GameFontNormalSmall")
-        end
-        label:SetText(tabDef.text)
-        label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-        btn.label = label
-
-        -- Measure text width for proportional layout
-        local textWidth = label:GetStringWidth()
-        btn.textWidth = textWidth
-        totalTextWidth = totalTextWidth + textWidth
-
-        -- Underline (selected indicator)
-        local underline = btn:CreateTexture(nil, "OVERLAY")
-        underline:SetHeight(2)
-        underline:SetPoint("BOTTOMLEFT", btn, "BOTTOMLEFT", 0, 0)
-        underline:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", 0, 0)
-        underline:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-        underline:Hide()
-        btn.underline = underline
-
-        -- Mouse events
-        btn:SetScript("OnEnter", function(self)
-            if currentSubTab ~= self.tabId then
-                self.hoverBg:Show()
-            end
-        end)
-
-        btn:SetScript("OnLeave", function(self)
-            self.hoverBg:Hide()
-        end)
-
-        btn:SetScript("OnClick", function(self)
-            if currentSubTab ~= self.tabId then
-                currentSubTab = self.tabId
-                UpdateTabVisuals(cachedTabButtons, currentSubTab)
-                RenderContentIntoScrollChild(currentSubTab)
-            end
-        end)
-
-        table_insert(tabButtons, btn)
-    end
-
-    -- Cache tab buttons for callbacks
-    cachedTabButtons = tabButtons
-
-    -- Function to layout tabs proportionally based on text width
-    local function LayoutTabs(barWidth)
-        if barWidth <= 0 then return end
-
-        local numTabs = #tabButtons
-        local totalMinWidth = totalTextWidth + (minPadding * numTabs)
-
-        -- Calculate extra space to distribute
-        local extraSpace = math.max(0, barWidth - totalMinWidth)
-        local extraPerTab = extraSpace / numTabs
-
-        local xOffset = 0
-        for _, btn in ipairs(tabButtons) do
-            local tabWidth = btn.textWidth + minPadding + extraPerTab
-
-            btn:ClearAllPoints()
-            btn:SetPoint("TOP", tabBar, "TOP", 0, 0)
-            btn:SetPoint("BOTTOM", tabBar, "BOTTOM", 0, 0)
-            btn:SetPoint("LEFT", tabBar, "LEFT", xOffset, 0)
-            btn:SetWidth(tabWidth)
-
-            xOffset = xOffset + tabWidth
-        end
-    end
-
-    -- Initial layout
-    LayoutTabs(tabBar:GetWidth())
-
-    -- Update tab positions when tabBar size changes
-    tabBar:SetScript("OnSizeChanged", function(self, width, height)
-        LayoutTabs(width)
-    end)
-
-    -- Initial tab selection and visuals
-    UpdateTabVisuals(tabButtons, currentSubTab)
+    })
 
     -- Render initial content
-    RenderContentIntoScrollChild(currentSubTab)
+    RenderContent(currentSubTab)
 
-    UpdateAllWidgetStates()
-    return panel
+    return tabPanel.panel
 end
 
 ----------------------------------------------------------------

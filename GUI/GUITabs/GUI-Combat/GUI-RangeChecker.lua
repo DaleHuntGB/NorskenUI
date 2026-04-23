@@ -58,14 +58,18 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Range Checker Text", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Range Checker Text", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Range Checker Text", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Range Checker Text", "On", "Off"
-    )
+        msgPopup = true,
+        msgText = "Range Checker Text",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -78,11 +82,13 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
     table_insert(allWidgets, card1b)
 
     local row1a = GUIFrame:CreateRow(card1b.content, 40)
-    local CombatOnly = GUIFrame:CreateCheckbox(row1a, "Show In Combat Only", db.CombatOnly ~= false,
-        function(checked)
+    local CombatOnly = GUIFrame:CreateCheckbox(row1a, "Show In Combat Only", {
+        value = db.CombatOnly ~= false,
+        callback = function(checked)
             db.CombatOnly = checked
             ApplySettings()
-        end)
+        end
+    })
     row1a:AddWidget(CombatOnly, 0.5)
     card1b:AddRow(row1a, 40)
 
@@ -95,12 +101,16 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
 
     -- Update Throttle
     local row1b = GUIFrame:CreateRow(card1b.content, 36)
-    local UpdateThrottle = GUIFrame:CreateSlider(row1b, "Update Throttle", 0, 1, 0.05,
-        db.UpdateThrottle, nil,
-        function(val)
+    local UpdateThrottle = GUIFrame:CreateSlider(row1b, "Update Throttle", {
+        min = 0,
+        max = 1,
+        step = 0.05,
+        value = db.UpdateThrottle,
+        callback = function(val)
             db.UpdateThrottle = val
             ApplySettings()
-        end)
+        end
+    })
     row1b:AddWidget(UpdateThrottle, 1)
     table_insert(allWidgets, UpdateThrottle)
     card1b:AddRow(row1b, 36)
@@ -115,48 +125,52 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
 
     -- 40+ Yards Color
     local row2a = GUIFrame:CreateRow(card2.content, 38)
-    local ColorOneColorPicker = GUIFrame:CreateColorPicker(row2a, "40+ Yards Color",
-        db.ColorOne or { 1, 0.82, 0, 1 },
-        function(r, g, b, a)
+    local ColorOneColorPicker = GUIFrame:CreateColorPicker(row2a, "40+ Yards Color", {
+        color = db.ColorOne or { 1, 0.82, 0, 1 },
+        callback = function(r, g, b, a)
             db.ColorOne = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(ColorOneColorPicker, 0.5)
     table_insert(allWidgets, ColorOneColorPicker)
     card2:AddRow(row2a, 38)
 
     -- 20-40 Yards Color
     local row2b = GUIFrame:CreateRow(card2.content, 38)
-    local ColorTwoColorPicker = GUIFrame:CreateColorPicker(row2b, "20-40 Yards Color",
-        db.ColorTwo or { 1, 0.2, 0.2, 1 },
-        function(r, g, b, a)
+    local ColorTwoColorPicker = GUIFrame:CreateColorPicker(row2b, "20-40 Yards Color", {
+        color = db.ColorTwo or { 1, 0.2, 0.2, 1 },
+        callback = function(r, g, b, a)
             db.ColorTwo = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(ColorTwoColorPicker, 0.5)
     table_insert(allWidgets, ColorTwoColorPicker)
     card2:AddRow(row2b, 38)
 
     -- 10-20 Yards Color
     local row2c = GUIFrame:CreateRow(card2.content, 38)
-    local ColorThreeColorPicker = GUIFrame:CreateColorPicker(row2c, "10-20 Yards Color",
-        db.ColorThree or { 0.3, 0.7, 1, 1 },
-        function(r, g, b, a)
+    local ColorThreeColorPicker = GUIFrame:CreateColorPicker(row2c, "10-20 Yards Color", {
+        color = db.ColorThree or { 0.3, 0.7, 1, 1 },
+        callback = function(r, g, b, a)
             db.ColorThree = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2c:AddWidget(ColorThreeColorPicker, 0.5)
     table_insert(allWidgets, ColorThreeColorPicker)
     card2:AddRow(row2c, 38)
 
     -- 0-10 Yards Color
     local row2d = GUIFrame:CreateRow(card2.content, 38)
-    local ColorFourColorPicker = GUIFrame:CreateColorPicker(row2d, "0-10 Yards Color",
-        db.ColorFour or { 0.3, 0.7, 1, 1 },
-        function(r, g, b, a)
+    local ColorFourColorPicker = GUIFrame:CreateColorPicker(row2d, "0-10 Yards Color", {
+        color = db.ColorFour or { 0.3, 0.7, 1, 1 },
+        callback = function(r, g, b, a)
             db.ColorFour = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row2d:AddWidget(ColorFourColorPicker, 0.5)
     table_insert(allWidgets, ColorFourColorPicker)
     card2:AddRow(row2d, 38)
@@ -179,20 +193,31 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
 
     -- Font Face and Outline Dropdowns
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     -- Font Size Slider
-    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", 8, 72, 1, db.FontSize or 24, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", {
+        min = 8,
+        max = 72,
+        step = 1,
+        value = db.FontSize or 24,
+        labelWidth = 60,
+        callback = function(val)
             db.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(fontSizeSlider, 0.5)
     table_insert(allWidgets, fontSizeSlider)
     card3:AddRow(row3a, 40)
@@ -205,11 +230,14 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE",  text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(outlineDropdown, 1)
     table_insert(allWidgets, outlineDropdown)
 
@@ -222,15 +250,6 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card4, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = ApplySettings,

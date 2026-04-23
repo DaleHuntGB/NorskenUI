@@ -131,8 +131,6 @@ local function auraButtonInit(button)
     BUFFS.buttons[button] = true
 
     local db = BUFFS.db
-    local fontPath = NRSKNUI:GetFontPath(db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(db.FontOutline)
 
     -- Add backdrop/background
     button.bg = button:CreateTexture(nil, "BACKGROUND")
@@ -149,9 +147,9 @@ local function auraButtonInit(button)
 
     -- Count text
     button.Count = button:CreateFontString(nil, "OVERLAY")
-    button.Count:SetFont(fontPath, db.FontSize, fontOutline)
     button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
     button.Count:SetJustifyH("RIGHT")
+    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     -- Cooldown frame
@@ -166,8 +164,8 @@ local function auraButtonInit(button)
     local timerPos = db.TimerPosition or {}
     local cooldownText = button.Cooldown:GetRegions()
     if cooldownText and cooldownText.SetFont then
-        cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
-        cooldownText:SetShadowOffset(0, 0)
+        NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+        if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
         cooldownText:ClearAllPoints()
         cooldownText:SetPoint(
             timerPos.AnchorFrom or "CENTER",
@@ -185,16 +183,20 @@ local function auraButtonInit(button)
 end
 
 -- Apply visual settings to a single button
-local function applyButtonSettings(button, db, fontPath, fontOutline)
+local function applyButtonSettings(button, db)
     if button.bg then button.bg:SetColorTexture(unpack(db.BackgroundColor)) end
     if button.SetBorderColor then button:SetBorderColor(unpack(db.BorderColor)) end
-    if button.Count then button.Count:SetFont(fontPath, db.FontSize, fontOutline) end
+    if button.Count then
+        NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+        button.Count:SetShadowOffset(0, 0)
+    end
     if button.Cooldown then
         local timerFontSize = db.TimerFontSize or 14
         local timerPos = db.TimerPosition or {}
         local cooldownText = button.Cooldown:GetRegions()
         if cooldownText and cooldownText.SetFont then
-            cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
+            NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+            if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
             cooldownText:ClearAllPoints()
             cooldownText:SetPoint(
                 timerPos.AnchorFrom or "CENTER",
@@ -211,9 +213,7 @@ end
 -- Apply settings to all initialized buttons
 function BUFFS:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
-    local fontPath = NRSKNUI:GetFontPath(self.db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(self.db.FontOutline)
-    for button in pairs(self.buttons) do applyButtonSettings(button, self.db, fontPath, fontOutline) end
+    for button in pairs(self.buttons) do applyButtonSettings(button, self.db) end
     if self.previewActive then self:ShowPreview() end
 end
 
@@ -369,8 +369,6 @@ local PREVIEW_ICONS = {
 
 -- Create a single preview button
 local function CreatePreviewButton(parent, index, db)
-    local fontPath = NRSKNUI:GetFontPath(db.FontFace)
-    local fontOutline = NRSKNUI:GetFontOutline(db.FontOutline)
     local iconSize = db.IconSize
 
     local button = CreateFrame("Frame", nil, parent)
@@ -393,9 +391,9 @@ local function CreatePreviewButton(parent, index, db)
 
     -- Count text
     button.Count = button:CreateFontString(nil, "OVERLAY")
-    button.Count:SetFont(fontPath, db.FontSize, fontOutline)
     button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
     button.Count:SetJustifyH("RIGHT")
+    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
     -- Show stack count on some icons
     if index % 4 == 1 then
@@ -416,8 +414,8 @@ local function CreatePreviewButton(parent, index, db)
     local timerPos = db.TimerPosition or {}
     local cooldownText = button.Cooldown:GetRegions()
     if cooldownText and cooldownText.SetFont then
-        cooldownText:SetFont(fontPath, timerFontSize, fontOutline)
-        cooldownText:SetShadowOffset(0, 0)
+        NRSKNUI:ApplyFont(cooldownText, db.FontFace, timerFontSize, db.FontOutline)
+        if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
         cooldownText:ClearAllPoints()
         cooldownText:SetPoint(
             timerPos.AnchorFrom or "CENTER",

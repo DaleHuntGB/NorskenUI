@@ -79,18 +79,16 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Minimap", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Minimap", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyMinimapState(checked)
             UpdateAllWidgetStates()
             NRSKNUI:CreateReloadPrompt("Enabling/Disabling this UI element requires a reload to take full effect.")
         end,
-        true,
-        "Minimap",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Minimap", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
 
     card1:AddRow(row1, 36)
@@ -105,11 +103,16 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
 
     -- Minimap Size
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local MinimapSize = GUIFrame:CreateSlider(row2, "Minimap Size", 50, 500, 1, db.Size, _,
-        function(val)
+    local MinimapSize = GUIFrame:CreateSlider(row2, "Minimap Size", {
+        min = 50,
+        max = 500,
+        step = 1,
+        value = db.Size,
+        callback = function(val)
             db.Size = val
             if MAP then MAP:UpdateSize() end
-        end)
+        end
+    })
     row2:AddWidget(MinimapSize, 1)
     table_insert(allWidgets, MinimapSize)
     card2:AddRow(row2, 40)
@@ -118,11 +121,13 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
     local row3 = GUIFrame:CreateRow(card2.content, 36)
 
     -- Border coloring
-    local BorderColor = GUIFrame:CreateColorPicker(row3, "Border Color", db.Border.Color,
-        function(r, g, b, a)
+    local BorderColor = GUIFrame:CreateColorPicker(row3, "Border Color", {
+        color = db.Border.Color,
+        callback = function(r, g, b, a)
             db.Border.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row3:AddWidget(BorderColor, 1)
     table_insert(allWidgets, BorderColor)
     card2:AddRow(row3, 36)
@@ -135,13 +140,8 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
     local card3, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
         dbKeys = {
-            anchorFrameType = nil,
-            anchorFrameFrame = nil,
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
             xOffset = "X",
             yOffset = "Y",
-            strata = nil,
         },
         showAnchorFrameType = false,
         showStrata = false,
@@ -163,21 +163,28 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
 
     -- Toggle BugSack frame
     local row4 = GUIFrame:CreateRow(card4.content, 40)
-    local BugSackEnbl = GUIFrame:CreateCheckbox(row4, "Toggle BugSack Frame", db.BugSack.Enabled ~= false,
-        function(checked)
+    local BugSackEnbl = GUIFrame:CreateCheckbox(row4, "Toggle BugSack Frame", {
+        value = db.BugSack.Enabled ~= false,
+        callback = function(checked)
             db.BugSack.Enabled = checked
             if MAP then MAP:CreateBugSackButton() end
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row4:AddWidget(BugSackEnbl, 0.5)
     table_insert(allWidgets, BugSackEnbl)
 
     -- BugSack Size
-    local BugSackSize = GUIFrame:CreateSlider(row4, "BugSack Size", 5, 50, 1, db.BugSack.Size, _,
-        function(val)
+    local BugSackSize = GUIFrame:CreateSlider(row4, "BugSack Size", {
+        min = 5,
+        max = 50,
+        step = 1,
+        value = db.BugSack.Size,
+        callback = function(val)
             db.BugSack.Size = val
             if MAP then MAP:UpdateBugSackButton() end
-        end)
+        end
+    })
     row4:AddWidget(BugSackSize, 0.5)
     table_insert(allWidgets, BugSackSize)
     table_insert(bugWidgets, BugSackSize)
@@ -195,11 +202,13 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
     -- Toggle BugSack frame
     local row5 = GUIFrame:CreateRow(card5.content, 40)
     -- Hide addon compartment toggle
-    local HideAddOn = GUIFrame:CreateCheckbox(row5, "Hide AddOn Compartment", db.HideAddOnComp ~= false,
-        function(checked)
+    local HideAddOn = GUIFrame:CreateCheckbox(row5, "Hide AddOn Compartment", {
+        value = db.HideAddOnComp ~= false,
+        callback = function(checked)
             db.HideAddOnComp = checked
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(HideAddOn, 0.5)
     table_insert(allWidgets, HideAddOn)
     card5:AddRow(row5, 40)

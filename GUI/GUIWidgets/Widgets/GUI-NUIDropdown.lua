@@ -1,10 +1,11 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
+local NUIDropdownMixin = {}
+
 local tostring = tostring
 local CreateFrame = CreateFrame
 local C_Timer = C_Timer
@@ -18,46 +19,153 @@ local ipairs = ipairs
 local pairs = pairs
 local strlower = string.lower
 local strfind = string.find
+local Mixin = Mixin
 
--- Configuration constants
 local DROPDOWN_HEIGHT = 24
 local ITEM_HEIGHT = 24
 local MAX_DROPDOWN_HEIGHT = 400
+
 local SEARCH_BOX_HEIGHT = 24
 local SEARCH_PADDING = 6
 local SEARCH_INPUT_RIGHT_PADDING = 16
-local ANIMATION_DURATION = 0.12
-local ARROW_SIZE = 16
-local ARROW_TEX = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\collapse.tga"
-local ENABLE_ANIMATIONS = true
-
--- Font preview constants
 local FONT_PREVIEW_SIZE = 12
 
--- Cached backdrop tables
-local DROPDOWN_BACKDROP = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
-    edgeSize = 1,
-}
-local SCROLLBAR_BACKDROP = {
-    bgFile = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
-    edgeSize = 1,
-}
-local BORDER_ONLY_BACKDROP = {
-    edgeFile = "Interface\\Buttons\\WHITE8X8",
-    edgeSize = 1,
-}
+local ARROW_TEX = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\collapse.tga"
+local ARROW_SIZE = 16
 
--- Safe font application helper for previews
+local STANDARD_BACKDROP = { bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1, }
+local BORDER_ONLY_BACKDROP = { edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1, }
+local HOVER_DURATION = 0.12
+
 local function SafeApplyPreviewFont(fontString, fontPath, size)
     if not fontString or not fontPath then return false end
     local success = fontString:SetFont(fontPath, size or FONT_PREVIEW_SIZE, "")
-    if not success then
-        fontString:SetFontObject("GameFontHighlightSmall")
-    end
+    if not success then fontString:SetFontObject("GameFontHighlightSmall") end
     return success
+end
+
+---@param value any
+---@param silent? boolean
+function NUIDropdownMixin:SetValue(value, silent)
+    self._currentValue = value
+    if self._normalizedOptions[value] then
+        self._selectedText:SetText(self._normalizedOptions[value])
+    else
+        self._selectedText:SetText(tostring(value))
+    end
+
+    if self._isFontPreview then
+        local fontPath = NRSKNUI:GetFontPath(value)
+        SafeApplyPreviewFont(self._selectedText, fontPath, FONT_PREVIEW_SIZE)
+    end
+
+    for _, btn in ipairs(self._itemButtons) do if btn._updateColor then btn._updateColor() end end
+
+    if self._callback and not silent then self._callback(value) end
+end
+
+---@param value any
+---@param silent? boolean
+function NUIDropdownMixin:SetSelected(value, silent) return self:SetValue(value, silent) end
+
+---@return any
+function NUIDropdownMixin:GetValue() return self._currentValue end
+
+---@return any
+function NUIDropdownMixin:GetSelected() return self._currentValue end
+
+---@param enabled boolean
+function NUIDropdownMixin:SetEnabled(enabled)
+    if enabled then
+        self.dropdown:Enable()
+        self.dropdown:SetAlpha(1)
+        self.label:SetAlpha(1)
+    else
+        self.dropdown:Disable()
+        self.dropdown:SetAlpha(0.5)
+        self.label:SetAlpha(0.5)
+        if self._isOpen then
+            self._closeDropdown()
+        end
+    end
+end
+
+---@param newOptions table
+function NUIDropdownMixin:UpdateOptions(newOptions)
+    self._normalizedOptions = {}
+    self._orderedKeys = nil
+    if type(newOptions) == "table" then
+        if newOptions[1] and type(newOptions[1]) == "table" and (newOptions[1].key or newOptions[1].value) then
+            self._orderedKeys = {}
+            for _, opt in ipairs(newOptions) do
+                local optKey = opt.key or opt.value
+                self._normalizedOptions[optKey] = opt.text
+                table_insert(self._orderedKeys, optKey)
+            end
+        else
+            local isSequentialArray = newOptions[1] ~= nil and type(newOptions[1]) == "string"
+            if isSequentialArray then
+                for _, v in ipairs(newOptions) do self._normalizedOptions[v] = v end
+            else
+                for k, v in pairs(newOptions) do self._normalizedOptions[k] = v end
+            end
+        end
+    end
+
+    if self._itemsCreated then
+        self._createItemButtons()
+        if self._isOpen then self._updateScroll() end
+    end
+end
+
+---@param newOptions table
+function NUIDropdownMixin:SetOptions(newOptions) return self:UpdateOptions(newOptions) end
+
+function NUIDropdownMixin:UpdateColors()
+    self.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    self.dropdown:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
+    self.dropdown:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+    self._selectedText:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+    self._dropdownList:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
+    self._dropdownList:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+
+    local arrow = self.dropdown.arrow
+    if arrow then
+        arrow:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+    end
+
+    self._borderColorFrom.r, self._borderColorFrom.g, self._borderColorFrom.b = Theme.border[1], Theme.border[2],
+        Theme.border[3]
+    self._borderColorTo.r, self._borderColorTo.g, self._borderColorTo.b = Theme.border[1], Theme.border[2],
+        Theme.border[3]
+
+    if self._scrollbar then
+        self._scrollbar:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
+        self._scrollbar:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+        if self._thumb then
+            self._thumb:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.8)
+        end
+        if self._thumbBorder then
+            self._thumbBorder:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+        end
+    end
+
+    if self._searchContainer then
+        self._searchContainer:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
+        self._searchContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+    end
+    if self._searchEditBox then
+        self._searchEditBox:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+    end
+    if self._emptyLabel then
+        self._emptyLabel:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    end
+
+    for _, btn in ipairs(self._itemButtons) do
+        if btn._updateColor then
+            btn._updateColor()
+        end
+    end
 end
 
 local globalMouseChecker = CreateFrame("Frame", nil, UIParent)
@@ -93,27 +201,36 @@ local function AcquireItemButton(parent)
     local btn = table_remove(itemButtonPool)
     if btn then
         btn:SetParent(parent)
+        btn._hoverBg:SetColorTexture(1, 1, 1, 0.05)
+        btn._hoverBg:SetAlpha(0)
+        btn._hoverTarget = 0
+        NRSKNUI:ApplyThemeFont(btn._text, "normal")
         btn:Show()
         return btn
     end
 
-    -- Create new button with hover texture
     btn = CreateFrame("Button", nil, parent)
     btn:SetHeight(ITEM_HEIGHT)
 
-    -- Hover background texture
     local hoverBg = btn:CreateTexture(nil, "BACKGROUND")
     hoverBg:SetAllPoints()
-    hoverBg:SetColorTexture(
-        Theme.accentHover[1],
-        Theme.accentHover[2],
-        Theme.accentHover[3],
-        Theme.accentHover[4] or 0.25
-    )
-    hoverBg:Hide()
+    hoverBg:SetColorTexture(1, 1, 1, 0.05)
+    hoverBg:SetAlpha(0)
     btn._hoverBg = hoverBg
+    btn._hoverTarget = 0
 
-    -- Text
+    btn:SetScript("OnUpdate", function(self, elapsed)
+        local current = self._hoverBg:GetAlpha()
+        if math.abs(current - self._hoverTarget) > 0.01 then
+            local speed = elapsed / HOVER_DURATION
+            if self._hoverTarget > current then
+                self._hoverBg:SetAlpha(math.min(current + speed, self._hoverTarget))
+            else
+                self._hoverBg:SetAlpha(math.max(current - speed, self._hoverTarget))
+            end
+        end
+    end)
+
     local btnText = btn:CreateFontString(nil, "OVERLAY")
     btnText:SetPoint("LEFT", btn, "LEFT", 8, 0)
     btnText:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
@@ -130,31 +247,40 @@ local function ReleaseItemButton(btn)
     btn:SetScript("OnClick", nil)
     btn:SetScript("OnEnter", nil)
     btn:SetScript("OnLeave", nil)
-    btn._hoverBg:Hide()
+    btn._hoverBg:SetAlpha(0)
+    btn._hoverTarget = 0
     btn._itemValue = nil
     btn._itemText = nil
     btn._updateColor = nil
+    btn._index = nil
     table_insert(itemButtonPool, btn)
 end
 
-function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidth, callback, isFontPreview, config)
-    local tooltip = nil
-    local sorting = nil
-    local customHeight = nil
-
-    if type(isFontPreview) == "table" and config == nil then
-        config = isFontPreview
-        isFontPreview = config.isFontPreview
-    end
+---Dropdown with optional search and font preview
+---```lua
+---config = {
+---    options = table,         -- Key-value pairs or array of {key, text} (required)
+---    value = any,             -- Initial selected key
+---    callback = function,     -- Called when selection changes
+---    searchable = boolean,    -- Enable search/filter input (default: false)
+---    isFontPreview = boolean, -- Show font preview in dropdown items (default: false)
+---}
+---```
+---@param parent Frame
+---@param labelText string
+---@param config NUIDropdownConfig
+---@return NUIDropdown
+function GUIFrame:CreateDropdown(parent, labelText, config)
     config = config or {}
+    local options = config.options
+    local selected = config.value
+    local callback = config.callback
     local searchable = config.searchable == true
+    local isFontPreview = config.isFontPreview
 
-    -- CREATE ROW CONTAINER
-    local rowHeight = customHeight or 34
     local row = CreateFrame("Frame", nil, parent)
-    row:SetHeight(rowHeight)
+    row:SetHeight(34)
 
-    -- Label
     local label = row:CreateFontString(nil, "OVERLAY")
     label:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 1)
     label:SetJustifyH("LEFT")
@@ -163,16 +289,14 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     row.label = label
 
-    -- Main dropdown button
     local dropdownButton = CreateFrame("Button", nil, row, "BackdropTemplate")
     dropdownButton:SetHeight(DROPDOWN_HEIGHT)
     dropdownButton:SetPoint("TOPLEFT", row, "TOPLEFT", 0, -14)
     dropdownButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, -14)
-    dropdownButton:SetBackdrop(DROPDOWN_BACKDROP)
+    dropdownButton:SetBackdrop(STANDARD_BACKDROP)
     dropdownButton:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
     dropdownButton:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
-    -- Selected text
     local selectedText = dropdownButton:CreateFontString(nil, "OVERLAY")
     selectedText:SetPoint("LEFT", dropdownButton, "LEFT", Theme.paddingSmall, 0)
     selectedText:SetPoint("RIGHT", dropdownButton, "RIGHT", -24, 0)
@@ -181,7 +305,6 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     selectedText:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     dropdownButton.selectedText = selectedText
 
-    -- Arrow icon
     local arrow = dropdownButton:CreateTexture(nil, "ARTWORK")
     arrow:SetSize(ARROW_SIZE, ARROW_SIZE)
     arrow:SetPoint("RIGHT", dropdownButton, "RIGHT", -Theme.paddingSmall, 0)
@@ -190,40 +313,35 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     arrow:SetTexelSnappingBias(0)
     arrow:SetSnapToPixelGrid(false)
     arrow:SetRotation(-math.pi / 2)
+    dropdownButton.arrow = arrow
 
-    -- Normalize options and preserve order if provided as array
-    local normalizedOptions = {}
-    local orderedKeys = nil
+    row._normalizedOptions = {}
+    row._orderedKeys = nil
     if type(options) == "table" then
         if options[1] and type(options[1]) == "table" and (options[1].value or options[1].key) then
-            orderedKeys = {}
+            row._orderedKeys = {}
             for _, opt in ipairs(options) do
                 local optKey = opt.value or opt.key
-                normalizedOptions[optKey] = opt.text
-                table_insert(orderedKeys, optKey)
+                row._normalizedOptions[optKey] = opt.text
+                table_insert(row._orderedKeys, optKey)
             end
         else
             local isSequentialArray = options[1] ~= nil and type(options[1]) == "string"
             if isSequentialArray then
-                for _, v in ipairs(options) do
-                    normalizedOptions[v] = v
-                end
+                for _, v in ipairs(options) do row._normalizedOptions[v] = v end
             else
-                for k, v in pairs(options) do
-                    normalizedOptions[k] = v
-                end
+                for k, v in pairs(options) do row._normalizedOptions[k] = v end
             end
         end
     end
-    if sorting and type(sorting) == "table" then
-        orderedKeys = sorting
-    end
 
-    -- State variables
-    local isOpen = false
-    local currentValue = selected
-    local itemButtons = {}
-    local itemsCreated = false
+    row._isOpen = false
+    row._currentValue = selected
+    row._itemButtons = {}
+    row._itemsCreated = false
+    row._isFontPreview = isFontPreview
+    row._callback = callback
+    row._selectedText = selectedText
     local startHeight = 0
     local targetHeight = 0
     local scrollHold = false
@@ -231,17 +349,15 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     local searchText = ""
     local firstVisibleKey = nil
 
-    -- Dropdown list
     local dropdownList = CreateFrame("Frame", nil, row, "BackdropTemplate")
     dropdownList:SetHeight(1)
-    dropdownList:SetBackdrop(DROPDOWN_BACKDROP)
+    dropdownList:SetBackdrop(STANDARD_BACKDROP)
     dropdownList:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], 1)
     dropdownList:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
     dropdownList:SetFrameStrata("TOOLTIP")
     dropdownList:SetClipsChildren(true)
     dropdownList:Hide()
 
-    -- Scroll frame
     local scrollFrame = CreateFrame("ScrollFrame", nil, dropdownList)
     scrollFrame:SetPoint("TOPLEFT", dropdownList, "TOPLEFT", 0, searchable and -(SEARCH_BOX_HEIGHT + SEARCH_PADDING) or 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", dropdownList, "BOTTOMRIGHT", 0, 0)
@@ -253,7 +369,6 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     local searchEditBox = nil
     local emptyLabel = nil
 
-    -- Scrollbar components
     local scrollbar = nil
     local thumb = nil
     local thumbBorder = nil
@@ -265,7 +380,7 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         scrollbar:SetPoint("TOPRIGHT", dropdownList, "TOPRIGHT", 0, 0)
         scrollbar:SetPoint("BOTTOMRIGHT", dropdownList, "BOTTOMRIGHT", 0, 0)
         scrollbar:SetWidth(12)
-        scrollbar:SetBackdrop(SCROLLBAR_BACKDROP)
+        scrollbar:SetBackdrop(STANDARD_BACKDROP)
         scrollbar:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
         scrollbar:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
         scrollbar:SetOrientation("VERTICAL")
@@ -276,15 +391,8 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         scrollbar:Hide()
 
         scrollbar:SetThumbTexture("Interface\\Buttons\\WHITE8X8")
-        scrollbar:SetScript("OnValueChanged", function(_, value)
-            scrollFrame:SetVerticalScroll(value)
-        end)
-
-        scrollbar:SetScript("OnMouseDown", function(_, button)
-            if button == "LeftButton" then
-                scrollHold = true
-            end
-        end)
+        scrollbar:SetScript("OnValueChanged", function(_, value) scrollFrame:SetVerticalScroll(value) end)
+        scrollbar:SetScript("OnMouseDown", function(_, button) if button == "LeftButton" then scrollHold = true end end)
         scrollbar:SetScript("OnMouseUp", function(_, button)
             if button == "LeftButton" then
                 C_Timer.After(0.1, function()
@@ -305,91 +413,67 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
 
         thumb:HookScript("OnShow", function() thumbBorder:Show() end)
         thumb:HookScript("OnHide", function() thumbBorder:Hide() end)
+
+        row._scrollbar = scrollbar
+        row._thumb = thumb
+        row._thumbBorder = thumbBorder
     end
 
-    -- Animation groups
-    local animGroup, arrowAnimGroup, arrowRotation
+    local animGroup = dropdownList:CreateAnimationGroup()
+    animGroup:CreateAnimation("Animation"):SetDuration(Theme.animDuration)
 
-    if ENABLE_ANIMATIONS then
-        animGroup = dropdownList:CreateAnimationGroup()
-        local heightAnim = animGroup:CreateAnimation("Animation")
-        heightAnim:SetDuration(ANIMATION_DURATION)
+    local arrowAnimGroup = arrow:CreateAnimationGroup()
+    local arrowRotation = arrowAnimGroup:CreateAnimation("Rotation")
+    arrowRotation:SetDuration(Theme.animDuration)
+    arrowRotation:SetOrigin("CENTER", 0, 0)
+    arrowRotation:SetSmoothing("IN_OUT")
 
-        arrowAnimGroup = arrow:CreateAnimationGroup()
-        arrowRotation = arrowAnimGroup:CreateAnimation("Rotation")
-        arrowRotation:SetDuration(ANIMATION_DURATION)
-        arrowRotation:SetOrigin("CENTER", 0, 0)
-        arrowRotation:SetSmoothing("IN_OUT")
+    arrowAnimGroup:SetScript("OnFinished", function() arrow:SetRotation(row._isOpen and 0 or -math.pi / 2) end)
 
-        arrowAnimGroup:SetScript("OnFinished", function()
-            arrow:SetRotation(isOpen and 0 or -math.pi / 2)
-        end)
-    end
-
-    -- Border hover animation
-    local hoverAnimGroup, hoverAnim
     local borderColorFrom = { r = Theme.border[1], g = Theme.border[2], b = Theme.border[3] }
     local borderColorTo = { r = Theme.border[1], g = Theme.border[2], b = Theme.border[3] }
 
-    if ENABLE_ANIMATIONS then
-        hoverAnimGroup = dropdownButton:CreateAnimationGroup()
-        hoverAnim = hoverAnimGroup:CreateAnimation("Animation")
-        hoverAnim:SetDuration(0.15)
+    local hoverAnimGroup = dropdownButton:CreateAnimationGroup()
+    hoverAnimGroup:CreateAnimation("Animation"):SetDuration(Theme.animDuration)
 
-        hoverAnimGroup:SetScript("OnUpdate", function(self)
-            local progress = self:GetProgress() or 0
-            local r = borderColorFrom.r + (borderColorTo.r - borderColorFrom.r) * progress
-            local g = borderColorFrom.g + (borderColorTo.g - borderColorFrom.g) * progress
-            local b = borderColorFrom.b + (borderColorTo.b - borderColorFrom.b) * progress
-            dropdownButton:SetBackdropBorderColor(r, g, b, 1)
-        end)
+    hoverAnimGroup:SetScript("OnUpdate", function(anim)
+        local progress = anim:GetProgress() or 0
+        local r = borderColorFrom.r + (borderColorTo.r - borderColorFrom.r) * progress
+        local g = borderColorFrom.g + (borderColorTo.g - borderColorFrom.g) * progress
+        local b = borderColorFrom.b + (borderColorTo.b - borderColorFrom.b) * progress
+        dropdownButton:SetBackdropBorderColor(r, g, b, 1)
+    end)
 
-        hoverAnimGroup:SetScript("OnFinished", function()
-            dropdownButton:SetBackdropBorderColor(borderColorTo.r, borderColorTo.g, borderColorTo.b, 1)
-        end)
-    end
+    hoverAnimGroup:SetScript("OnFinished", function()
+        dropdownButton:SetBackdropBorderColor(borderColorTo.r, borderColorTo.g, borderColorTo.b, 1)
+    end)
 
     local function SetBorderHover(hovered)
-        if ENABLE_ANIMATIONS and hoverAnimGroup then
-            hoverAnimGroup:Stop()
+        hoverAnimGroup:Stop()
 
-            local currentR, currentG, currentB = dropdownButton:GetBackdropBorderColor()
-            borderColorFrom.r = currentR
-            borderColorFrom.g = currentG
-            borderColorFrom.b = currentB
+        local currentR, currentG, currentB = dropdownButton:GetBackdropBorderColor()
+        borderColorFrom.r = currentR
+        borderColorFrom.g = currentG
+        borderColorFrom.b = currentB
 
-            if hovered then
-                borderColorTo.r = Theme.accent[1]
-                borderColorTo.g = Theme.accent[2]
-                borderColorTo.b = Theme.accent[3]
-            else
-                borderColorTo.r = Theme.border[1]
-                borderColorTo.g = Theme.border[2]
-                borderColorTo.b = Theme.border[3]
-            end
-
-            hoverAnimGroup:Play()
+        if hovered then
+            borderColorTo.r = Theme.accent[1]
+            borderColorTo.g = Theme.accent[2]
+            borderColorTo.b = Theme.accent[3]
         else
-            -- Instant fallback
-            if hovered then
-                dropdownButton:SetBackdropBorderColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
-            else
-                dropdownButton:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
-            end
+            borderColorTo.r = Theme.border[1]
+            borderColorTo.g = Theme.border[2]
+            borderColorTo.b = Theme.border[3]
         end
+
+        hoverAnimGroup:Play()
     end
 
-    -- Close dropdown function
     local function CloseDropdown(instant)
         if scrollHold then return end
-        if not isOpen then return end
+        if not row._isOpen then return end
 
-        isOpen = false
-
-        -- Force instant if animations disabled
-        if not ENABLE_ANIMATIONS then
-            instant = true
-        end
+        row._isOpen = false
 
         if instant then
             dropdownList:SetHeight(1)
@@ -401,34 +485,26 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             end
 
             arrow:SetRotation(-math.pi / 2)
-            if animGroup then animGroup:Stop() end
-            if arrowAnimGroup then arrowAnimGroup:Stop() end
+            animGroup:Stop()
+            arrowAnimGroup:Stop()
         else
             startHeight = dropdownList:GetHeight()
             targetHeight = 1
-            if arrowAnimGroup then
-                arrowAnimGroup:Stop()
-                arrowRotation:SetRadians(-math.pi / 2)
-                arrowAnimGroup:Play()
-            end
-            if animGroup then
-                animGroup:Stop()
-                animGroup:Play()
-            end
+            arrowAnimGroup:Stop()
+            arrowRotation:SetRadians(-math.pi / 2)
+            arrowAnimGroup:Play()
+            animGroup:Stop()
+            animGroup:Play()
         end
 
-        -- Unregister from global mouse checker
         if globalMouseChecker.activeDropdown == row then
             globalMouseChecker.activeDropdown = nil
             globalMouseChecker:Hide()
         end
 
-        if GUIFrame.activeDropdown == dropdownButton then
-            GUIFrame.activeDropdown = nil
-        end
+        if GUIFrame.activeDropdown == dropdownButton then GUIFrame.activeDropdown = nil end
     end
 
-    -- Update scroll state
     local function UpdateScroll()
         local contentHeight = scrollChild:GetHeight()
         local scrollFrameHeight = scrollFrame:GetHeight()
@@ -453,78 +529,54 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
 
         scrollChild:SetWidth(scrollFrame:GetWidth())
 
-        -- Position buttons using stored index
-        for _, btn in ipairs(itemButtons) do
+        for _, btn in ipairs(row._itemButtons) do
             btn:ClearAllPoints()
             btn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -(btn._index - 1) * ITEM_HEIGHT)
             btn:SetPoint("RIGHT", scrollChild, "RIGHT", 0, 0)
         end
     end
 
-    local function SetSearchText(text, preserveCursor)
-        searchText = text or ""
-        if searchEditBox and searchEditBox:GetText() ~= searchText then
-            searchEditBox:SetText(searchText)
-            if preserveCursor then
-                searchEditBox:HighlightText(0, 0)
+    animGroup:SetScript("OnUpdate", function(anim)
+        local progress = anim:GetProgress() or 0
+        local smoothProgress = progress * progress * (3 - 2 * progress)
+        local newHeight = startHeight + (targetHeight - startHeight) * smoothProgress
+        dropdownList:SetHeight(newHeight)
+
+        if row._isOpen and newHeight < targetHeight then dropdownList:SetClipsChildren(false) end
+    end)
+
+    animGroup:SetScript("OnFinished", function()
+        dropdownList:SetHeight(targetHeight)
+
+        if not row._isOpen then
+            dropdownList:Hide()
+
+            if dropdownList._logicalParent then
+                dropdownList:SetParent(dropdownList._logicalParent)
+                dropdownList._logicalParent = nil
             end
+        else
+            dropdownList:SetClipsChildren(true)
         end
-    end
-
-    -- Animation scripts
-    if ENABLE_ANIMATIONS and animGroup then
-        animGroup:SetScript("OnUpdate", function(self)
-            local progress = self:GetProgress() or 0
-            local smoothProgress = progress * progress * (3 - 2 * progress)
-            local newHeight = startHeight + (targetHeight - startHeight) * smoothProgress
-            dropdownList:SetHeight(newHeight)
-
-            if isOpen and newHeight < targetHeight then
-                dropdownList:SetClipsChildren(false)
-            end
-        end)
-
-        animGroup:SetScript("OnFinished", function()
-            dropdownList:SetHeight(targetHeight)
-
-            if not isOpen then
-                dropdownList:Hide()
-
-                if dropdownList._logicalParent then
-                    dropdownList:SetParent(dropdownList._logicalParent)
-                    dropdownList._logicalParent = nil
-                end
-            else
-                dropdownList:SetClipsChildren(true)
-            end
-        end)
-    end
-
-    local function NormalizeSearch(text)
-        return strlower(tostring(text or ""))
-    end
+    end)
 
     local function BuildFilteredKeys()
         wipe(filteredKeys)
         firstVisibleKey = nil
 
         local sortedKeys
-        if orderedKeys then
-            sortedKeys = orderedKeys
+        if row._orderedKeys then
+            sortedKeys = row._orderedKeys
         else
             sortedKeys = {}
-            for k in pairs(normalizedOptions) do
-                table_insert(sortedKeys, k)
-            end
-            table_sort(sortedKeys, function(a, b)
-                return tostring(a) < tostring(b)
-            end)
+            for k in pairs(row._normalizedOptions) do table_insert(sortedKeys, k) end
+            table_sort(sortedKeys, function(a, b) return tostring(a) < tostring(b) end)
         end
 
-        local searchLower = NormalizeSearch(searchText)
+        local searchLower = strlower(tostring(searchText or ""))
         for _, key in ipairs(sortedKeys) do
-            local displayText = normalizedOptions[key]
-            local haystack = NormalizeSearch(displayText or key)
+            local displayText = row._normalizedOptions[key]
+            local haystack = strlower(tostring(displayText or key or ""))
             if searchLower == "" or strfind(haystack, searchLower, 1, true) then
                 table_insert(filteredKeys, key)
                 if not firstVisibleKey then
@@ -535,58 +587,45 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
     end
 
     local function SelectValue(value)
-        currentValue = value
-        if normalizedOptions[value] then
-            selectedText:SetText(normalizedOptions[value])
+        row._currentValue = value
+        if row._normalizedOptions[value] then
+            row._selectedText:SetText(row._normalizedOptions[value])
         else
-            selectedText:SetText(tostring(value))
+            row._selectedText:SetText(tostring(value))
         end
 
-        if isFontPreview then
+        if row._isFontPreview then
             local fontPath = NRSKNUI:GetFontPath(value)
-            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
-        end
-
-        for _, itemBtn in ipairs(itemButtons) do
-            if itemBtn._updateColor then
-                itemBtn._updateColor()
-            end
+            SafeApplyPreviewFont(row._selectedText, fontPath, FONT_PREVIEW_SIZE)
         end
 
         CloseDropdown()
 
-        if callback then
-            callback(value)
-        end
+        if row._callback then row._callback(value) end
     end
 
     local function CreateItemButtons()
-        -- Release existing buttons back to pool
-        for _, btn in ipairs(itemButtons) do
-            ReleaseItemButton(btn)
-        end
-        wipe(itemButtons)
+        for _, btn in ipairs(row._itemButtons) do ReleaseItemButton(btn) end
+        wipe(row._itemButtons)
 
         BuildFilteredKeys()
 
         for i, key in ipairs(filteredKeys) do
-            local displayText = normalizedOptions[key]
+            local displayText = row._normalizedOptions[key]
 
             local btn = AcquireItemButton(scrollChild)
             btn._itemValue = key
             btn._itemText = displayText
-            btn._index = i -- Store index directly on button
+            btn._index = i
             btn._text:SetText(displayText or key)
 
-            -- Apply font preview styling (render font name in that font)
-            if isFontPreview then
+            if row._isFontPreview then
                 local fontPath = NRSKNUI:GetFontPath(key)
                 SafeApplyPreviewFont(btn._text, fontPath, FONT_PREVIEW_SIZE)
             end
 
-            -- Update color function
             local function UpdateItemColor()
-                if currentValue == btn._itemValue then
+                if row._currentValue == btn._itemValue then
                     btn._text:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
                 else
                     btn._text:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
@@ -595,32 +634,28 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             btn._updateColor = UpdateItemColor
             UpdateItemColor()
 
-            btn:SetScript("OnClick", function()
-                SelectValue(btn._itemValue)
-            end)
+            btn:SetScript("OnClick", function() SelectValue(btn._itemValue) end)
 
             btn:SetScript("OnEnter", function()
-                btn._hoverBg:Show()
+                btn._hoverTarget = 1
                 btn._text:SetTextColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3], 1)
             end)
 
             btn:SetScript("OnLeave", function()
-                btn._hoverBg:Hide()
+                btn._hoverTarget = 0
                 UpdateItemColor()
             end)
 
             btn:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -(i - 1) * ITEM_HEIGHT)
             btn:SetPoint("RIGHT", scrollChild, "RIGHT", 0, 0)
 
-            table_insert(itemButtons, btn)
+            table_insert(row._itemButtons, btn)
         end
 
-        if emptyLabel then
-            emptyLabel:SetShown(#filteredKeys == 0)
-        end
+        if emptyLabel then emptyLabel:SetShown(#filteredKeys == 0) end
 
         scrollChild:SetHeight(#filteredKeys > 0 and (#filteredKeys * ITEM_HEIGHT) or ITEM_HEIGHT)
-        itemsCreated = true
+        row._itemsCreated = true
     end
 
     if searchable then
@@ -628,7 +663,7 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         searchContainer:SetHeight(SEARCH_BOX_HEIGHT)
         searchContainer:SetPoint("TOPLEFT", dropdownList, "TOPLEFT", SEARCH_PADDING, -SEARCH_PADDING)
         searchContainer:SetPoint("TOPRIGHT", dropdownList, "TOPRIGHT", -SEARCH_INPUT_RIGHT_PADDING, -SEARCH_PADDING)
-        searchContainer:SetBackdrop(DROPDOWN_BACKDROP)
+        searchContainer:SetBackdrop(STANDARD_BACKDROP)
         searchContainer:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 1)
         searchContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
         searchContainer:Hide()
@@ -673,7 +708,6 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         emptyLabel:Hide()
     end
 
-    -- Mouse wheel scrolling
     scrollFrame:EnableMouseWheel(true)
     scrollFrame:SetScript("OnMouseWheel", function(_, delta)
         if scrollbar and scrollbar:IsShown() then
@@ -685,9 +719,8 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         end
     end)
 
-    -- Toggle dropdown
     local function ToggleDropdown()
-        if isOpen then
+        if row._isOpen then
             CloseDropdown()
         else
             dropdownList._logicalParent = dropdownList:GetParent()
@@ -696,9 +729,10 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             dropdownList:SetPoint("TOPLEFT", dropdownButton, "BOTTOMLEFT", 0, -2)
             dropdownList:SetPoint("TOPRIGHT", dropdownButton, "BOTTOMRIGHT", 0, -2)
 
-            if searchable and searchContainer then
-                searchContainer:Show()
-                SetSearchText("", true)
+            if searchable then
+                searchText = ""
+                if searchContainer then searchContainer:Show() end
+                if searchEditBox then searchEditBox:SetText("") end
             end
 
             CreateItemButtons()
@@ -715,39 +749,25 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
             dropdownList:Show()
             dropdownList:SetHeight(startHeight)
 
-            isOpen = true
+            row._isOpen = true
 
-            -- Close other open dropdown
             if GUIFrame.activeDropdown and GUIFrame.activeDropdown ~= dropdownButton then
-                if GUIFrame.activeDropdown.closeDropdown then
-                    GUIFrame.activeDropdown.closeDropdown()
-                end
+                if GUIFrame.activeDropdown.closeDropdown then GUIFrame.activeDropdown.closeDropdown() end
             end
             GUIFrame.activeDropdown = dropdownButton
 
-            -- Animate or instant
-            if ENABLE_ANIMATIONS and animGroup and arrowAnimGroup then
-                arrowAnimGroup:Stop()
-                arrowRotation:SetRadians(math.pi / 2)
-                arrowAnimGroup:Play()
-                animGroup:Play()
-            else
-                -- Instant open
-                arrow:SetRotation(0)
-                dropdownList:SetHeight(targetHeight)
-            end
+            arrowAnimGroup:Stop()
+            arrowRotation:SetRadians(math.pi / 2)
+            arrowAnimGroup:Play()
+            animGroup:Play()
 
-            -- Register with global mouse checker
-            row._dropdownList = dropdownList
-            row._dropdownButton = dropdownButton
-            row._closeDropdown = CloseDropdown
             globalMouseChecker.activeDropdown = row
             globalMouseChecker.wasMouseDown = false
             globalMouseChecker:Show()
 
             if searchable and searchEditBox then
                 C_Timer.After(0, function()
-                    if isOpen and searchEditBox:IsShown() then
+                    if row._isOpen and searchEditBox:IsShown() then
                         searchEditBox:SetFocus()
                         searchEditBox:HighlightText(0, 0)
                     end
@@ -756,164 +776,68 @@ function GUIFrame:CreateDropdown(parent, labelText, options, selected, labelWidt
         end
     end
 
-    -- Button scripts
     dropdownButton:SetScript("OnClick", ToggleDropdown)
+    dropdownButton:SetScript("OnEnter", function() SetBorderHover(true) end)
+    dropdownButton:SetScript("OnLeave", function() SetBorderHover(false) end)
 
-    dropdownButton:SetScript("OnEnter", function()
-        SetBorderHover(true)
-        if tooltip then
-            GameTooltip:SetOwner(dropdownButton, "ANCHOR_TOP")
-            GameTooltip:SetText(tooltip, 1, 1, 1, 1, true)
-            GameTooltip:Show()
-        end
-    end)
-
-    dropdownButton:SetScript("OnLeave", function()
-        SetBorderHover(false)
-        GameTooltip:Hide()
-    end)
-
-    -- Set initial selected text
-    if selected and normalizedOptions[selected] then
-        selectedText:SetText(normalizedOptions[selected])
-        currentValue = selected
-        -- Apply font preview to initial selection
-        if isFontPreview then
+    if selected and row._normalizedOptions[selected] then
+        row._selectedText:SetText(row._normalizedOptions[selected])
+        row._currentValue = selected
+        if row._isFontPreview then
             local fontPath = NRSKNUI:GetFontPath(selected)
-            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
+            SafeApplyPreviewFont(row._selectedText, fontPath, FONT_PREVIEW_SIZE)
         end
     elseif selected ~= nil then
-        selectedText:SetText(tostring(selected))
-        currentValue = selected
-        -- Apply font preview to initial selection
-        if isFontPreview then
+        row._selectedText:SetText(tostring(selected))
+        row._currentValue = selected
+        if row._isFontPreview then
             local fontPath = NRSKNUI:GetFontPath(selected)
-            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
+            SafeApplyPreviewFont(row._selectedText, fontPath, FONT_PREVIEW_SIZE)
         end
     else
-        selectedText:SetText("Select...")
-        currentValue = nil
+        row._selectedText:SetText("Select...")
+        row._currentValue = nil
     end
 
-    -- Hide handlers
     dropdownList:SetScript("OnHide", function()
-        if isOpen then
-            isOpen = false
-        end
+        row._isOpen = false
         if searchable then
-            SetSearchText("", false)
-            if searchContainer then
-                searchContainer:Hide()
-            end
+            searchText = ""
+
             if searchEditBox then
+                searchEditBox:SetText("")
                 searchEditBox:ClearFocus()
             end
-            if emptyLabel then
-                emptyLabel:Hide()
-            end
+
+            if searchContainer then searchContainer:Hide() end
+            if emptyLabel then emptyLabel:Hide() end
         end
     end)
 
     dropdownButton:SetScript("OnHide", function()
         CloseDropdown(true)
-        if GUIFrame.activeDropdown == dropdownButton then
-            GUIFrame.activeDropdown = nil
-        end
+        if GUIFrame.activeDropdown == dropdownButton then GUIFrame.activeDropdown = nil end
     end)
 
-    -- Public API
-    function row:SetValue(value, silent)
-        currentValue = value
-        if normalizedOptions[value] then
-            selectedText:SetText(normalizedOptions[value])
-        else
-            selectedText:SetText(tostring(value))
-        end
+    row._closeDropdown = CloseDropdown
+    row._createItemButtons = CreateItemButtons
+    row._updateScroll = UpdateScroll
+    row._dropdownList = dropdownList
+    row._dropdownButton = dropdownButton
+    row._borderColorFrom = borderColorFrom
+    row._borderColorTo = borderColorTo
 
-        -- Apply font preview when setting value
-        if isFontPreview then
-            local fontPath = NRSKNUI:GetFontPath(value)
-            SafeApplyPreviewFont(selectedText, fontPath, FONT_PREVIEW_SIZE)
-        end
-
-        -- Only update colors if items exist
-        if itemsCreated then
-            CreateItemButtons()
-            UpdateScroll()
-        end
-
-        if callback and not silent then
-            callback(value)
-        end
-    end
-
-    function row:SetSelected(value, silent)
-        return row:SetValue(value, silent)
-    end
-
-    function row:GetValue()
-        return currentValue
-    end
-
-    function row:GetSelected()
-        return currentValue
-    end
-
-    function row:SetEnabled(enabled)
-        if enabled then
-            dropdownButton:Enable()
-            dropdownButton:SetAlpha(1)
-            label:SetAlpha(1)
-        else
-            dropdownButton:Disable()
-            dropdownButton:SetAlpha(0.5)
-            label:SetAlpha(0.5)
-            if isOpen then
-                CloseDropdown()
-            end
-        end
-    end
-
-    function row:UpdateOptions(newOptions)
-        normalizedOptions = {}
-        orderedKeys = nil
-        if type(newOptions) == "table" then
-            if newOptions[1] and type(newOptions[1]) == "table" and (newOptions[1].key or newOptions[1].value) then
-                orderedKeys = {}
-                for _, opt in ipairs(newOptions) do
-                    local optKey = opt.key or opt.value
-                    normalizedOptions[optKey] = opt.text
-                    table_insert(orderedKeys, optKey)
-                end
-            else
-                local isSequentialArray = newOptions[1] ~= nil and type(newOptions[1]) == "string"
-                if isSequentialArray then
-                    for _, v in ipairs(newOptions) do
-                        normalizedOptions[v] = v
-                    end
-                else
-                    for k, v in pairs(newOptions) do
-                        normalizedOptions[k] = v
-                    end
-                end
-            end
-        end
-
-        -- Recreate items if they were already created
-        if itemsCreated then
-            CreateItemButtons()
-            if isOpen then
-                UpdateScroll()
-            end
-        end
-    end
-
-    function row:SetOptions(newOptions)
-        return row:UpdateOptions(newOptions)
-    end
+    row._scrollbar = scrollbar
+    row._thumb = thumb
+    row._thumbBorder = thumbBorder
+    row._searchContainer = searchContainer
+    row._searchEditBox = searchEditBox
+    row._emptyLabel = emptyLabel
 
     dropdownButton.closeDropdown = CloseDropdown
     row.dropdown = dropdownButton
+
+    Mixin(row, NUIDropdownMixin)
 
     return row
 end

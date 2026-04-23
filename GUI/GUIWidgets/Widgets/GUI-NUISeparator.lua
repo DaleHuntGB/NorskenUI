@@ -1,26 +1,22 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
 local CreateFrame = CreateFrame
 local CreateColor = CreateColor
 
--- Separator widget
+---@param parent Frame
+---@return NUISeparator
 function GUIFrame:CreateSeparator(parent)
-    local sepHeight = 6
-
     local separator = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    separator:SetHeight(sepHeight)
+    separator:SetHeight(6)
     separator:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     separator:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
 
-    --local r, g, b = Theme.accent[1], Theme.accent[2], Theme.accent[3]
     local r, g, b = Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3]
 
-    -- Left half
     local left = separator:CreateTexture(nil, "ARTWORK")
     left:SetHeight(2)
     left:SetPoint("LEFT", separator, "LEFT", 3, 0)
@@ -30,7 +26,6 @@ function GUIFrame:CreateSeparator(parent)
     left:SetTexelSnappingBias(0)
     left:SetSnapToPixelGrid(false)
 
-    -- Right half
     local right = separator:CreateTexture(nil, "ARTWORK")
     right:SetHeight(2)
     right:SetPoint("LEFT", separator, "CENTER", 0, 0)

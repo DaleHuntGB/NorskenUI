@@ -828,37 +828,22 @@ function DT:CreateBarFrame(dungeonKey, triggerId, trigger)
         end
     end
 
-    local fontPath = NRSKNUI:GetFontPath(config.fontFace) or NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF"
     local fontSize = config.fontSize or 12
     local fontOutline = config.fontOutline or "OUTLINE"
-    local useSoftOutline = fontOutline == "SOFTOUTLINE"
-    local actualOutline = useSoftOutline and "" or (fontOutline == "NONE" and "" or fontOutline)
 
-    -- Text 1
+    -- Text 1 (left side)
     frame.text1 = frame.bar:CreateFontString(nil, "OVERLAY")
-    frame.text1:SetFont(fontPath, fontSize, actualOutline)
     frame.text1:SetPoint("LEFT", frame.bar, "LEFT", config.barText1XOffset or 4, config.barText1YOffset or 0)
-    frame.text1:SetPoint("RIGHT", frame.bar, "RIGHT", (config.barText1XOffset or 4) - 8, config.barText1YOffset or 0)
     frame.text1:SetJustifyH(config.barText1Justify or "LEFT")
+    NRSKNUI:ApplyFontToText(frame.text1, config.fontFace, fontSize, fontOutline)
     frame.text1:SetTextColor(unpack(config.textColor))
 
-    -- Soft outline for text1
-    if useSoftOutline and NRSKNUI.CreateSoftOutline then
-        frame.text1.softOutline = NRSKNUI:CreateSoftOutline(frame.text1, { size = 2 })
-    end
-
-    -- Text 2
+    -- Text 2 (right side)
     frame.text2 = frame.bar:CreateFontString(nil, "OVERLAY")
-    frame.text2:SetFont(fontPath, fontSize, actualOutline)
-    frame.text2:SetPoint("LEFT", frame.bar, "LEFT", (config.barText2XOffset or -4) + 8, config.barText2YOffset or 0)
     frame.text2:SetPoint("RIGHT", frame.bar, "RIGHT", config.barText2XOffset or -4, config.barText2YOffset or 0)
     frame.text2:SetJustifyH(config.barText2Justify or "RIGHT")
+    NRSKNUI:ApplyFontToText(frame.text2, config.fontFace, fontSize, fontOutline)
     frame.text2:SetTextColor(unpack(config.textColor))
-
-    -- Soft outline for text2
-    if useSoftOutline and NRSKNUI.CreateSoftOutline then
-        frame.text2.softOutline = NRSKNUI:CreateSoftOutline(frame.text2, { size = 2 })
-    end
 
     frame.config = config
     frame.dungeonKey = dungeonKey
@@ -883,53 +868,16 @@ function DT:CreateTextFrame(dungeonKey, triggerId, trigger)
     frame:SetFrameStrata("HIGH")
     frame:Hide()
 
-    local fontPath = NRSKNUI:GetFontPath(config.fontFace) or NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF"
     local justify = config.textJustify or "LEFT"
     local fontOutline = config.fontOutline or "OUTLINE"
-    local useSoftOutline = fontOutline == "SOFTOUTLINE"
-    local actualOutline = useSoftOutline and "" or (fontOutline == "NONE" and "" or fontOutline)
 
     -- Text spans full width
     frame.displayText = frame:CreateFontString(nil, "OVERLAY")
-    frame.displayText:SetFont(fontPath, fontSize, actualOutline)
     frame.displayText:SetPoint("LEFT", frame, "LEFT", 0, 0)
     frame.displayText:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
     frame.displayText:SetJustifyH(justify)
+    NRSKNUI:ApplyFontToText(frame.displayText, config.fontFace, fontSize, fontOutline)
     frame.displayText:SetTextColor(unpack(config.textColor))
-
-    if useSoftOutline and NRSKNUI.CreateSoftOutline then
-        local outline = NRSKNUI:CreateSoftOutline(frame.displayText, {
-            thickness = 1,
-            color = { 0, 0, 0 },
-            alpha = 0.9,
-            fontPath = fontPath,
-            fontSize = fontSize,
-        })
-        if outline and outline.shadows then
-            -- 8-direction offsets matching CustomOutline.lua
-            local SHADOW_OFFSETS = {
-                { 0,  1 },  -- N
-                { 1,  1 },  -- NE
-                { 1,  0 },  -- E
-                { 1,  -1 }, -- SE
-                { 0,  -1 }, -- S
-                { -1, -1 }, -- SW
-                { -1, 0 },  -- W
-                { -1, 1 },  -- NW
-            }
-            local thickness = outline.thickness or 1
-            for i, shadow in ipairs(outline.shadows) do
-                local offset = SHADOW_OFFSETS[i]
-                local xOff = offset[1] * thickness
-                local yOff = offset[2] * thickness
-                shadow:ClearAllPoints()
-                shadow:SetPoint("TOPLEFT", frame.displayText, "TOPLEFT", xOff, yOff)
-                shadow:SetPoint("BOTTOMRIGHT", frame.displayText, "BOTTOMRIGHT", xOff, yOff)
-                shadow:SetJustifyH(justify)
-            end
-            outline:SetShown(true)
-        end
-    end
 
     frame.config = config
     frame.dungeonKey = dungeonKey
@@ -2597,7 +2545,7 @@ function DT:GeneratePresetsCode()
 
     local output = {}
     table_insert(output, "-- Generated Dungeon Timer Presets")
-    table_insert(output, "-- Paste this into DungeonTimerPresets.lua")
+    table_insert(output, "-- Pasted into DungeonTimerPresets.lua")
     table_insert(output, "")
     table_insert(output, "NRSKNUI.DungeonTimerPresets = {")
     table_insert(output, "    _version = 1,")

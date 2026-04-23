@@ -3,24 +3,33 @@
 
     <Script file="GUIMain\GUI-Core.lua" />
 
-    <Script file="GUIWidgets\GUI-WidgetsCompact.lua" />
     <Script file="GUIUtil\GUI-FrameChooser.lua" />
 
-    <!-- GUI Widgets -->
-    <Script file="GUIWidgets\GUI-PositionCard.lua" />
-    <Script file="GUIWidgets\GUI-NUIToggle.lua" />
-    <Script file="GUIWidgets\GUI-NUISlider.lua" />
-    <Script file="GUIWidgets\GUI-NUIDropdown.lua" />
-    <Script file="GUIWidgets\GUI-NUIButton.lua" />
-    <Script file="GUIWidgets\GUI-NUIColorPicker.lua" />
-    <Script file="GUIWidgets\GUI-NUIEditBox.lua" />
-    <Script file="GUIWidgets\GUI-NUIMultiLineEditBox.lua" />
-    <Script file="GUIWidgets\GUI-NUISeparator.lua" />
-    <Script file="GUIWidgets\GUI-Sidebar.lua" />
-    <Script file="GUIWidgets\GUI-NUIText.lua" />
+    <!-- GUI Core Utilities -->
+    <Script file="GUIWidgets\GUI-WidgetStateManager.lua" />
+
+    <!-- GUI Single Widgets -->
+    <Script file="GUIWidgets\Widgets\GUI-NUIToggle.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUISlider.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIDropdown.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIButton.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIColorPicker.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIEditBox.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIMultiLineEditBox.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUISeparator.lua" />
+    <Script file="GUIWidgets\Widgets\GUI-NUIText.lua" />
+
+    <!-- GUI Premade Cards -->
+    <Script file="GUIWidgets\Cards\GUI-PositionCard.lua" />
+    <Script file="GUIWidgets\Cards\GUI-FontSettingsCard.lua" />
 
     <!-- GUI Home Page -->
     <Script file="GUIMain\GUI-HomePage.lua" />
+    <Script file="GUIMain\GUI-SidebarConfig.lua" />
+    <Script file="GUIMain\GUI-NUIScrollbar.lua" />
+    <Script file="GUIMain\GUI-ContentAreas.lua" />
+    <Script file="GUIMain\GUI-NUISubTabPanel.lua" />
+    <Script file="GUIMain\GUI-Sidebar.lua" />
 
     <!-- GUI Theme Page -->
     <Script file="GUITabs\GUI-ThemePage.lua" />
@@ -40,7 +49,6 @@
     <Script file="GUITabs\GUI-Combat\GUI-RangeChecker.lua" />
     <Script file="GUITabs\GUI-Combat\GUI-TimeSpiral.lua" />
     <Script file="GUITabs\GUI-Combat\GUI-FocusCastbar.lua" />
-    <Script file="GUITabs\GUI-Combat\GUI-BloodlustTracker.lua" />
 
     <!-- GUI QoL Tabs -->
     <Script file="GUITabs\GUI-QoL\GUI-AutomationTab.lua" />

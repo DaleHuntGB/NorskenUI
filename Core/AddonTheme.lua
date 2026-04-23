@@ -1,6 +1,10 @@
 -- NorskenUI namespace
+local addonName = select(1, ...)
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+
+NRSKNUI.PATH = ([[Interface\AddOns\%s\Media\]]):format(addonName)
+NRSKNUI.FONT = NRSKNUI.PATH .. [[Fonts\]] .. 'Expressway.TTF'
 
 -- Module with my addon theme settings and helpers
 
@@ -15,7 +19,7 @@ local THEME_PRESETS = {
     -- Theme 1: Warpaint (Red, brown, grey/brownish)
     ["Warpaint"] = {
         bgDark        = { 0.0745, 0.0588, 0.0510, 0.6 },
-        bgMedium      = { 0.0745, 0.0588, 0.0510, 1 },
+        bgMedium      = { 0.0745, 0.0588, 0.0510, 0.8 },
         bgLight       = { 0.1945, 0.1788, 0.1710, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -35,7 +39,7 @@ local THEME_PRESETS = {
     -- Theme 2: Greenwake (Green, blue, peach)
     ["Greenwake"] = {
         bgDark        = { 0.031, 0.106, 0.106, 0.6 },
-        bgMedium      = { 0.031, 0.106, 0.106, 1 },
+        bgMedium      = { 0.031, 0.106, 0.106, 0.8 },
         bgLight       = { 0.125, 0.231, 0.216, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -55,7 +59,7 @@ local THEME_PRESETS = {
     -- Theme 3: Timberfall (Orange, Dark green, light brown/green)
     ["Timberfall"] = {
         bgDark        = { 0.092, 0.069, 0.018, 0.6 },
-        bgMedium      = { 0.092, 0.069, 0.018, 1 },
+        bgMedium      = { 0.092, 0.069, 0.018, 0.8 },
         bgLight       = { 0.286, 0.220, 0.118, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -75,7 +79,7 @@ local THEME_PRESETS = {
     -- Theme 4: Obsidian (Purple, obsidian)
     ["Obsidian"] = {
         bgDark        = { 0.014, 0.047, 0.063, 0.6 },
-        bgMedium      = { 0.014, 0.047, 0.063, 1 },
+        bgMedium      = { 0.014, 0.047, 0.063, 0.8 },
         bgLight       = { 0.114, 0.147, 0.163, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -95,7 +99,7 @@ local THEME_PRESETS = {
     -- Theme 5: Mocha
     ["Mocha"] = {
         bgDark        = { 0.0588, 0.0559, 0.0294, 0.6 },
-        bgMedium      = { 0.0588, 0.0559, 0.0294, 1 },
+        bgMedium      = { 0.0588, 0.0559, 0.0294, 0.8 },
         bgLight       = { 0.1019, 0.0969, 0.0510, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -115,7 +119,7 @@ local THEME_PRESETS = {
     -- Theme 6: Frost (Icy blue)
     ["Frost"] = {
         bgDark        = { 0.024, 0.078, 0.106, 0.6 },
-        bgMedium      = { 0.024, 0.078, 0.106, 1 },
+        bgMedium      = { 0.024, 0.078, 0.106, 0.8 },
         bgLight       = { 0.067, 0.129, 0.176, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -135,7 +139,7 @@ local THEME_PRESETS = {
     -- Theme 7: Echo (Red/Pink)
     ["Echo"] = {
         bgDark        = { 0.0666, 0.0000, 0.0000, 0.6 },
-        bgMedium      = { 0.0666, 0.0000, 0.0000, 1 },
+        bgMedium      = { 0.0666, 0.0000, 0.0000, 0.8 },
         bgLight       = { 0.0705, 0.0705, 0.0705, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -155,7 +159,7 @@ local THEME_PRESETS = {
     -- Theme 8: Dark
     ["Dark"] = {
         bgDark        = { 0.0235, 0.0235, 0.0235, 0.6 },
-        bgMedium      = { 0.0431, 0.0431, 0.0431, 1 },
+        bgMedium      = { 0.0431, 0.0431, 0.0431, 0.8 },
         bgLight       = { 0.1176, 0.1176, 0.1176, 1 },
         bgHover       = { 0.22, 0.22, 0.24, 1 },
         border        = { 0, 0, 0, 1 },
@@ -167,6 +171,26 @@ local THEME_PRESETS = {
         textMuted     = { 0.50, 0.50, 0.50, 1 },
         selectedBg    = { 0.8980, 0.0627, 0.2235, 0.25 },
         selectedText  = { 0.8980, 0.0627, 0.2235, 1 },
+        error         = { 0.90, 0.30, 0.30, 1 },
+        success       = { 0.30, 0.80, 0.40, 1 },
+        warning       = { 0.90, 0.75, 0.30, 1 },
+    },
+
+    -- Theme 9: NUI v2
+    ["NUI v2"] = {
+        bgDark        = { 0.015, 0.047, 0.062, 0.6 },
+        bgMedium      = { 0.015, 0.047, 0.062, 0.8 },
+        bgLight       = { 0.113, 0.145, 0.164, 1 },
+        bgHover       = { 0.219, 0.219, 0.239, 1 },
+        border        = { 0, 0, 0, 1 },
+        accent        = { 0, 1, 0.588, 1 },
+        accentHover   = { 0, 1, 0.588, 0.25 },
+        accentDim     = { 0, 1, 0.588, 1 },
+        textPrimary   = { 0.95, 0.95, 0.95, 1 },
+        textSecondary = { 0.70, 0.70, 0.70, 1 },
+        textMuted     = { 0.50, 0.50, 0.50, 1 },
+        selectedBg    = { 0, 1, 0.588, 0.15 },
+        selectedText  = { 0, 1, 0.588, 1 },
         error         = { 0.90, 0.30, 0.30, 1 },
         success       = { 0.30, 0.80, 0.40, 1 },
         warning       = { 0.90, 0.75, 0.30, 1 },
@@ -185,7 +209,8 @@ NRSKNUI.ThemePresetNames = {
     "Obsidian",
     "Mocha",
     "Frost",
-    "Dark"
+    "Dark",
+    "NUI v2",
 }
 
 -- Theme mode options that the user can choose between
@@ -222,27 +247,44 @@ local ThemeDefaults = {
     -- Dimensions
     headerHeight   = 35,
     footerHeight   = 28,
-    sidebarWidth   = 192,
-    contentWidth   = 702,
+    sidebarWidth   = 242,
+    contentWidth   = 679,
     borderSize     = 1,
 
     -- Spacing
     paddingSmall   = 4,
     paddingMedium  = 8,
     paddingLarge   = 16,
-    scrollbarWidth = 16,
+    scrollbarWidth = 17,
+
+    -- Row Heights
+    rowHeight          = 40,   -- Standard row height
+    rowHeightLast      = 44,   -- Last row in a card (use 0 spacing in AddRow)
+    rowHeightTall      = 80,   -- Anchor point selector rows
+    rowHeightSeparator = 8,    -- Separator-only rows
 
     -- Font settings
-    fontFace       = "Fonts\\FRIZQT__.TTF",
+    fontFace       = NRSKNUI.FONT,
     fontSizeSmall  = 12,
     fontSizeNormal = 12,
     fontSizeLarge  = 16,
     fontOutline    = "OUTLINE",
     fontShadow     = false,
+
+    -- Animation
+    animDuration   = 0.18, -- Standard hover animation duration
 }
 
 -- Export ThemeDefaults for reference
 NRSKNUI.ThemeDefaults = ThemeDefaults
+
+-- Font outline options (shared constant for dropdowns)
+NRSKNUI.FontOutlineOptions = {
+    { key = "NONE",         text = "None" },
+    { key = "OUTLINE",      text = "Outline" },
+    { key = "THICKOUTLINE", text = "Thick" },
+    { key = "SOFTOUTLINE",  text = "Soft" },
+}
 
 -- Color keys that support class coloring
 local ClassColorKeys = {
@@ -289,7 +331,7 @@ end
 -- GetSelectedPreset: Get the name of the selected preset theme
 local function GetSelectedPreset()
     local db = GetThemeDB()
-    return (db and db.selectedPreset) or "Echo"
+    return (db and db.selectedPreset) or "NUI v2"
 end
 
 -- GetThemeValue: Get theme value from db or default (for non-color values)
@@ -385,13 +427,22 @@ NRSKNUI.Theme = {
     paddingLarge   = ThemeDefaults.paddingLarge,
     scrollbarWidth = ThemeDefaults.scrollbarWidth,
 
+    -- Row Heights
+    rowHeight          = ThemeDefaults.rowHeight,
+    rowHeightLast      = ThemeDefaults.rowHeightLast,
+    rowHeightTall      = ThemeDefaults.rowHeightTall,
+    rowHeightSeparator = ThemeDefaults.rowHeightSeparator,
+
     -- Font settings
-    fontFace       = ThemeDefaults.fontFace,
+    fontFace       = NRSKNUI.FONT or "Fonts\\FRIZQT__.TTF",
     fontSizeNormal = ThemeDefaults.fontSizeNormal,
     fontSizeSmall  = ThemeDefaults.fontSizeSmall,
     fontSizeLarge  = ThemeDefaults.fontSizeLarge,
     fontOutline    = ThemeDefaults.fontOutline,
     fontShadow     = ThemeDefaults.fontShadow,
+
+    -- Animation
+    animDuration   = ThemeDefaults.animDuration,
 }
 
 -- Theme color keys, for iteration in settings UI
@@ -582,7 +633,7 @@ function NRSKNUI:ResetTheme()
     -- Reset theme settings
     self.db.global.Theme = {
         mode = "preset",
-        selectedPreset = "Echo",
+        selectedPreset = "NUI v2",
         customColors = {},
     }
 
@@ -637,7 +688,8 @@ function NRSKNUI:SetThemeValue(key, value)
     end
 end
 
--- ApplyThemeFont: Apply theme font to a font string
+---@param fontString FontString
+---@param size "small"|"normal"|"large"|number
 function NRSKNUI:ApplyThemeFont(fontString, size)
     if not fontString or not fontString.SetFont then return end
 
@@ -656,7 +708,7 @@ function NRSKNUI:ApplyThemeFont(fontString, size)
     end
 
     -- Get font face and outline
-    local fontFace = Theme.fontFace or "Fonts\\FRIZQT__.TTF"
+    local fontFace = Theme.fontFace or self.FONT or "Fonts\\FRIZQT__.TTF"
     local fontOutline = Theme.fontOutline or "OUTLINE"
 
     -- Handle "NONE" outline option

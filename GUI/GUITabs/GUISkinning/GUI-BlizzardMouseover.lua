@@ -69,17 +69,18 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Blizzard Mouseover", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Blizzard Mouseover", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyBlizzardMouseoverState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Blizzard Mouseover",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Blizzard Mouseover",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -92,10 +93,11 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
 
     local textRow1Size = 30
     local row1b = GUIFrame:CreateRow(card1.content, textRow1Size)
-    local ttInfoText = GUIFrame:CreateText(row1b,
-        NRSKNUI:ColorTextByTheme("Elements Supported"),
-        NRSKNUI:ColorTextByTheme("• ") .. "Bag Bar",
-        textRow1Size, "hide")
+    local ttInfoText = GUIFrame:CreateText(row1b, NRSKNUI:ColorTextByTheme("Elements Supported"), {
+        text = NRSKNUI:ColorTextByTheme("• ") .. "Bag Bar",
+        height = textRow1Size,
+        bgMode = "hide"
+    })
     row1b:AddWidget(ttInfoText, 1)
     table_insert(allWidgets, ttInfoText)
     card1:AddRow(row1b, textRow1Size)
@@ -110,29 +112,44 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
 
     -- Alpha when non mouseover
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local nonMouseoverAlpha = GUIFrame:CreateSlider(row2, "Alpha When No Mouseover", 0, 1, 0.1, db.Alpha, _,
-        function(val)
+    local nonMouseoverAlpha = GUIFrame:CreateSlider(row2, "Alpha When No Mouseover", {
+        min = 0,
+        max = 1,
+        step = 0.1,
+        value = db.Alpha,
+        callback = function(val)
             db.Alpha = val
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(nonMouseoverAlpha, 1)
     table_insert(allWidgets, nonMouseoverAlpha)
     card2:AddRow(row2, 40)
 
     -- Fade In Duration
     local row3 = GUIFrame:CreateRow(card2.content, 36)
-    local FadeInDuration = GUIFrame:CreateSlider(row3, "Fade In Duration", 0, 10, 0.1, db.FadeInDuration, _,
-        function(val)
+    local FadeInDuration = GUIFrame:CreateSlider(row3, "Fade In Duration", {
+        min = 0,
+        max = 10,
+        step = 0.1,
+        value = db.FadeInDuration,
+        callback = function(val)
             db.FadeInDuration = val
-        end)
+        end
+    })
     row3:AddWidget(FadeInDuration, 0.5)
     table_insert(allWidgets, FadeInDuration)
 
     -- Fade Out Duration
-    local FadeOutDuration = GUIFrame:CreateSlider(row3, "Fade Out Duration", 0, 10, 0.1, db.FadeOutDuration, _,
-        function(val)
+    local FadeOutDuration = GUIFrame:CreateSlider(row3, "Fade Out Duration", {
+        min = 0,
+        max = 10,
+        step = 0.1,
+        value = db.FadeOutDuration,
+        callback = function(val)
             db.FadeOutDuration = val
-        end)
+        end
+    })
     row3:AddWidget(FadeOutDuration, 0.5)
     table_insert(allWidgets, FadeOutDuration)
 
@@ -148,14 +165,16 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
 
     -- Toggle for bagBar mouseover
     local row4 = GUIFrame:CreateRow(card3.content, 40)
-    local bagEnableCheck = GUIFrame:CreateCheckbox(row4, "Enable BagBar Mouseover", db.BagMouseover.Enabled ~= false,
-        function(checked)
+    local bagEnableCheck = GUIFrame:CreateCheckbox(row4, "Enable BagBar Mouseover", {
+        value = db.BagMouseover.Enabled ~= false,
+        callback = function(checked)
             db.BagMouseover.Enabled = checked
             if BMO then
                 BMO:ToggleElement("bags", checked)
                 ApplySettings()
             end
-        end)
+        end,
+    })
     row4:AddWidget(bagEnableCheck, 1)
     table_insert(allWidgets, bagEnableCheck)
 

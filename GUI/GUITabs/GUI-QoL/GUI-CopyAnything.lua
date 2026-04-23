@@ -61,17 +61,15 @@ GUIFrame:RegisterContent("CopyAnything", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Copy Anything", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Copy Anything", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyCopyAnythingState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Copy Anything",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Copy Anything", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -85,11 +83,12 @@ GUIFrame:RegisterContent("CopyAnything", function(scrollChild, yOffset)
     -- Quick TLDR
     local textRow5abSize = 50
     local row1b = GUIFrame:CreateRow(card1.content, textRow5abSize)
-    local chatBubblText = GUIFrame:CreateText(row1b,
-        NRSKNUI:ColorTextByTheme("Functionality Info"),
-        (NRSKNUI:ColorTextByTheme("• ") .. "Copies SpellID, ItemID, AuraID, MacroID and Unitnames on mouseover\n" ..
+    local chatBubblText = GUIFrame:CreateText(row1b, NRSKNUI:ColorTextByTheme("Functionality Info"), {
+        text = (NRSKNUI:ColorTextByTheme("• ") .. "Copies SpellID, ItemID, AuraID, MacroID and Unitnames on mouseover\n" ..
             NRSKNUI:ColorTextByTheme("• ") .. "Limited functionality in certain environments because of secret values."),
-        textRow5abSize, "hide")
+        height = textRow5abSize,
+        bgMode = "hide"
+    })
     row1b:AddWidget(chatBubblText, 1)
     table_insert(allWidgets, chatBubblText)
     card1:AddRow(row1b, textRow5abSize)
@@ -112,17 +111,23 @@ GUIFrame:RegisterContent("CopyAnything", function(scrollChild, yOffset)
         ["ctrl+alt"] = "Ctrl + Alt",
         ["ctrl+shift+alt"] = "Ctrl + Shift + Alt"
     }
-    local modDropdown = GUIFrame:CreateDropdown(row2, "Copy Modifier Key(s)", modList, db.mod, _,
-        function(key)
+    local modDropdown = GUIFrame:CreateDropdown(row2, "Copy Modifier Key(s)", {
+        options = modList,
+        value = db.mod,
+        callback = function(key)
             db.mod = key
-        end)
+        end
+    })
     row2:AddWidget(modDropdown, 0.5)
     table_insert(allWidgets, modDropdown)
 
     -- keybind text
-    local key = GUIFrame:CreateEditBox(row2, "Copy Keybind, Supports Single Letter Only", db.key, function(val)
-        db.key = val
-    end)
+    local key = GUIFrame:CreateEditBox(row2, "Copy Keybind, Supports Single Letter Only", {
+        value = db.key,
+        callback = function(val)
+            db.key = val
+        end
+    })
     row2:AddWidget(key, 0.1)
     table_insert(allWidgets, key)
     card2:AddRow(row2, 38)

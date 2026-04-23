@@ -69,17 +69,15 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Automation", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Automation", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyAutomationState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Automation",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Automation", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -93,22 +91,26 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
 
     -- Skip Cinematics checkbox
     local row2a = GUIFrame:CreateRow(card2.content, 40)
-    local skipCinematicsCheck = GUIFrame:CreateCheckbox(row2a, "Skip Cinematics & Movies",
-        db.SkipCinematics ~= false, function(checked)
+    local skipCinematicsCheck = GUIFrame:CreateCheckbox(row2a, "Skip Cinematics & Movies", {
+        value = db.SkipCinematics ~= false,
+        callback = function(checked)
             db.SkipCinematics = checked
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(skipCinematicsCheck, 1)
     table_insert(allWidgets, skipCinematicsCheck)
     card2:AddRow(row2a, 40)
 
     -- Hide Talking Head Frame checkbox
     local row2b = GUIFrame:CreateRow(card2.content, 34)
-    local hideTalkingHeadCheck = GUIFrame:CreateCheckbox(row2b, "Hide Talking Head Frame",
-        db.HideTalkingHead ~= false, function(checked)
+    local hideTalkingHeadCheck = GUIFrame:CreateCheckbox(row2b, "Hide Talking Head Frame", {
+        value = db.HideTalkingHead ~= false,
+        callback = function(checked)
             db.HideTalkingHead = checked
             ApplySettings()
-        end)
+        end
+    })
     row2b:AddWidget(hideTalkingHeadCheck, 1)
     table_insert(allWidgets, hideTalkingHeadCheck)
     card2:AddRow(row2b, 34)
@@ -123,33 +125,39 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
 
     -- Auto Sell Junk checkbox
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local autoSellCheck = GUIFrame:CreateCheckbox(row3a, "Auto Sell Junk (Grey Items)", db.AutoSellJunk ~= false,
-        function(checked)
+    local autoSellCheck = GUIFrame:CreateCheckbox(row3a, "Auto Sell Junk (Grey Items)", {
+        value = db.AutoSellJunk ~= false,
+        callback = function(checked)
             db.AutoSellJunk = checked
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(autoSellCheck, 1)
     table_insert(allWidgets, autoSellCheck)
     card3:AddRow(row3a, 40)
 
     -- Auto Repair checkbox
     local row3b = GUIFrame:CreateRow(card3.content, 40)
-    local autoRepairCheck = GUIFrame:CreateCheckbox(row3b, "Auto Repair Gear", db.AutoRepair ~= false,
-        function(checked)
+    local autoRepairCheck = GUIFrame:CreateCheckbox(row3b, "Auto Repair Gear", {
+        value = db.AutoRepair ~= false,
+        callback = function(checked)
             db.AutoRepair = checked
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(autoRepairCheck, 1)
     table_insert(allWidgets, autoRepairCheck)
     card3:AddRow(row3b, 40)
 
     -- Use Guild Funds checkbox
     local row3c = GUIFrame:CreateRow(card3.content, 34)
-    local useGuildCheck = GUIFrame:CreateCheckbox(row3c, "Use Guild Funds for Repair", db.UseGuildFunds ~= false,
-        function(checked)
+    local useGuildCheck = GUIFrame:CreateCheckbox(row3c, "Use Guild Funds for Repair", {
+        value = db.UseGuildFunds ~= false,
+        callback = function(checked)
             db.UseGuildFunds = checked
             ApplySettings()
-        end)
+        end
+    })
     row3c:AddWidget(useGuildCheck, 1)
     table_insert(allWidgets, useGuildCheck)
     card3:AddRow(row3c, 34)
@@ -164,11 +172,13 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
 
     -- Auto Accept Role Check checkbox
     local row4 = GUIFrame:CreateRow(card4.content, 34)
-    local autoRoleCheck = GUIFrame:CreateCheckbox(row4, "Auto Accept Role Check", db.AutoRoleCheck ~= false,
-        function(checked)
+    local autoRoleCheck = GUIFrame:CreateCheckbox(row4, "Auto Accept Role Check", {
+        value = db.AutoRoleCheck ~= false,
+        callback = function(checked)
             db.AutoRoleCheck = checked
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(autoRoleCheck, 1)
     table_insert(allWidgets, autoRoleCheck)
     card4:AddRow(row4, 34)
@@ -183,21 +193,26 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
 
     -- Auto-Fill DELETE Text checkbox
     local row5a = GUIFrame:CreateRow(card5.content, 40)
-    local autoFillDeleteCheck = GUIFrame:CreateCheckbox(row5a, "Auto-Fill DELETE Text", db.AutoFillDelete ~= false,
-        function(checked)
+    local autoFillDeleteCheck = GUIFrame:CreateCheckbox(row5a, "Auto-Fill DELETE Text", {
+        value = db.AutoFillDelete ~= false,
+        callback = function(checked)
             db.AutoFillDelete = checked
             ApplySettings()
-        end)
+        end
+    })
     row5a:AddWidget(autoFillDeleteCheck, 1)
     table_insert(allWidgets, autoFillDeleteCheck)
     card5:AddRow(row5a, 40)
 
     -- Auto Loot checkbox
     local row5b = GUIFrame:CreateRow(card5.content, 34)
-    local autoLootCheck = GUIFrame:CreateCheckbox(row5b, "Auto Loot", db.AutoLoot ~= false, function(checked)
-        db.AutoLoot = checked
-        ApplySettings()
-    end)
+    local autoLootCheck = GUIFrame:CreateCheckbox(row5b, "Auto Loot", {
+        value = db.AutoLoot ~= false,
+        callback = function(checked)
+            db.AutoLoot = checked
+            ApplySettings()
+        end
+    })
     row5b:AddWidget(autoLootCheck, 1)
     table_insert(allWidgets, autoLootCheck)
     card5:AddRow(row5b, 34)

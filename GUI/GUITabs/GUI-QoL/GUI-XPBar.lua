@@ -80,17 +80,15 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable XP Bar", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable XP Bar", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyXPBarState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "XP Bar",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "XP Bar", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -103,11 +101,13 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1b = GUIFrame:CreateRow(card1.content, 36)
-    local hideWhenMax = GUIFrame:CreateCheckbox(row1b, "Hide XP Bar When Max Level", db.hideWhenMax ~= false,
-        function(checked)
+    local hideWhenMax = GUIFrame:CreateCheckbox(row1b, "Hide XP Bar When Max Level", {
+        value = db.hideWhenMax ~= false,
+        callback = function(checked)
             db.hideWhenMax = checked
             ApplySettings()
-        end)
+        end
+    })
     row1b:AddWidget(hideWhenMax, 1)
     table_insert(allWidgets, hideWhenMax)
     card1:AddRow(row1b, 36)
@@ -130,20 +130,31 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Font Face and Outline Dropdowns
     local row3a = GUIFrame:CreateRow(card2.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     -- Font Size Slider
-    local fontSizeSlider = GUIFrame:CreateSlider(card2.content, "Font Size", 8, 72, 1, db.FontSize or 24, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(card2.content, "Font Size", {
+        min = 8,
+        max = 72,
+        step = 1,
+        value = db.FontSize or 24,
+        labelWidth = 60,
+        callback = function(val)
             db.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(fontSizeSlider, 0.5)
     table_insert(allWidgets, fontSizeSlider)
     card2:AddRow(row3a, 40)
@@ -151,19 +162,24 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
     -- Font Outline Dropdown
     local row3b = GUIFrame:CreateRow(card2.content, 37)
     local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick", ["SOFTOUTLINE"] = "Soft" }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3b, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
 
-    local textColor = GUIFrame:CreateColorPicker(row3b, "Text color", db.TextColor,
-        function(r, g, b, a)
+    local textColor = GUIFrame:CreateColorPicker(row3b, "Text color", {
+        color = db.TextColor,
+        callback = function(r, g, b, a)
             db.TextColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(textColor, 0.5)
     table_insert(allWidgets, textColor)
     card2:AddRow(row3b, 37)
@@ -175,15 +191,6 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card3, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = false,
         showStrata = true,
         onChangeCallback = ApplySettings,
@@ -205,22 +212,30 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Bar Width
     local row4 = GUIFrame:CreateRow(card4.content, 40)
-    local chatWidth = GUIFrame:CreateSlider(row4, "Bar Width", 1, 1000, 1,
-        db.width, nil,
-        function(val)
+    local chatWidth = GUIFrame:CreateSlider(row4, "Bar Width", {
+        min = 1,
+        max = 1000,
+        step = 1,
+        value = db.width,
+        callback = function(val)
             db.width = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(chatWidth, 0.5)
     table_insert(allWidgets, chatWidth)
 
     -- Bar Height
-    local chatHeight = GUIFrame:CreateSlider(row4, "Bar Height", 1, 1000, 1,
-        db.height, nil,
-        function(val)
+    local chatHeight = GUIFrame:CreateSlider(row4, "Bar Height", {
+        min = 1,
+        max = 1000,
+        step = 1,
+        value = db.height,
+        callback = function(val)
             db.height = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(chatHeight, 0.5)
     table_insert(allWidgets, chatHeight)
     card4:AddRow(row4, 40)
@@ -235,12 +250,15 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
     else
         statusbarList["Blizzard"] = "Blizzard"
     end
-    local statusbarDropdown = GUIFrame:CreateDropdown(rowTexture, "Bar Texture", statusbarList,
-        db.StatusBarTexture or "Blizzard", 70,
-        function(key)
+    local statusbarDropdown = GUIFrame:CreateDropdown(rowTexture, "Bar Texture", {
+        options = statusbarList,
+        value = db.StatusBarTexture or "Blizzard",
+        callback = function(key)
             db.StatusBarTexture = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true
+    })
     rowTexture:AddWidget(statusbarDropdown, 1)
     table_insert(allWidgets, statusbarDropdown)
     card4:AddRow(rowTexture, 40)
@@ -255,23 +273,26 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
     -- Inactive Tab Color Mode
     local currentColorMode = db.ColorMode or "theme"
     local row5 = GUIFrame:CreateRow(card4.content, 40)
-    local colorModeDropdown = GUIFrame:CreateDropdown(row5, "Foreground Color Mode",
-        NRSKNUI.ColorModeOptions, currentColorMode, 70,
-        function(key)
+    local colorModeDropdown = GUIFrame:CreateDropdown(row5, "Foreground Color Mode", {
+        options = NRSKNUI.ColorModeOptions,
+        value = currentColorMode,
+        callback = function(key)
             db.ColorMode = key
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row5:AddWidget(colorModeDropdown, 0.5)
     table_insert(allWidgets, colorModeDropdown)
 
     -- Foreground Custom Color (only shown when mode is "custom")
-    local foregroundColor = GUIFrame:CreateColorPicker(row5, "Foreground Custom Color",
-        db.StatusColor,
-        function(r, g, b, a)
+    local foregroundColor = GUIFrame:CreateColorPicker(row5, "Foreground Custom Color", {
+        color = db.StatusColor,
+        callback = function(r, g, b, a)
             db.StatusColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(foregroundColor, 0.5)
     table_insert(allWidgets, foregroundColor)
     table_insert(customColorWidgets, foregroundColor)
@@ -286,11 +307,13 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Rested Color
     local row5b = GUIFrame:CreateRow(card4.content, 39)
-    local restedColor = GUIFrame:CreateColorPicker(row5b, "Rested XP Color", db.RestedColor or { 0, 0, 0, 0.8 },
-        function(r, g, b, a)
+    local restedColor = GUIFrame:CreateColorPicker(row5b, "Rested XP Color", {
+        color = db.RestedColor or { 0, 0, 0, 0.8 },
+        callback = function(r, g, b, a)
             db.RestedColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5b:AddWidget(restedColor, 1)
     table_insert(allWidgets, restedColor)
     card4:AddRow(row5b, 39)
@@ -304,21 +327,24 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
 
     -- Backdrop Color
     local row6 = GUIFrame:CreateRow(card4.content, 39)
-    local backdropColor = GUIFrame:CreateColorPicker(row6, "Backdrop Color", db.BackdropColor or { 0, 0, 0, 0.8 },
-        function(r, g, b, a)
+    local backdropColor = GUIFrame:CreateColorPicker(row6, "Backdrop Color", {
+        color = db.BackdropColor or { 0, 0, 0, 0.8 },
+        callback = function(r, g, b, a)
             db.BackdropColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row6:AddWidget(backdropColor, 0.5)
     table_insert(allWidgets, backdropColor)
 
     -- Border Color
-    local borderColor = GUIFrame:CreateColorPicker(row6, "Backdrop Border Color",
-        db.BackdropBorderColor or { 0, 0, 0, 1 },
-        function(r, g, b, a)
+    local borderColor = GUIFrame:CreateColorPicker(row6, "Backdrop Border Color", {
+        color = db.BackdropBorderColor or { 0, 0, 0, 1 },
+        callback = function(r, g, b, a)
             db.BackdropBorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row6:AddWidget(borderColor, 0.5)
     table_insert(allWidgets, borderColor)
     card4:AddRow(row6, 39)

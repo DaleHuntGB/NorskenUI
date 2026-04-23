@@ -681,7 +681,7 @@ end
 local function CreateIcon()
     local raidDb = MBUFFS.db.RaidBuffDisplay
     local iconFrame = NRSKNUI:CreateIconFrame(containerFrame, raidDb.IconSize)
-    NRSKNUI:ApplyFontSettings(iconFrame, raidDb, nil)
+    NRSKNUI:ApplyFontToText(iconFrame.text, raidDb.FontFace, raidDb.FontSize, raidDb.FontOutline, raidDb.FontShadow)
     iconFrame.text:SetTextColor(1, 1, 1, 1)
     iconFrame.text:SetPoint("CENTER", iconFrame, "CENTER", 0, 0)
     iconFrame:Hide()
@@ -774,7 +774,7 @@ local function CreateStanceFrame()
     stanceFrame.cooldown = cooldown
 
     NRSKNUI:ApplyFramePosition(stanceFrame, stanceDb.Position, stanceDb)
-    NRSKNUI:ApplyFontSettings(stanceFrame, stanceDb, nil)
+    NRSKNUI:ApplyFontToText(stanceFrame.text, stanceDb.FontFace, stanceDb.FontSize, stanceDb.FontOutline, stanceDb.FontShadow)
     stanceFrame.text:SetTextColor(1, 1, 1, 1)
     stanceFrame:Hide()
 end
@@ -791,7 +791,7 @@ local function CreateStanceTextFrame()
 
     -- Apply position and font settings
     NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
-    NRSKNUI:ApplyFontSettings(stanceTextFrame, textDb, nil)
+    NRSKNUI:ApplyFontToText(stanceTextFrame.text, textDb.FontFace, textDb.FontSize, textDb.FontOutline, textDb.FontShadow)
 
     -- Text alignment based on anchor point
     local textPoint = NRSKNUI:GetTextPointFromAnchor(textDb.Position.AnchorFrom)
@@ -815,7 +815,7 @@ local function ShowStanceIcon(spellId, reverseIcon, currentSpellId)
         stanceFrame.icon:SetTexture(texture)
 
         -- Apply Font Settings
-        NRSKNUI:ApplyFontSettings(stanceFrame, stanceDb, nil)
+        NRSKNUI:ApplyFontToText(stanceFrame.text, stanceDb.FontFace, stanceDb.FontSize, stanceDb.FontOutline, stanceDb.FontShadow)
         stanceFrame.text:SetText(reverseIcon and "" or MISSING_TEXT)
 
         -- Apply icon size settings
@@ -899,7 +899,7 @@ local function UpdateStanceTextDisplay()
         stanceTextFrame.text:SetTextColor(color[1], color[2], color[3], color[4] or 1)
 
         -- Update font
-        NRSKNUI:ApplyFontSettings(stanceTextFrame, textDb, nil)
+        NRSKNUI:ApplyFontToText(stanceTextFrame.text, textDb.FontFace, textDb.FontSize, textDb.FontOutline, textDb.FontShadow)
 
         -- Update position
         NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
@@ -922,7 +922,8 @@ local function UpdateIconAppearance(iconFrame, buff, text)
     iconFrame.icon:SetTexture(texture)
 
     -- Apply font settings
-    NRSKNUI:ApplyFontSettings(iconFrame, MBUFFS.db.RaidBuffDisplay, nil)
+    local raidDb = MBUFFS.db.RaidBuffDisplay
+    NRSKNUI:ApplyFontToText(iconFrame.text, raidDb.FontFace, raidDb.FontSize, raidDb.FontOutline, raidDb.FontShadow)
     iconFrame.text:SetText(text or buff.text or GENERALBUFF_TEXT)
 
     -- Apply size settings
@@ -1575,12 +1576,12 @@ function MBUFFS:ApplySettings()
         NRSKNUI:ApplyFramePosition(stanceFrame, stanceDb.Position, stanceDb)
 
         -- Update stance frame font
-        NRSKNUI:ApplyFontSettings(stanceFrame, stanceDb, nil)
+        NRSKNUI:ApplyFontToText(stanceFrame.text, stanceDb.FontFace, stanceDb.FontSize, stanceDb.FontOutline, stanceDb.FontShadow)
     end
 
     -- Update stance text frame
     if stanceTextFrame then
-        NRSKNUI:ApplyFontSettings(stanceTextFrame, textDb, nil)
+        NRSKNUI:ApplyFontToText(stanceTextFrame.text, textDb.FontFace, textDb.FontSize, textDb.FontOutline, textDb.FontShadow)
         NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
 
         -- Update text alignment based on anchor point
@@ -1651,7 +1652,7 @@ local function ShowPreviewIcons()
         stanceFrame.icon:SetTexture(texture)
         stanceFrame.text:SetText("MISSING")
         stanceFrame:SetSize(stanceDb.IconSize, stanceDb.IconSize)
-        NRSKNUI:ApplyFontSettings(stanceFrame, stanceDb, nil)
+        NRSKNUI:ApplyFontToText(stanceFrame.text, stanceDb.FontFace, stanceDb.FontSize, stanceDb.FontOutline, stanceDb.FontShadow)
         NRSKNUI:ApplyFramePosition(stanceFrame, stanceDb.Position, stanceDb)
         stanceFrame:Show()
     end
@@ -1663,7 +1664,7 @@ local function ShowPreviewIcons()
             stanceTextFrame:Hide()
         else
             -- Apply font settings
-            NRSKNUI:ApplyFontSettings(stanceTextFrame, textDb, nil)
+            NRSKNUI:ApplyFontToText(stanceTextFrame.text, textDb.FontFace, textDb.FontSize, textDb.FontOutline, textDb.FontShadow)
 
             -- Get preview text and color from per-stance settings
             local previewText = "Battle Stance"

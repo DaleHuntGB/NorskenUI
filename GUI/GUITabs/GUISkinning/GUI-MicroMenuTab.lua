@@ -98,18 +98,19 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Micro Menu Skinning", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Micro Menu Skinning", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyMicroMenuState(checked)
             UpdateAllWidgetStates()
             NRSKNUI:CreateReloadPrompt("Enabling/Disabling this UI element requires a reload to take full effect.")
         end,
-        true,
-        "Micro Menu Skinning",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Micro Menu Skinning",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     row1:AddWidget(enableCheck, 1)
 
     card1:AddRow(row1, 36)
@@ -121,15 +122,6 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card2, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         showAnchorFrameType = true,
         showStrata = true,
         onChangeCallback = ApplySettings,
@@ -152,22 +144,28 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
     -- Alpha toggle
     local row2 = GUIFrame:CreateRow(card3.content, 40)
     local mouseOverDB = db.Mouseover
-    local MicroMenuEnableCheck = GUIFrame:CreateCheckbox(row2, "Enable Micro Menu Mouseover", mouseOverDB.Enabled ~= false,
-        function(checked)
+    local MicroMenuEnableCheck = GUIFrame:CreateCheckbox(row2, "Enable Micro Menu Mouseover", {
+        value = mouseOverDB.Enabled ~= false,
+        callback = function(checked)
             mouseOverDB.Enabled = checked
             UpdateAlphaState()
             UpdateAllWidgetStates()
-        end)
+        end,
+    })
     row2:AddWidget(MicroMenuEnableCheck, 0.5)
     table_insert(allWidgets, MicroMenuEnableCheck)
 
     -- Alpha when non mouseover
-    local MicroMenunonMouseoverAlpha = GUIFrame:CreateSlider(row2, "Alpha When No Mouseover", 0, 1, 0.1,
-        mouseOverDB.Alpha, _,
-        function(val)
+    local MicroMenunonMouseoverAlpha = GUIFrame:CreateSlider(row2, "Alpha When No Mouseover", {
+        min = 0,
+        max = 1,
+        step = 0.1,
+        value = mouseOverDB.Alpha,
+        callback = function(val)
             mouseOverDB.Alpha = val
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(MicroMenunonMouseoverAlpha, 0.5)
     table_insert(allWidgets, MicroMenunonMouseoverAlpha)
     table_insert(mouseOverWidgets, MicroMenunonMouseoverAlpha)
@@ -176,21 +174,29 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
 
     -- Fade In Duration
     local row3 = GUIFrame:CreateRow(card3.content, 36)
-    local MicroMenuFadeInDuration = GUIFrame:CreateSlider(row3, "Fade In Duration", 0, 10, 0.1,
-        mouseOverDB.FadeInDuration, _,
-        function(val)
+    local MicroMenuFadeInDuration = GUIFrame:CreateSlider(row3, "Fade In Duration", {
+        min = 0,
+        max = 10,
+        step = 0.1,
+        value = mouseOverDB.FadeInDuration,
+        callback = function(val)
             mouseOverDB.FadeInDuration = val
-        end)
+        end
+    })
     row3:AddWidget(MicroMenuFadeInDuration, 0.5)
     table_insert(allWidgets, MicroMenuFadeInDuration)
     table_insert(mouseOverWidgets, MicroMenuFadeInDuration)
 
     -- Fade Out Duration
-    local MicroMenuFadeOutDuration = GUIFrame:CreateSlider(row3, "Fade Out Duration", 0, 10, 0.1,
-        mouseOverDB.FadeOutDuration, _,
-        function(val)
+    local MicroMenuFadeOutDuration = GUIFrame:CreateSlider(row3, "Fade Out Duration", {
+        min = 0,
+        max = 10,
+        step = 0.1,
+        value = mouseOverDB.FadeOutDuration,
+        callback = function(val)
             mouseOverDB.FadeOutDuration = val
-        end)
+        end
+    })
     row3:AddWidget(MicroMenuFadeOutDuration, 0.5)
     table_insert(allWidgets, MicroMenuFadeOutDuration)
     table_insert(mouseOverWidgets, MicroMenuFadeOutDuration)
@@ -207,34 +213,44 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
 
     -- Button width
     local row4 = GUIFrame:CreateRow(card4.content, 40)
-    local MMButtonWidth = GUIFrame:CreateSlider(row4, "Button Width", 5, 50, 1,
-        db.ButtonWidth, _,
-        function(val)
+    local MMButtonWidth = GUIFrame:CreateSlider(row4, "Button Width", {
+        min = 5,
+        max = 50,
+        step = 1,
+        value = db.ButtonWidth,
+        callback = function(val)
             db.ButtonWidth = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(MMButtonWidth, 0.5)
     table_insert(allWidgets, MMButtonWidth)
 
     -- Button Height
-    local MMButtonHeight = GUIFrame:CreateSlider(row4, "Button Height", 5, 50, 1,
-        db.ButtonHeight, _,
-        function(val)
+    local MMButtonHeight = GUIFrame:CreateSlider(row4, "Button Height", {
+        min = 5,
+        max = 50,
+        step = 1,
+        value = db.ButtonHeight,
+        callback = function(val)
             db.ButtonHeight = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(MMButtonHeight, 0.5)
     table_insert(allWidgets, MMButtonHeight)
     card4:AddRow(row4, 40)
 
     -- Button Height
     local row5 = GUIFrame:CreateRow(card4.content, 39)
-    local MMButtonSpacing = GUIFrame:CreateSlider(row5, "Button Spacing", -20, 20, 1,
-        db.ButtonSpacing, _,
-        function(val)
+    local MMButtonSpacing = GUIFrame:CreateSlider(row5, "Button Spacing", {
+        min = -20, max = 20, step = 1,
+        value = db.ButtonSpacing,
+        callback = function(val)
             db.ButtonSpacing = val
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(MMButtonSpacing, 1)
     table_insert(allWidgets, MMButtonSpacing)
     card4:AddRow(row5, 39)
@@ -249,23 +265,27 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
 
     -- MicroMenu Backdrop Toggle
     local row6 = GUIFrame:CreateRow(card5.content, 39)
-    local backdropCheck = GUIFrame:CreateCheckbox(row6, "Enable Backdrop", db.ShowBackdrop ~= false,
-        function(checked)
+    local backdropCheck = GUIFrame:CreateCheckbox(row6, "Enable Backdrop", {
+        value = db.ShowBackdrop ~= false,
+        callback = function(checked)
             db.ShowBackdrop = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end,
+    })
     row6:AddWidget(backdropCheck, 1)
     table_insert(allWidgets, backdropCheck)
     card5:AddRow(row6, 39)
 
     -- Backdrop coloring
     local row7 = GUIFrame:CreateRow(card5.content, 39)
-    local BackdropColor = GUIFrame:CreateColorPicker(row7, "Backdrop Color", db.BackdropColor,
-        function(r, g, b, a)
+    local BackdropColor = GUIFrame:CreateColorPicker(row7, "Backdrop Color", {
+        color = db.BackdropColor,
+        callback = function(r, g, b, a)
             db.BackdropColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row7:AddWidget(BackdropColor, 1)
     table_insert(allWidgets, BackdropColor)
     table_insert(bgWidgets, BackdropColor)
@@ -273,11 +293,13 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
 
     -- Backdrop Border coloring
     local row8 = GUIFrame:CreateRow(card5.content, 39)
-    local BorderColor = GUIFrame:CreateColorPicker(row8, "Backdrop Border Color", db.BackdropBorderColor,
-        function(r, g, b, a)
+    local BorderColor = GUIFrame:CreateColorPicker(row8, "Backdrop Border Color", {
+        color = db.BackdropBorderColor,
+        callback = function(r, g, b, a)
             db.BackdropBorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row8:AddWidget(BorderColor, 1)
     table_insert(allWidgets, BorderColor)
     table_insert(bgWidgets, BorderColor)

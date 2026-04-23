@@ -40,19 +40,17 @@ GUIFrame:RegisterContent("tooltips", function(scrollChild, yOffset)
     local card = GUIFrame:CreateCard(scrollChild, "Tooltip Skinning", yOffset)
 
     local row1 = GUIFrame:CreateRow(card.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Tooltip Skinning", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Tooltip Skinning", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyTooltipState(checked)
             if not checked then
                 NRSKNUI:CreateReloadPrompt("Enabling Blizzard UI elements requires a reload to take full effect.")
             end
         end,
-        true,
-        "Tooltip Skinning",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Tooltip Skinning", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card:AddRow(row1, 40)
 

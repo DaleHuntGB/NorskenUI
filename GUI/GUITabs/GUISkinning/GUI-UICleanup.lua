@@ -63,8 +63,9 @@ GUIFrame:RegisterContent("UICleanup", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable UICleanup", db.HideBlizzardClutter ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable UICleanup", {
+        value = db.HideBlizzardClutter ~= false,
+        callback = function(checked)
             db.HideBlizzardClutter = checked
             ApplyUICleanupState(checked)
             UpdateAllWidgetStates()
@@ -72,11 +73,8 @@ GUIFrame:RegisterContent("UICleanup", function(scrollChild, yOffset)
                 NRSKNUI:CreateReloadPrompt("Enabling Blizzard UI elements requires a reload to take full effect.")
             end
         end,
-        true,
-        "UICleanup",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "UICleanup", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -100,15 +98,13 @@ GUIFrame:RegisterContent("UICleanup", function(scrollChild, yOffset)
     }
     local rowHeight = 165
     local row = GUIFrame:CreateRow(card1.content, rowHeight)
-    local textWidget = GUIFrame:CreateText(
-        row,
-        NRSKNUI:ColorTextByTheme("Hides The Following Frames"),
-        function()
+    local textWidget = GUIFrame:CreateText(row, NRSKNUI:ColorTextByTheme("Hides The Following Frames"), {
+        text = function()
             return hiddenNames
         end,
-        rowHeight,
-        "hide"
-    )
+        height = rowHeight,
+        bgMode = "hide"
+    })
     row:AddWidget(textWidget, 1)
     table_insert(allWidgets, textWidget)
     card1:AddRow(row, rowHeight)

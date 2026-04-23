@@ -1,18 +1,31 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+---@class GUIFrame
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
 local CreateFrame = CreateFrame
 local type = type
 local ipairs = ipairs
 
--- Slider widget
-function GUIFrame:CreateText(parent, titleTex, labelText, customRowHeight, bgShow, wrapOn)
-    -- Row
-    local rowHeight = customRowHeight or 34
+---```lua
+---config = {
+---    text = string|table|function,  -- The label/body text
+---    height = number?,              -- Row height (default 34)
+---    bgMode = "show"|"border"|"hide"?,  -- Background mode
+---    wrapOn = boolean?,             -- Enable word wrap
+---}
+---```
+---@param parent Frame
+---@param titleText string
+---@param config NUITextConfig
+---@return NUIText
+function GUIFrame:CreateText(parent, titleText, config)
+    config = config or {}
+    local labelText = config.text
+    local rowHeight = config.height or 34
+    local bgShow = config.bgMode
+    local wrapOn = config.wrapOn
     local row = CreateFrame("Frame", nil, parent)
     row:SetHeight(rowHeight)
 
@@ -37,14 +50,13 @@ function GUIFrame:CreateText(parent, titleTex, labelText, customRowHeight, bgSho
         container:SetBackdropBorderColor(0, 0, 0, 0)
     end
 
-    -- Label
     local title = container:CreateFontString(nil, "OVERLAY")
     title:SetPoint("TOPLEFT", container, "TOPLEFT", 1, -1)
     title:SetPoint("TOPRIGHT", container, "TOPRIGHT", -1, -1)
     title:SetHeight(18)
     title:SetJustifyH("LEFT")
     NRSKNUI:ApplyThemeFont(title, "large")
-    title:SetText(titleTex or "")
+    title:SetText(titleText or "")
     title:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
     title:SetShadowColor(0, 0, 0, 0)
 
@@ -52,7 +64,6 @@ function GUIFrame:CreateText(parent, titleTex, labelText, customRowHeight, bgSho
     local smolSpacer = 2
     local totSpacer = titleHeight + smolSpacer
 
-    -- Label
     local label = container:CreateFontString(nil, "OVERLAY")
     label:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -totSpacer)
     label:SetPoint("BOTTOMRIGHT", container, "BOTTOMRIGHT", 0, 0)

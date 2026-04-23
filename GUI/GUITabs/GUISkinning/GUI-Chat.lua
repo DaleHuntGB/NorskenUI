@@ -88,8 +88,9 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Chat Skinning", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Chat Skinning", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyChatState(checked)
             UpdateAllWidgetStates()
@@ -97,11 +98,11 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
                 NRSKNUI:CreateReloadPrompt("Enabling/Disabling Chat Skinning requires a reload to take full effect.")
             end
         end,
-        true,
-        "Chat Skinning",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Chat Skinning",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
 
@@ -123,21 +124,29 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Font Face Dropdown
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", fontList, db.FontFace, 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row2, "Font", {
+        options = fontList,
+        value = db.FontFace,
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row2:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     -- Font Outline Dropdown
     local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick" }
-    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row2, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card2:AddRow(row2, 40)
@@ -151,12 +160,16 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Font Sizes
     local row3 = GUIFrame:CreateRow(card2.content, 40)
-    local editBoxSizeSlider = GUIFrame:CreateSlider(row3, "EditBox Font Size", 8, 24, 1,
-        db.EditBoxFontSize or 14, nil,
-        function(val)
+    local editBoxSizeSlider = GUIFrame:CreateSlider(row3, "EditBox Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = db.EditBoxFontSize or 14,
+        callback = function(val)
             db.EditBoxFontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3:AddWidget(editBoxSizeSlider, 1)
     table_insert(allWidgets, editBoxSizeSlider)
     card2:AddRow(row3, 40)
@@ -169,12 +182,16 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
     card2:AddRow(row3sep, 8)
 
     local row3b = GUIFrame:CreateRow(card2.content, 40)
-    local chatSizeSlider = GUIFrame:CreateSlider(row3b, "Chat Font Size", 8, 24, 1,
-        db.ChatFontSize or 12, nil,
-        function(val)
+    local chatSizeSlider = GUIFrame:CreateSlider(row3b, "Chat Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = db.ChatFontSize or 12,
+        callback = function(val)
             db.ChatFontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(chatSizeSlider, 1)
     table_insert(allWidgets, chatSizeSlider)
     card2:AddRow(row3b, 40)
@@ -192,23 +209,27 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Backdrop Toggle
     local row4 = GUIFrame:CreateRow(card4.content, 39)
-    local backdropCheck = GUIFrame:CreateCheckbox(row4, "Enable Backdrop", db.Backdrop.Enabled ~= false,
-        function(checked)
+    local backdropCheck = GUIFrame:CreateCheckbox(row4, "Enable Backdrop", {
+        value = db.Backdrop.Enabled ~= false,
+        callback = function(checked)
             db.Backdrop.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row4:AddWidget(backdropCheck, 1)
     table_insert(allWidgets, backdropCheck)
     card4:AddRow(row4, 39)
 
     -- Backdrop Color
     local row5 = GUIFrame:CreateRow(card4.content, 39)
-    local backdropColor = GUIFrame:CreateColorPicker(row5, "Backdrop Color", db.Backdrop.Color or { 0, 0, 0, 0.8 },
-        function(r, g, b, a)
+    local backdropColor = GUIFrame:CreateColorPicker(row5, "Backdrop Color", {
+        color = db.Backdrop.Color or { 0, 0, 0, 0.8 },
+        callback = function(r, g, b, a)
             db.Backdrop.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(backdropColor, 1)
     table_insert(allWidgets, backdropColor)
     table_insert(bgWidgets, backdropColor)
@@ -216,11 +237,13 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Border Color
     local row6 = GUIFrame:CreateRow(card4.content, 39)
-    local borderColor = GUIFrame:CreateColorPicker(row6, "Border Color", db.Backdrop.BorderColor or { 0, 0, 0, 1 },
-        function(r, g, b, a)
+    local borderColor = GUIFrame:CreateColorPicker(row6, "Border Color", {
+        color = db.Backdrop.BorderColor or { 0, 0, 0, 1 },
+        callback = function(r, g, b, a)
             db.Backdrop.BorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row6:AddWidget(borderColor, 1)
     table_insert(allWidgets, borderColor)
     table_insert(bgWidgets, borderColor)
@@ -239,22 +262,24 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- EditBox Backdrop Color
     local row7 = GUIFrame:CreateRow(card5.content, 39)
-    local editBoxBgColor = GUIFrame:CreateColorPicker(row7, "Backdrop Color",
-        db.EditBox.BackdropColor or { 0, 0, 0, 0.8 },
-        function(r, g, b, a)
+    local editBoxBgColor = GUIFrame:CreateColorPicker(row7, "Backdrop Color", {
+        color = db.EditBox.BackdropColor or { 0, 0, 0, 0.8 },
+        callback = function(r, g, b, a)
             db.EditBox.BackdropColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row7:AddWidget(editBoxBgColor, 0.5)
     table_insert(allWidgets, editBoxBgColor)
 
     -- EditBox Border Color
-    local editBoxBorderColor = GUIFrame:CreateColorPicker(row7, "Border Color",
-        db.EditBox.BorderColor or { 0, 0, 0, 1 },
-        function(r, g, b, a)
+    local editBoxBorderColor = GUIFrame:CreateColorPicker(row7, "Border Color", {
+        color = db.EditBox.BorderColor or { 0, 0, 0, 1 },
+        callback = function(r, g, b, a)
             db.EditBox.BorderColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row7:AddWidget(editBoxBorderColor, 0.5)
     table_insert(allWidgets, editBoxBorderColor)
     card5:AddRow(row7, 39)
@@ -272,33 +297,36 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
 
     -- Active and Alert Colors
     local row8 = GUIFrame:CreateRow(card6.content, 39)
-    local activeColor = GUIFrame:CreateColorPicker(row8, "Active Tab",
-        db.TabColors.ActiveColor or { 1, 1, 1, 1 },
-        function(r, g, b, a)
+    local activeColor = GUIFrame:CreateColorPicker(row8, "Active Tab", {
+        color = db.TabColors.ActiveColor or { 1, 1, 1, 1 },
+        callback = function(r, g, b, a)
             db.TabColors.ActiveColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row8:AddWidget(activeColor, 0.5)
     table_insert(allWidgets, activeColor)
 
-    local alertColor = GUIFrame:CreateColorPicker(row8, "Alert Tab",
-        db.TabColors.AlertColor or { 1, 0, 0, 1 },
-        function(r, g, b, a)
+    local alertColor = GUIFrame:CreateColorPicker(row8, "Alert Tab", {
+        color = db.TabColors.AlertColor or { 1, 0, 0, 1 },
+        callback = function(r, g, b, a)
             db.TabColors.AlertColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row8:AddWidget(alertColor, 0.5)
     table_insert(allWidgets, alertColor)
     card6:AddRow(row8, 39)
 
     -- Whisper Color
     local row9 = GUIFrame:CreateRow(card6.content, 39)
-    local whisperColor = GUIFrame:CreateColorPicker(row9, "Whisper Tab",
-        db.TabColors.WhisperColor or { 1, 0.5, 0.8, 1 },
-        function(r, g, b, a)
+    local whisperColor = GUIFrame:CreateColorPicker(row9, "Whisper Tab", {
+        color = db.TabColors.WhisperColor or { 1, 0.5, 0.8, 1 },
+        callback = function(r, g, b, a)
             db.TabColors.WhisperColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row9:AddWidget(whisperColor, 1)
     table_insert(allWidgets, whisperColor)
     card6:AddRow(row9, 39)
@@ -312,23 +340,26 @@ GUIFrame:RegisterContent("Chat", function(scrollChild, yOffset)
     local currentColorMode = db.TabColors.InactiveColorMode or "custom"
 
     local row10 = GUIFrame:CreateRow(card6.content, 40)
-    local colorModeDropdown = GUIFrame:CreateDropdown(row10, "Inactive Color Mode",
-        NRSKNUI.ColorModeOptions, currentColorMode, 70,
-        function(key)
+    local colorModeDropdown = GUIFrame:CreateDropdown(row10, "Inactive Color Mode", {
+        options = NRSKNUI.ColorModeOptions,
+        value = currentColorMode,
+        callback = function(key)
             db.TabColors.InactiveColorMode = key
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row10:AddWidget(colorModeDropdown, 0.5)
     table_insert(allWidgets, colorModeDropdown)
 
     -- Inactive Custom Color (only shown when mode is "custom")
-    local inactiveColor = GUIFrame:CreateColorPicker(row10, "Inactive Custom Color",
-        db.TabColors.InactiveColor,
-        function(r, g, b, a)
+    local inactiveColor = GUIFrame:CreateColorPicker(row10, "Inactive Custom Color", {
+        color = db.TabColors.InactiveColor,
+        callback = function(r, g, b, a)
             db.TabColors.InactiveColor = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row10:AddWidget(inactiveColor, 0.5)
     table_insert(allWidgets, inactiveColor)
     table_insert(customColorWidgets, inactiveColor)

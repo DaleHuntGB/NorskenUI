@@ -98,8 +98,9 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "UI Widgets", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable UI Widget Skinning", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable UI Widget Skinning", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             if checked then
                 NorskenUI:EnableModule("UIWidgets")
@@ -109,11 +110,11 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
             end
             UpdateAllWidgetStates()
         end,
-        true,
-        "UI Widget Skinning",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "UI Widget Skinning",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
 
@@ -127,20 +128,28 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Font Dropdown
     local row2a = GUIFrame:CreateRow(card2.content, 36)
-    local fontDropdown = GUIFrame:CreateDropdown(row2a, "Font", fontList, db.Font or "Expressway", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row2a, "Font", {
+        options = fontList,
+        value = db.Font or "Expressway",
+        callback = function(key)
             db.Font = key
             ApplySettings()
-        end, { searchable = true })
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row2a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
     -- Outline Dropdown
-    local outlineDropdown = GUIFrame:CreateDropdown(row2a, "Outline", OUTLINE_OPTIONS, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row2a, "Outline", {
+        options = OUTLINE_OPTIONS,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
-        end)
+        end
+    })
     row2a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card2:AddRow(row2a, 36)
@@ -156,21 +165,29 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Enable toggle
     local row3a = GUIFrame:CreateRow(card3.content, 36)
-    local enableBarCheck = GUIFrame:CreateCheckbox(row3a, "Enable Status Bar Styling", barDB.Enabled ~= false,
-        function(checked)
+    local enableBarCheck = GUIFrame:CreateCheckbox(row3a, "Enable Status Bar Styling", {
+        value = barDB.Enabled ~= false,
+        callback = function(checked)
             barDB.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end,
+    })
     row3a:AddWidget(enableBarCheck, 0.5)
     table_insert(allWidgets, enableBarCheck)
 
     -- Width slider (0 = default/auto)
-    local barWidthSlider = GUIFrame:CreateSlider(row3a, "Width (0=Auto)", 0, 400, 1, barDB.Width or 0, 80,
-        function(val)
+    local barWidthSlider = GUIFrame:CreateSlider(row3a, "Width (0=Auto)", {
+        min = 0,
+        max = 400,
+        step = 1,
+        value = barDB.Width or 0,
+        labelWidth = 80,
+        callback = function(val)
             barDB.Width = val
             ApplySettings()
-        end)
+        end
+    })
     row3a:AddWidget(barWidthSlider, 0.5)
     table_insert(allWidgets, barWidthSlider)
     table_insert(statusBarWidgets, barWidthSlider)
@@ -178,21 +195,25 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Style Label toggle
     local row3b = GUIFrame:CreateRow(card3.content, 36)
-    local styleLabelCheck = GUIFrame:CreateCheckbox(row3b, "Style Label Text", barDB.StyleLabel ~= false,
-        function(checked)
+    local styleLabelCheck = GUIFrame:CreateCheckbox(row3b, "Style Label Text", {
+        value = barDB.StyleLabel ~= false,
+        callback = function(checked)
             barDB.StyleLabel = checked
             ApplySettings()
-        end)
+        end,
+    })
     row3b:AddWidget(styleLabelCheck, 0.5)
     table_insert(allWidgets, styleLabelCheck)
     table_insert(statusBarWidgets, styleLabelCheck)
 
     -- Style Bar Text toggle
-    local styleBarTextCheck = GUIFrame:CreateCheckbox(row3b, "Style Bar Text", barDB.StyleBarText ~= false,
-        function(checked)
+    local styleBarTextCheck = GUIFrame:CreateCheckbox(row3b, "Style Bar Text", {
+        value = barDB.StyleBarText ~= false,
+        callback = function(checked)
             barDB.StyleBarText = checked
             ApplySettings()
-        end)
+        end,
+    })
     row3b:AddWidget(styleBarTextCheck, 0.5)
     table_insert(allWidgets, styleBarTextCheck)
     table_insert(statusBarWidgets, styleBarTextCheck)
@@ -200,20 +221,32 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Font Size Sliders
     local row3c = GUIFrame:CreateRow(card3.content, 40)
-    local labelSizeSlider = GUIFrame:CreateSlider(row3c, "Label Size", 8, 24, 1, barDB.LabelSize or 14, 60,
-        function(val)
+    local labelSizeSlider = GUIFrame:CreateSlider(row3c, "Label Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = barDB.LabelSize or 14,
+        labelWidth = 60,
+        callback = function(val)
             barDB.LabelSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3c:AddWidget(labelSizeSlider, 0.5)
     table_insert(allWidgets, labelSizeSlider)
     table_insert(statusBarWidgets, labelSizeSlider)
 
-    local barTextSizeSlider = GUIFrame:CreateSlider(row3c, "Bar Text Size", 8, 24, 1, barDB.BarTextSize or 12, 70,
-        function(val)
+    local barTextSizeSlider = GUIFrame:CreateSlider(row3c, "Bar Text Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = barDB.BarTextSize or 12,
+        labelWidth = 70,
+        callback = function(val)
             barDB.BarTextSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3c:AddWidget(barTextSizeSlider, 0.5)
     table_insert(allWidgets, barTextSizeSlider)
     table_insert(statusBarWidgets, barTextSizeSlider)
@@ -229,12 +262,13 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Strip Textures toggle
     local row3d = GUIFrame:CreateRow(card3.content, 36)
-    local stripTexturesCheck = GUIFrame:CreateCheckbox(row3d, "Strip Blizzard Textures & Add Backdrop",
-        barDB.StripTextures ~= false,
-        function(checked)
+    local stripTexturesCheck = GUIFrame:CreateCheckbox(row3d, "Strip Blizzard Textures & Add Backdrop", {
+        value = barDB.StripTextures ~= false,
+        callback = function(checked)
             barDB.StripTextures = checked
             ApplySettings()
-        end)
+        end,
+    })
     row3d:AddWidget(stripTexturesCheck, 1)
     table_insert(allWidgets, stripTexturesCheck)
     table_insert(statusBarWidgets, stripTexturesCheck)
@@ -242,21 +276,25 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Backdrop Color
     local row3e = GUIFrame:CreateRow(card3.content, 36)
-    local backdropColorPicker = GUIFrame:CreateColorPicker(row3e, "Backdrop Color", barDB.BackdropColor,
-        function(r, g, b, a)
+    local backdropColorPicker = GUIFrame:CreateColorPicker(row3e, "Backdrop Color", {
+        color = barDB.BackdropColor,
+        callback = function(r, g, b, a)
             barDB.BackdropColor = { r, g, b, a }
             ApplySettings()
-        end, true)
+        end
+    })
     row3e:AddWidget(backdropColorPicker, 0.5)
     table_insert(allWidgets, backdropColorPicker)
     table_insert(statusBarWidgets, backdropColorPicker)
 
     -- Border Color
-    local borderColorPicker = GUIFrame:CreateColorPicker(row3e, "Border Color", barDB.BorderColor,
-        function(r, g, b, a)
+    local borderColorPicker = GUIFrame:CreateColorPicker(row3e, "Border Color", {
+        color = barDB.BorderColor,
+        callback = function(r, g, b, a)
             barDB.BorderColor = { r, g, b, a }
             ApplySettings()
-        end, true)
+        end
+    })
     row3e:AddWidget(borderColorPicker, 0.5)
     table_insert(allWidgets, borderColorPicker)
     table_insert(statusBarWidgets, borderColorPicker)
@@ -273,21 +311,25 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Enable toggle and Style Text
     local row4a = GUIFrame:CreateRow(card4.content, 36)
-    local enableTextCheck = GUIFrame:CreateCheckbox(row4a, "Enable Text Widget Styling", textDB.Enabled ~= false,
-        function(checked)
+    local enableTextCheck = GUIFrame:CreateCheckbox(row4a, "Enable Text Widget Styling", {
+        value = textDB.Enabled ~= false,
+        callback = function(checked)
             textDB.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end,
+    })
     row4a:AddWidget(enableTextCheck, 0.5)
     table_insert(allWidgets, enableTextCheck)
 
     -- Style Text toggle
-    local styleTextCheck = GUIFrame:CreateCheckbox(row4a, "Style Text", textDB.StyleText ~= false,
-        function(checked)
+    local styleTextCheck = GUIFrame:CreateCheckbox(row4a, "Style Text", {
+        value = textDB.StyleText ~= false,
+        callback = function(checked)
             textDB.StyleText = checked
             ApplySettings()
-        end)
+        end,
+    })
     row4a:AddWidget(styleTextCheck, 0.5)
     table_insert(allWidgets, styleTextCheck)
     table_insert(textWidgets, styleTextCheck)
@@ -295,11 +337,17 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Width slider (0 = default/auto)
     local row4width = GUIFrame:CreateRow(card4.content, 40)
-    local textWidthSlider = GUIFrame:CreateSlider(row4width, "Width (0=Auto)", 0, 400, 1, textDB.Width or 0, 80,
-        function(val)
+    local textWidthSlider = GUIFrame:CreateSlider(row4width, "Width (0=Auto)", {
+        min = 0,
+        max = 400,
+        step = 1,
+        value = textDB.Width or 0,
+        labelWidth = 80,
+        callback = function(val)
             textDB.Width = val
             ApplySettings()
-        end)
+        end
+    })
     row4width:AddWidget(textWidthSlider, 1)
     table_insert(allWidgets, textWidthSlider)
     table_insert(textWidgets, textWidthSlider)
@@ -307,11 +355,17 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
 
     -- Font Size Slider
     local row4b = GUIFrame:CreateRow(card4.content, 40)
-    local textSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", 8, 24, 1, textDB.Size or 14, 60,
-        function(val)
+    local textSizeSlider = GUIFrame:CreateSlider(row4b, "Font Size", {
+        min = 8,
+        max = 24,
+        step = 1,
+        value = textDB.Size or 14,
+        labelWidth = 60,
+        callback = function(val)
             textDB.Size = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(textSizeSlider, 1)
     table_insert(allWidgets, textSizeSlider)
     table_insert(textWidgets, textSizeSlider)

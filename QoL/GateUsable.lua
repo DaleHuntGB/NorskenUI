@@ -144,7 +144,8 @@ end
 function GATE:ApplySettings()
     if not self.alertFrame then return end
     NRSKNUI:ApplyFramePosition(self.alertFrame, self.db.Position, self.db)
-    NRSKNUI:ApplyFontSettings(self.alertFrame, self.db, true)
+    self.alertFrame.text:SetTextColor(unpack(self.db.Color))
+    NRSKNUI:ApplyFontToText(self.alertFrame.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, self.db.FontShadow)
 
     -- Update frame strata
     if self.db.Strata then

@@ -110,17 +110,18 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Combat Texts", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Combat Messages", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Combat Messages", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyCombatMessageState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Combat Messages",
-        "On",
-        "Off"
-    )
+        msgPopup = true,
+        msgText = "Combat Messages",
+        msgOn = "On",
+        msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 36)
 
@@ -131,15 +132,6 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     ----------------------------------------------------------------
     local card2, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
-        dbKeys = {
-            anchorFrameType = "anchorFrameType",
-            anchorFrameFrame = "ParentFrame",
-            selfPoint = "AnchorFrom",
-            anchorPoint = "AnchorTo",
-            xOffset = "XOffset",
-            yOffset = "YOffset",
-            strata = "Strata",
-        },
         defaults = {
             anchorFrameType = "UIPARENT",
             anchorFrameFrame = "UIParent",
@@ -177,11 +169,16 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
 
     -- Font Face and Outline
     local row3a = GUIFrame:CreateRow(card3.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", fontList, db.FontFace or "Friz Quadrata TT", 30,
-        function(key)
+    local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
+        options = fontList,
+        value = db.FontFace or "Friz Quadrata TT",
+        callback = function(key)
             db.FontFace = key
             ApplySettings()
-        end, {searchable = true})
+        end,
+        searchable = true,
+        isFontPreview = true
+    })
     row3a:AddWidget(fontDropdown, 0.5)
     table_insert(allWidgets, fontDropdown)
 
@@ -191,23 +188,32 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
         { key = "THICKOUTLINE", text = "Thick" },
         { key = "SOFTOUTLINE", text = "Soft" },
     }
-    local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", outlineList, db.FontOutline or "OUTLINE", 45,
-        function(key)
+    local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", {
+        options = outlineList,
+        value = db.FontOutline or "OUTLINE",
+        callback = function(key)
             db.FontOutline = key
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row3a:AddWidget(outlineDropdown, 0.5)
     table_insert(allWidgets, outlineDropdown)
     card3:AddRow(row3a, 40)
 
     -- Font Size
     local row3b = GUIFrame:CreateRow(card3.content, 37)
-    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", 8, 72, 1, db.FontSize or 15, 60,
-        function(val)
+    local fontSizeSlider = GUIFrame:CreateSlider(card3.content, "Font Size", {
+        min = 8,
+        max = 72,
+        step = 1,
+        value = db.FontSize or 15,
+        labelWidth = 60,
+        callback = function(val)
             db.FontSize = val
             ApplySettings()
-        end)
+        end
+    })
     row3b:AddWidget(fontSizeSlider, 1)
     table_insert(allWidgets, fontSizeSlider)
     card3:AddRow(row3b, 37)
@@ -221,41 +227,57 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     table_insert(allWidgets, card4)
 
     local row4a = GUIFrame:CreateRow(card4.content, 40)
-    local shadowEnableCheck = GUIFrame:CreateCheckbox(row4a, "Enable Shadow", db.FontShadow.Enabled == true,
-        function(checked)
+    local shadowEnableCheck = GUIFrame:CreateCheckbox(row4a, "Enable Shadow", {
+        value = db.FontShadow.Enabled == true,
+        callback = function(checked)
             db.FontShadow.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row4a:AddWidget(shadowEnableCheck, 0.5)
     table_insert(allWidgets, shadowEnableCheck)
     table_insert(shadowWidgets, shadowEnableCheck)
 
-    local shadowColor = GUIFrame:CreateColorPicker(row4a, "Shadow Color", db.FontShadow.Color or { 0, 0, 0, 1 },
-        function(r, g, b, a)
+    local shadowColor = GUIFrame:CreateColorPicker(row4a, "Shadow Color", {
+        color = db.FontShadow.Color or { 0, 0, 0, 1 },
+        callback = function(r, g, b, a)
             db.FontShadow.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row4a:AddWidget(shadowColor, 0.5)
     table_insert(allWidgets, shadowColor)
     table_insert(shadowWidgets, shadowColor)
     card4:AddRow(row4a, 40)
 
     local row4b = GUIFrame:CreateRow(card4.content, 37)
-    local shadowX = GUIFrame:CreateSlider(row4b, "Shadow X", -5, 5, 1, db.FontShadow.OffsetX or 0, 15,
-        function(val)
+    local shadowX = GUIFrame:CreateSlider(row4b, "Shadow X", {
+        min = -5,
+        max = 5,
+        step = 1,
+        value = db.FontShadow.OffsetX or 0,
+        labelWidth = 15,
+        callback = function(val)
             db.FontShadow.OffsetX = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(shadowX, 0.5)
     table_insert(allWidgets, shadowX)
     table_insert(shadowWidgets, shadowX)
 
-    local shadowY = GUIFrame:CreateSlider(row4b, "Shadow Y", -5, 5, 1, db.FontShadow.OffsetY or 0, 15,
-        function(val)
+    local shadowY = GUIFrame:CreateSlider(row4b, "Shadow Y", {
+        min = -5,
+        max = 5,
+        step = 1,
+        value = db.FontShadow.OffsetY or 0,
+        labelWidth = 15,
+        callback = function(val)
             db.FontShadow.OffsetY = val
             ApplySettings()
-        end)
+        end
+    })
     row4b:AddWidget(shadowY, 0.5)
     table_insert(allWidgets, shadowY)
     table_insert(shadowWidgets, shadowY)
@@ -270,29 +292,35 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     table_insert(allWidgets, card5)
 
     local row5a = GUIFrame:CreateRow(card5.content, 38)
-    local enterEnableCheck = GUIFrame:CreateCheckbox(row5a, "Enabled", db.EnterCombat.Enabled ~= false,
-        function(checked)
+    local enterEnableCheck = GUIFrame:CreateCheckbox(row5a, "Enabled", {
+        value = db.EnterCombat.Enabled ~= false,
+        callback = function(checked)
             db.EnterCombat.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row5a:AddWidget(enterEnableCheck, 0.2)
     table_insert(allWidgets, enterEnableCheck)
 
-    local enterColorPicker = GUIFrame:CreateColorPicker(row5a, "Color",
-        db.EnterCombat.Color or { 0.929, 0.259, 0, 1 },
-        function(r, g, b, a)
+    local enterColorPicker = GUIFrame:CreateColorPicker(row5a, "Color", {
+        color = db.EnterCombat.Color or { 0.929, 0.259, 0, 1 },
+        callback = function(r, g, b, a)
             db.EnterCombat.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row5a:AddWidget(enterColorPicker, 0.3)
     table_insert(allWidgets, enterColorPicker)
     table_insert(enterWidgets, enterColorPicker)
 
-    local enterTextInput = GUIFrame:CreateEditBox(row5a, "Text", db.EnterCombat.Text or "+ COMBAT +", function(val)
-        db.EnterCombat.Text = val
-        ApplySettings()
-    end)
+    local enterTextInput = GUIFrame:CreateEditBox(row5a, "Text", {
+        value = db.EnterCombat.Text or "+ COMBAT +",
+        callback = function(val)
+            db.EnterCombat.Text = val
+            ApplySettings()
+        end
+    })
     row5a:AddWidget(enterTextInput, 0.5)
     table_insert(allWidgets, enterTextInput)
     table_insert(enterWidgets, enterTextInput)
@@ -307,29 +335,35 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     table_insert(allWidgets, card6)
 
     local row6a = GUIFrame:CreateRow(card6.content, 38)
-    local exitEnableCheck = GUIFrame:CreateCheckbox(row6a, "Enabled", db.ExitCombat.Enabled ~= false,
-        function(checked)
+    local exitEnableCheck = GUIFrame:CreateCheckbox(row6a, "Enabled", {
+        value = db.ExitCombat.Enabled ~= false,
+        callback = function(checked)
             db.ExitCombat.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end
+    })
     row6a:AddWidget(exitEnableCheck, 0.2)
     table_insert(allWidgets, exitEnableCheck)
 
-    local exitColorPicker = GUIFrame:CreateColorPicker(row6a, "Color",
-        db.ExitCombat.Color or { 0.788, 1, 0.627, 1 },
-        function(r, g, b, a)
+    local exitColorPicker = GUIFrame:CreateColorPicker(row6a, "Color", {
+        color = db.ExitCombat.Color or { 0.788, 1, 0.627, 1 },
+        callback = function(r, g, b, a)
             db.ExitCombat.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row6a:AddWidget(exitColorPicker, 0.3)
     table_insert(allWidgets, exitColorPicker)
     table_insert(exitWidgets, exitColorPicker)
 
-    local exitTextInput = GUIFrame:CreateEditBox(row6a, "Text", db.ExitCombat.Text or "- COMBAT -", function(val)
-        db.ExitCombat.Text = val
-        ApplySettings()
-    end)
+    local exitTextInput = GUIFrame:CreateEditBox(row6a, "Text", {
+        value = db.ExitCombat.Text or "- COMBAT -",
+        callback = function(val)
+            db.ExitCombat.Text = val
+            ApplySettings()
+        end
+    })
     row6a:AddWidget(exitTextInput, 0.5)
     table_insert(allWidgets, exitTextInput)
     table_insert(exitWidgets, exitTextInput)
@@ -344,31 +378,36 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     table_insert(allWidgets, card7)
 
     local row7a = GUIFrame:CreateRow(card7.content, 38)
-    local noTargetEnableCheck = GUIFrame:CreateCheckbox(row7a, "Enabled", db.NoTarget.Enabled == true,
-        function(checked)
+    local noTargetEnableCheck = GUIFrame:CreateCheckbox(row7a, "Enabled", {
+        value = db.NoTarget.Enabled == true,
+        callback = function(checked)
             db.NoTarget.Enabled = checked
             ApplySettings()
             UpdateAllWidgetStates()
-            -- Trigger immediate check
             if CM then CM:CheckNoTarget() end
-        end)
+        end
+    })
     row7a:AddWidget(noTargetEnableCheck, 0.2)
     table_insert(allWidgets, noTargetEnableCheck)
 
-    local noTargetColorPicker = GUIFrame:CreateColorPicker(row7a, "Color",
-        db.NoTarget.Color or { 1, 0.8, 0, 1 },
-        function(r, g, b, a)
+    local noTargetColorPicker = GUIFrame:CreateColorPicker(row7a, "Color", {
+        color = db.NoTarget.Color or { 1, 0.8, 0, 1 },
+        callback = function(r, g, b, a)
             db.NoTarget.Color = { r, g, b, a }
             ApplySettings()
-        end)
+        end
+    })
     row7a:AddWidget(noTargetColorPicker, 0.3)
     table_insert(allWidgets, noTargetColorPicker)
     table_insert(noTargetWidgets, noTargetColorPicker)
 
-    local noTargetTextInput = GUIFrame:CreateEditBox(row7a, "Text", db.NoTarget.Text or "NO TARGET", function(val)
-        db.NoTarget.Text = val
-        ApplySettings()
-    end)
+    local noTargetTextInput = GUIFrame:CreateEditBox(row7a, "Text", {
+        value = db.NoTarget.Text or "NO TARGET",
+        callback = function(val)
+            db.NoTarget.Text = val
+            ApplySettings()
+        end
+    })
     row7a:AddWidget(noTargetTextInput, 0.5)
     table_insert(allWidgets, noTargetTextInput)
     table_insert(noTargetWidgets, noTargetTextInput)
@@ -383,19 +422,31 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     table_insert(allWidgets, card8)
 
     local row8a = GUIFrame:CreateRow(card8.content, 37)
-    local durationSlider = GUIFrame:CreateSlider(row8a, "Fade Duration (seconds)", 0.5, 5.0, 0.1, db.Duration or 2.5, 140,
-        function(val)
+    local durationSlider = GUIFrame:CreateSlider(row8a, "Fade Duration (seconds)", {
+        min = 0.5,
+        max = 5.0,
+        step = 0.1,
+        value = db.Duration or 2.5,
+        labelWidth = 140,
+        callback = function(val)
             db.Duration = val
             ApplySettings()
-        end)
+        end
+    })
     row8a:AddWidget(durationSlider, 0.6)
     table_insert(allWidgets, durationSlider)
 
-    local spacingSlider = GUIFrame:CreateSlider(row8a, "Message Spacing", 0, 20, 1, db.Spacing or 4, 100,
-        function(val)
+    local spacingSlider = GUIFrame:CreateSlider(row8a, "Message Spacing", {
+        min = 0,
+        max = 20,
+        step = 1,
+        value = db.Spacing or 4,
+        labelWidth = 100,
+        callback = function(val)
             db.Spacing = val
             ApplySettings()
-        end)
+        end
+    })
     row8a:AddWidget(spacingSlider, 0.4)
     table_insert(allWidgets, spacingSlider)
     card8:AddRow(row8a, 37)

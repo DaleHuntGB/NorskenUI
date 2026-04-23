@@ -1,169 +1,161 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
-
--- Soft Outline Object and global font util
-
--- Example usage
---[[
--- Create the softoutline object
-frame.softOutline = NRSKNUI:CreateSoftOutline(MyFontString, {
-    thickness = 1,
-    color = {0, 0, 0},
-    alpha = 0.9,
-})
-
--- Adjustments
-frame.softOutline:SetThickness(2)
-frame.softOutline:SetShadowColor(0, 0, 0, 1)
-frame.softOutline:SetAlpha(0.8)
-frame.softOutline:SetShown(false)
-
--- Cleanup
-frame.softOutline:Release()
---]]
 
 local SoftOutline = {}
 SoftOutline.__index = SoftOutline
 
--- Localization
 local ipairs = ipairs
 local hooksecurefunc = hooksecurefunc
 local setmetatable = setmetatable
-local unpack = unpack
 local UIFrameFade, UIFrameFadeIn, UIFrameFadeOut = UIFrameFade, UIFrameFadeIn, UIFrameFadeOut
+local issecretvalue = issecretvalue
+local type = type
 
--- 8-direction offsets
+local SOFT_OUTLINE_FADEOUT_SPEED = 0.85
+local fadeHookRunning = false
+local DEFAULT_FONT = "Fonts\\FRIZQT__.TTF"
+
 local SHADOW_OFFSETS = {
-    { 0,  1 },  -- N
-    { 1,  1 },  -- NE
-    { 1,  0 },  -- E
-    { 1,  -1 }, -- SE
-    { 0,  -1 }, -- S
-    { -1, -1 }, -- SW
-    { -1, 0 },  -- W
-    { -1, 1 },  -- NW
+    { 0, 1 }, { 1, 1 }, { 1, 0 }, { 1, -1 },
+    { 0, -1 }, { -1, -1 }, { -1, 0 }, { -1, 1 },
 }
 
--- Alpha falloff
-local ALPHA_STRENGTH = {
-    1.0, 0.7,
-    1.0, 0.7,
-    1.0, 0.7,
-    1.0, 0.7,
-}
+local ALPHA_STRENGTH = { 1.0, 0.7, 1.0, 0.7, 1.0, 0.7, 1.0, 0.7 }
 
--- Strip WoW escape codes from text for solid outline
--- We do this so that colored text and embedded textures don't appear in the outline shadows
--- Textures are replaced with spaces to approximate the icon width for better alignment
 local function StripEscapeCodes(text)
-    if not text then return "" end
-    text = text:gsub("|c%x%x%x%x%x%x%x%x", "") -- Remove |cAARRGGBB (color start)
-    text = text:gsub("|r", "")                 -- Remove |r (color reset)
-    text = text:gsub("|T.-|t", "   ")          -- Replace |T...|t (textures) with spaces (~icon width)
-    text = text:gsub("|A.-|a", "   ")          -- Replace |A...|a (atlas textures) with spaces
-    return text
+    if type(text) ~= "string" then return "" end
+    if issecretvalue and issecretvalue(text) then return text end
+    return text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", "   "):gsub("|A.-|a", "   ")
 end
 
--- Internal Helpers
-function SoftOutline:_ApplyOffsets()
+local function HandleFadeHook(frame, outline, startAlpha)
+    if not outline.shadows or not outline.isShown then return end
+    local _, _, _, textAlpha = frame:GetTextColor()
+    -- Secret values can't be compared, proceed if secret (assume visible)
+    if not (issecretvalue and issecretvalue(textAlpha)) and textAlpha == 0 then return end
+
+    fadeHookRunning = true
+    for _, shadow in ipairs(outline.shadows) do
+        shadow:SetAlpha(startAlpha)
+        shadow:Show()
+    end
+    fadeHookRunning = false
+end
+
+hooksecurefunc("UIFrameFade", function(frame, fadeInfo)
+    if not frame or not fadeInfo or fadeHookRunning then return end
+    local outline = frame._nrsknSoftOutline
+    if not outline or not outline.shadows then return end
+
+    fadeHookRunning = true
+    local isFadeOut = fadeInfo.mode == "OUT" or
+        (fadeInfo.startAlpha and fadeInfo.endAlpha and fadeInfo.endAlpha < fadeInfo.startAlpha)
+
+    for _, shadow in ipairs(outline.shadows) do
+        local shadowFade = {
+            mode = fadeInfo.mode,
+            startAlpha = fadeInfo.startAlpha,
+            endAlpha = fadeInfo.endAlpha,
+            diffAlpha = fadeInfo.diffAlpha,
+            timeToFade = isFadeOut and (fadeInfo.timeToFade * SOFT_OUTLINE_FADEOUT_SPEED) or fadeInfo.timeToFade,
+        }
+        if fadeInfo.endAlpha == 0 then
+            shadowFade.finishedFunc = function() shadow:Hide() end
+        end
+        UIFrameFade(shadow, shadowFade)
+    end
+    fadeHookRunning = false
+end)
+
+if UIFrameFadeIn then
+    hooksecurefunc("UIFrameFadeIn", function(frame, _, startAlpha)
+        if not frame or fadeHookRunning then return end
+        local outline = frame._nrsknSoftOutline
+        if outline then HandleFadeHook(frame, outline, startAlpha or 0) end
+    end)
+end
+
+if UIFrameFadeOut then
+    hooksecurefunc("UIFrameFadeOut", function(frame, _, startAlpha)
+        if not frame or fadeHookRunning then return end
+        local outline = frame._nrsknSoftOutline
+        if outline then HandleFadeHook(frame, outline, startAlpha or 1) end
+    end)
+end
+
+function SoftOutline:_ForEach(fn)
     if not self.shadows then return end
     for i, shadow in ipairs(self.shadows) do
-        local offset = SHADOW_OFFSETS[i]
-        local x = offset[1] * self.thickness
-        local y = offset[2] * self.thickness
-
-        shadow:ClearAllPoints()
-        shadow:SetPoint("CENTER", self.main, "CENTER", x, y)
+        fn(shadow, i)
     end
+end
+
+function SoftOutline:_ApplyOffsets()
+    self:_ForEach(function(shadow, i)
+        local offset = SHADOW_OFFSETS[i]
+        shadow:ClearAllPoints()
+        shadow:SetPoint("CENTER", self.main, "CENTER", offset[1] * self.thickness, offset[2] * self.thickness)
+    end)
 end
 
 function SoftOutline:_ApplyColor()
-    if not self.shadows then return end
-    for i, shadow in ipairs(self.shadows) do
-        local strength = ALPHA_STRENGTH[i] or 1
-        shadow:SetTextColor(
-            self.color[1],
-            self.color[2],
-            self.color[3],
-            self.alpha * strength
-        )
-    end
+    self:_ForEach(function(shadow, i)
+        shadow:SetTextColor(self.color[1], self.color[2], self.color[3], self.alpha * (ALPHA_STRENGTH[i] or 1))
+    end)
 end
 
--- Public API
+function SoftOutline:_SyncWidth()
+    if not self.main then return end
+    local width = self.main:GetWidth()
+    self:_ForEach(function(shadow) shadow:SetWidth(width) end)
+    self.hasExplicitWidth = true
+end
+
+function SoftOutline:_SyncWrapSettings()
+    if not self.main then return end
+    local wordWrap, nonSpaceWrap = self.main:CanWordWrap(), self.main:CanNonSpaceWrap()
+    self:_ForEach(function(shadow)
+        if wordWrap ~= nil then shadow:SetWordWrap(wordWrap) end
+        if nonSpaceWrap ~= nil then shadow:SetNonSpaceWrap(nonSpaceWrap) end
+    end)
+end
+
+function SoftOutline:_SyncJustify()
+    if not self.main then return end
+    local justifyH, justifyV = self.main:GetJustifyH(), self.main:GetJustifyV()
+    self:_ForEach(function(shadow)
+        shadow:SetJustifyH(justifyH)
+        shadow:SetJustifyV(justifyV)
+    end)
+end
+
 function SoftOutline:SetText(text)
-    if not self.shadows then return end
     local cleanText = StripEscapeCodes(text)
-    for _, shadow in ipairs(self.shadows) do
-        shadow:SetText(cleanText)
-    end
+    self:_ForEach(function(shadow) shadow:SetText(cleanText) end)
 end
 
-function SoftOutline:SetFont(fontPath, fontSize, flags)
+function SoftOutline:SetFont(fontPath, fontSize)
     if not self.shadows then return false end
-
-    -- Validate and fix inputs
-    if not fontPath or fontPath == "" then
-        fontPath = "Fonts\\FRIZQT__.TTF"
-    end
-    if not fontSize or fontSize <= 0 then
-        fontSize = 14
-    end
-    flags = flags or ""
+    fontPath = (fontPath and fontPath ~= "") and fontPath or DEFAULT_FONT
+    fontSize = (fontSize and fontSize > 0) and fontSize or 14
 
     local success = true
     for _, shadow in ipairs(self.shadows) do
-        local ok = shadow:SetFont(fontPath, fontSize, flags)
-        if not ok then
-            -- Try fallback
-            shadow:SetFont("Fonts\\FRIZQT__.TTF", fontSize, flags)
+        if not shadow:SetFont(fontPath, fontSize, "") then
+            shadow:SetFont(DEFAULT_FONT, fontSize, "")
             success = false
         end
     end
     return success
 end
 
--- Sync width constraint to shadows
--- Only called from SetWidth hook or explicit SyncWidth() call
--- NEVER call this at creation - GetWidth() returns rendered width, not explicit constraint
-function SoftOutline:_SyncWidth()
-    if not self.shadows or not self.main then return end
-
-    local width = self.main:GetWidth()
-    for _, shadow in ipairs(self.shadows) do
-        shadow:SetWidth(width)
-    end
-    self.hasExplicitWidth = true
-end
-
--- Public method to force width sync (use when width was set before outline creation)
 function SoftOutline:SyncWidth()
     self:_SyncWidth()
 end
 
--- Sync wrap settings - safe to call at creation since these come from explicit calls
-function SoftOutline:_SyncWrapSettings()
-    if not self.shadows or not self.main then return end
-
-    local wordWrap = self.main:CanWordWrap()
-    local nonSpaceWrap = self.main:CanNonSpaceWrap()
-
-    for _, shadow in ipairs(self.shadows) do
-        if wordWrap ~= nil then
-            shadow:SetWordWrap(wordWrap)
-        end
-        if nonSpaceWrap ~= nil then
-            shadow:SetNonSpaceWrap(nonSpaceWrap)
-        end
-    end
-end
-
 function SoftOutline:SetShadowColor(r, g, b, a)
     self.color = { r, g, b }
-    if a then
-        self.alpha = a
-    end
+    if a then self.alpha = a end
     self:_ApplyColor()
 end
 
@@ -177,54 +169,36 @@ function SoftOutline:SetAlpha(a)
     self:_ApplyColor()
 end
 
+function SoftOutline:_IsTextVisible()
+    if not self.main then return false end
+    local _, _, _, textAlpha = self.main:GetTextColor()
+    local frameAlpha = self.main:GetAlpha()
+    -- Secret values can't be compared, assume visible if secret
+    if issecretvalue and (issecretvalue(textAlpha) or issecretvalue(frameAlpha)) then
+        return true
+    end
+    return textAlpha ~= 0 and frameAlpha ~= 0
+end
+
 function SoftOutline:SetShown(shown)
     if not self.shadows then return end
     self.isShown = shown
 
-    if not shown then
-        for _, shadow in ipairs(self.shadows) do
-            shadow:SetShown(false)
-        end
+    if not shown or not self:_IsTextVisible() then
+        self:_ForEach(function(shadow) shadow:SetShown(false) end)
         return
     end
 
-    -- Showing - first check if text is actually visible
-    if self.main then
-        local _, _, _, textAlpha = self.main:GetTextColor()
-        local frameAlpha = self.main:GetAlpha()
-        if textAlpha == 0 or frameAlpha == 0 then
-            for _, shadow in ipairs(self.shadows) do
-                shadow:SetShown(false)
-            end
-            return
-        end
-
-        -- Re-sync all properties when becoming visible
-        -- This handles cases where properties changed while hidden
-        local font, size, flags = self.main:GetFont()
-        if font and font ~= "" and size and size > 0 then
-            self:SetFont(font, size, "")
-        end
-        self:SetText(self.main:GetText() or "")
-
-        -- Sync justification
-        local justifyH = self.main:GetJustifyH()
-        local justifyV = self.main:GetJustifyV()
-        for _, shadow in ipairs(self.shadows) do
-            shadow:SetJustifyH(justifyH)
-            shadow:SetJustifyV(justifyV)
-        end
-
-        self:_SyncWrapSettings()
-        -- Only sync width if it was explicitly set before
-        if self.hasExplicitWidth then
-            self:_SyncWidth()
-        end
+    local font, size = self.main:GetFont()
+    if font and font ~= "" and size and size > 0 then
+        self:SetFont(font, size)
     end
+    self:SetText(self.main:GetText() or "")
+    self:_SyncJustify()
+    self:_SyncWrapSettings()
+    if self.hasExplicitWidth then self:_SyncWidth() end
 
-    for _, shadow in ipairs(self.shadows) do
-        shadow:SetShown(true)
-    end
+    self:_ForEach(function(shadow) shadow:SetShown(true) end)
 end
 
 function SoftOutline:IsShown()
@@ -232,313 +206,143 @@ function SoftOutline:IsShown()
 end
 
 function SoftOutline:Release()
-    if not self.shadows then return end
-    for _, shadow in ipairs(self.shadows) do
-        -- Cancel any active UIFrameFade on this shadow
-        if UIFrameFadeRemoveFrame then
-            UIFrameFadeRemoveFrame(shadow)
-        end
+    self:_ForEach(function(shadow)
+        if UIFrameFadeRemoveFrame then UIFrameFadeRemoveFrame(shadow) end
         shadow:Hide()
         shadow:ClearAllPoints()
         shadow:SetParent(nil)
-    end
+    end)
 
-    if self.main then
-        self.main._nrsknSoftOutline = nil
-    end
-
+    if self.main then self.main._nrsknSoftOutline = nil end
     self.main = nil
     self.shadows = nil
     self.isShown = false
 end
 
--- Hook Sync - Only hooks once per FontString
 function SoftOutline:_HookMain()
     local main = self.main
-
-    -- Check if already hooked to prevent duplicate hooks
     if main._nrsknSoftOutlineHooked then return end
     main._nrsknSoftOutlineHooked = true
-
-    -- Store reference on main text so hooks can find current outline
-    -- This is updated each time a new soft outline is created for this text
     main._nrsknSoftOutline = self
 
-    local SOFT_OUTLINE_FADEOUT_SPEED = 0.85
-    local fadeHookRunning = false  -- Recursion guard
-    hooksecurefunc("UIFrameFade", function(frame, fadeInfo)
-        if not frame or not fadeInfo then return end
-        if fadeHookRunning then return end  -- Prevent recursion
-
-        if frame._nrsknSoftOutline then
-            local outline = frame._nrsknSoftOutline
-            if not outline or not outline.shadows then return end
-
-            -- Set guard AFTER validation, reset at end
-            fadeHookRunning = true
-
-            -- Determine if this is a fade out
-            local isFadeOut = fadeInfo.mode == "OUT"
-                or (fadeInfo.startAlpha and fadeInfo.endAlpha
-                    and fadeInfo.endAlpha < fadeInfo.startAlpha)
-
-            for _, shadow in ipairs(outline.shadows) do
-                local shadowFade = {}
-                shadowFade.mode = fadeInfo.mode
-                shadowFade.startAlpha = fadeInfo.startAlpha
-                shadowFade.endAlpha = fadeInfo.endAlpha
-                shadowFade.diffAlpha = fadeInfo.diffAlpha
-                if isFadeOut then
-                    shadowFade.timeToFade = fadeInfo.timeToFade * SOFT_OUTLINE_FADEOUT_SPEED
-                else
-                    shadowFade.timeToFade = fadeInfo.timeToFade
-                end
-
-                if fadeInfo.endAlpha == 0 then
-                    shadowFade.finishedFunc = function()
-                        shadow:Hide()
-                    end
-                end
-
-                UIFrameFade(shadow, shadowFade)
-            end
-
-            fadeHookRunning = false  -- Reset guard after processing all shadows
-        end
-    end)
-
-    -- Hook UIFrameFadeIn specifically to ensure shadows are shown at fade start
-    if UIFrameFadeIn then
-        hooksecurefunc("UIFrameFadeIn", function(frame, timeToFade, startAlpha, endAlpha)
-            if not frame then return end
-            if fadeHookRunning then return end  -- Prevent recursion
-
-            if frame._nrsknSoftOutline then
-                local outline = frame._nrsknSoftOutline
-                if not outline or not outline.shadows or not outline.isShown then return end
-
-                fadeHookRunning = true
-
-                -- Check if text color alpha is visible
-                local _, _, _, textAlpha = frame:GetTextColor()
-                if textAlpha ~= 0 then
-                    for _, shadow in ipairs(outline.shadows) do
-                        shadow:SetAlpha(startAlpha or 0)
-                        shadow:Show()
-                    end
-                end
-
-                fadeHookRunning = false
-            end
-        end)
+    local function getOutline()
+        local outline = main._nrsknSoftOutline
+        return (outline and outline.shadows) and outline or nil
     end
 
-    -- Hook UIFrameFadeOut to handle hideOnFinish for shadows
-    if UIFrameFadeOut then
-        hooksecurefunc("UIFrameFadeOut", function(frame, timeToFade, startAlpha, endAlpha)
-            if not frame then return end
-            if fadeHookRunning then return end  -- Prevent recursion
-
-            if frame._nrsknSoftOutline then
-                local outline = frame._nrsknSoftOutline
-                if not outline or not outline.shadows or not outline.isShown then return end
-
-                fadeHookRunning = true
-
-                -- Check if text color alpha is visible
-                local _, _, _, textAlpha = frame:GetTextColor()
-                if textAlpha ~= 0 then
-                    for _, shadow in ipairs(outline.shadows) do
-                        shadow:SetAlpha(startAlpha or 1)
-                        shadow:Show()
-                    end
-                end
-
-                fadeHookRunning = false
-            end
-        end)
-    end
-
-    -- Hook SetText
     hooksecurefunc(main, "SetText", function(_, text)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows and outline.isShown then
+        local outline = getOutline()
+        if outline and outline.isShown then
             outline:SetText(text)
+            outline:_ForEach(function(shadow) shadow:Show() end)
         end
     end)
 
-    -- Hook SetFormattedText (used by timers, etc.)
     hooksecurefunc(main, "SetFormattedText", function(self)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows and outline.isShown then
-            -- GetText() returns the formatted result
+        local outline = getOutline()
+        if outline and outline.isShown then
             outline:SetText(self:GetText() or "")
+            outline:_ForEach(function(shadow) shadow:Show() end)
         end
     end)
 
-    -- Hook SetFont
-    hooksecurefunc(main, "SetFont", function(_, font, size, flags)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows and outline.isShown then
-            -- Validate parameters before passing to soft outline
-            if font and font ~= "" and size and size > 0 then
-                outline:SetFont(font, size, flags or "")
-            end
+    hooksecurefunc(main, "SetFont", function(_, font, size)
+        local outline = getOutline()
+        if outline and outline.isShown and font and font ~= "" and size and size > 0 then
+            outline:SetFont(font, size)
         end
     end)
 
-    -- Hook SetJustifyH
     hooksecurefunc(main, "SetJustifyH", function(_, justify)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows and outline.isShown then
-            for _, shadow in ipairs(outline.shadows) do
-                shadow:SetJustifyH(justify)
-            end
+        local outline = getOutline()
+        if outline and outline.isShown then
+            outline:_ForEach(function(shadow) shadow:SetJustifyH(justify) end)
         end
     end)
 
-    -- Hook SetJustifyV
     hooksecurefunc(main, "SetJustifyV", function(_, justify)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows and outline.isShown then
-            for _, shadow in ipairs(outline.shadows) do
-                shadow:SetJustifyV(justify)
-            end
+        local outline = getOutline()
+        if outline and outline.isShown then
+            outline:_ForEach(function(shadow) shadow:SetJustifyV(justify) end)
         end
     end)
 
-    -- Hook SetWidth to sync shadow width constraints
-    -- This is the ONLY place width should be synced - indicates explicit width was set
     hooksecurefunc(main, "SetWidth", function()
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows then
-            outline:_SyncWidth()
-        end
+        local outline = getOutline()
+        if outline then outline:_SyncWidth() end
     end)
 
-    -- Hook SetWordWrap
     hooksecurefunc(main, "SetWordWrap", function(_, wrap)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows then
-            for _, shadow in ipairs(outline.shadows) do
-                shadow:SetWordWrap(wrap)
-            end
-        end
+        local outline = getOutline()
+        if outline then outline:_ForEach(function(shadow) shadow:SetWordWrap(wrap) end) end
     end)
 
-    -- Hook SetNonSpaceWrap
     hooksecurefunc(main, "SetNonSpaceWrap", function(_, wrap)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows then
-            for _, shadow in ipairs(outline.shadows) do
-                shadow:SetNonSpaceWrap(wrap)
-            end
-        end
+        local outline = getOutline()
+        if outline then outline:_ForEach(function(shadow) shadow:SetNonSpaceWrap(wrap) end) end
     end)
 
-    -- Hook SetAlpha to handle fade effects
-    -- When main text alpha is 0, hide shadows to prevent ghost outline
-    hooksecurefunc(main, "SetAlpha", function(_, a)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows then
-            if a == 0 then
-                -- Hide shadows when text is fully transparent
-                for _, shadow in ipairs(outline.shadows) do
-                    shadow:Hide()
-                end
-            elseif outline.isShown then
-                -- Show shadows when text becomes visible again
-                for _, shadow in ipairs(outline.shadows) do
-                    shadow:Show()
-                end
+    local function handleAlphaChange(a)
+        local outline = getOutline()
+        if not outline then return end
+        -- Secret values can't be compared, assume visible if secret
+        if issecretvalue and issecretvalue(a) then
+            if outline.isShown then
+                outline:_ForEach(function(shadow) shadow:Show() end)
             end
+            return
         end
-    end)
-
-    -- Hook SetTextColor to handle text color alpha
-    -- When text color alpha is 0, hide shadows to prevent ghost outline
-    hooksecurefunc(main, "SetTextColor", function(_, r, g, b, a)
-        local outline = main._nrsknSoftOutline
-        if outline and outline.shadows then
-            if a == 0 then
-                -- Hide shadows when text color is fully transparent
-                for _, shadow in ipairs(outline.shadows) do
-                    shadow:Hide()
-                end
-            elseif outline.isShown then
-                -- Show shadows when text becomes visible again
-                for _, shadow in ipairs(outline.shadows) do
-                    shadow:Show()
-                end
-            end
+        if a == 0 then
+            outline:_ForEach(function(shadow) shadow:Hide() end)
+        elseif outline.isShown then
+            outline:_ForEach(function(shadow) shadow:Show() end)
         end
-    end)
+    end
 
-    -- Hook parent frame visibility
+    hooksecurefunc(main, "SetAlpha", function(_, a) handleAlphaChange(a) end)
+    hooksecurefunc(main, "SetTextColor", function(_, _, _, _, a) handleAlphaChange(a) end)
+
     local parent = main:GetParent()
     if parent and not parent._nrsknSoftOutlineHooked then
         parent._nrsknSoftOutlineHooked = true
 
         hooksecurefunc(parent, "Hide", function()
-            local outline = main._nrsknSoftOutline
-            if outline and outline.shadows then
-                for _, shadow in ipairs(outline.shadows) do
-                    shadow:Hide()
-                end
-            end
+            local outline = getOutline()
+            if outline then outline:_ForEach(function(shadow) shadow:Hide() end) end
         end)
 
         hooksecurefunc(parent, "Show", function()
-            local outline = main._nrsknSoftOutline
-            if outline and outline.shadows and outline.isShown then
-                -- Check if text is actually visible before showing shadows
-                local _, _, _, textAlpha = main:GetTextColor()
-                local frameAlpha = main:GetAlpha()
-                if textAlpha ~= 0 and frameAlpha ~= 0 then
-                    for _, shadow in ipairs(outline.shadows) do
-                        shadow:Show()
-                    end
-                end
+            local outline = getOutline()
+            if outline and outline.isShown and outline:_IsTextVisible() then
+                outline:_ForEach(function(shadow) shadow:Show() end)
             end
         end)
     end
 end
 
--- Factory
+local function GetFontWithFallback(fontString, options)
+    local font, size = fontString:GetFont()
+    font = (font and font ~= "") and font or options.fontPath or DEFAULT_FONT
+    size = (size and size > 0) and size or options.fontSize or 14
+    return font, size
+end
+
 function NRSKNUI:CreateSoftOutline(mainText, options)
     if not mainText then return nil end
-
     options = options or {}
 
-    -- If this text already has a soft outline, reuse it instead of creating new one
     local existingOutline = mainText._nrsknSoftOutline
     if existingOutline and existingOutline.shadows then
-        -- Update existing outline with new options
         existingOutline.color = options.color or existingOutline.color or { 0, 0, 0 }
         existingOutline.alpha = options.alpha or existingOutline.alpha or 0.9
         existingOutline.thickness = options.thickness or existingOutline.thickness or 1
-
-        -- Get font settings
-        local font, size, flags = mainText:GetFont()
-        font = (font and font ~= "") and font or options.fontPath or "Fonts\\FRIZQT__.TTF"
-        size = (size and size > 0) and size or options.fontSize or 14
-        flags = flags or ""
-
-        -- Update shadows
-        existingOutline:SetFont(font, size, "")
-        existingOutline:SetText(mainText:GetText() or "")
         existingOutline:_ApplyOffsets()
         existingOutline:_ApplyColor()
-        existingOutline:_SyncWrapSettings()
-        -- DON'T sync width here - only sync when SetWidth hook fires
-        -- If width was previously synced, hasExplicitWidth will be true and hook will handle it
         existingOutline:SetShown(true)
-
         return existingOutline
     end
 
     local outline = setmetatable({}, SoftOutline)
-
     outline.main = mainText
     outline.shadows = {}
     outline.color = options.color or { 0, 0, 0 }
@@ -546,179 +350,73 @@ function NRSKNUI:CreateSoftOutline(mainText, options)
     outline.thickness = options.thickness or 1
     outline.isShown = true
 
-    -- Disable Blizzard shadow
     mainText:SetShadowColor(0, 0, 0, 0)
     mainText:SetShadowOffset(0, 0)
 
-    -- Get font from main text, with fallbacks from options
-    -- Note to self: GetFont() can return -1 for size if font is not set, so we check > 0
-    local font, size, flags = mainText:GetFont()
-    font = (font and font ~= "") and font or options.fontPath or "Fonts\\FRIZQT__.TTF"
-    size = (size and size > 0) and size or options.fontSize or 14
-    flags = flags or ""
-
-    -- Create shadows
-    -- Use ARTWORK layer with sublevel 7 so shadows appear above icon textures (sublevel 0)
-    -- but below OVERLAY layer where the main text lives
+    local font, size = GetFontWithFallback(mainText, options)
     local parent = mainText:GetParent()
+    local text = StripEscapeCodes(mainText:GetText() or "")
+    local justifyH, justifyV = mainText:GetJustifyH(), mainText:GetJustifyV()
+
     for i = 1, #SHADOW_OFFSETS do
         local shadow = parent:CreateFontString(nil, "ARTWORK", nil, 7)
         shadow:SetFont(font, size, "")
-        shadow:SetText(StripEscapeCodes(mainText:GetText() or ""))
-        shadow:SetJustifyH(mainText:GetJustifyH())
-        shadow:SetJustifyV(mainText:GetJustifyV())
-
+        shadow:SetText(text)
+        shadow:SetJustifyH(justifyH)
+        shadow:SetJustifyV(justifyV)
         outline.shadows[i] = shadow
     end
 
     outline:_ApplyOffsets()
     outline:_ApplyColor()
     outline:_SyncWrapSettings()
-    -- DON'T sync width at creation - shadows auto-size to content
-    -- Width only syncs when SetWidth is explicitly called on main text (via hook)
     outline:_HookMain()
-
-    -- Store reference on main text
     mainText._nrsknSoftOutline = outline
 
-    -- Check initial text alpha - hide shadows if text is invisible
-    local _, _, _, textAlpha = mainText:GetTextColor()
-    local frameAlpha = mainText:GetAlpha()
-    if textAlpha == 0 or frameAlpha == 0 then
-        for _, shadow in ipairs(outline.shadows) do
-            shadow:Hide()
-        end
+    if not outline:_IsTextVisible() then
+        outline:_ForEach(function(shadow) shadow:Hide() end)
     end
 
     return outline
 end
 
--- Global apply font settings func w/ softoutline support
--- Example usage:
--- NRSKNUI:ApplyFontSettings(self.frame, self.db. true/nil)
-function NRSKNUI:ApplyFontSettings(frame, settings, color)
-    if not frame or not frame.text or not settings then return false end
-    local text = frame.text
-
-    -- Get settings with fallbacks
-    local fontName = settings.FontFace or "Friz Quadrata TT"
-    local fontSize = settings.FontSize
-    if not fontSize or fontSize <= 0 then
-        fontSize = 14
-    end
-    local fontOutline = settings.FontOutline or "OUTLINE"
-
-    if color then
-        text:SetTextColor(unpack(settings.Color or { 1, 1, 1, 1 }))
-    end
-
-    -- Softoutline mode
-    if fontOutline == "SOFTOUTLINE" then
-        -- Set font on main text FIRST before creating/updating soft outline
-        -- Use ApplyFont with SOFTOUTLINE which returns "" for outline flags
-        local success = self:ApplyFont(text, fontName, fontSize, "SOFTOUTLINE")
-        text:SetShadowOffset(0, 0)
-        text:SetShadowColor(0, 0, 0, 0)
-
-        -- Get fontPath for soft outline creation
-        local fontPath = self:GetFontPath(fontName)
-
-        if not frame.softOutline then
-            frame.softOutline = self:CreateSoftOutline(text, {
-                thickness = 1,
-                color = { 0, 0, 0 },
-                alpha = 0.9,
-                fontPath = fontPath,
-                fontSize = fontSize,
-            })
-        else
-            -- Update existing soft outline
-            frame.softOutline:SetFont(fontPath, fontSize, "")
-            frame.softOutline:SetText(text:GetText() or "")
-            frame.softOutline:SetShown(true)
-        end
-
-        return success
-    else
-        -- Hide soft outline if it exists
-        if frame.softOutline then
-            frame.softOutline:SetShown(false)
-        end
-
-        -- Use ApplyFont from Globals.lua (handles GetFontPath and GetFontOutline)
-        local success = self:ApplyFont(text, fontName, fontSize, fontOutline)
-
-        -- Font shadow
-        local shadow = settings.FontShadow or {}
-        if shadow.Enabled then
-            local shadowColor = shadow.Color or { 0, 0, 0, 1 }
-            local shadowAlpha = (shadowColor[4] and shadowColor[4] > 0) and shadowColor[4] or 0.9
-            text:SetShadowColor(shadowColor[1], shadowColor[2], shadowColor[3], shadowAlpha)
-            text:SetShadowOffset(shadow.OffsetX or 1, shadow.OffsetY or -1)
-        else
-            text:SetShadowOffset(0, 0)
-            text:SetShadowColor(0, 0, 0, 0)
-        end
-
-        return success
-    end
-end
-
--- Lower-level helper for applying font to a FontString directly, used for modules with multiple text elements
--- Unlike ApplyFontSettings, this works directly on a fontString without needing a frame wrapper
--- Example usage:
--- NRSKNUI:ApplyFontToText(self.frame.timerText, "Expressway", 18, "SOFTOUTLINE", shadowSettings)
 function NRSKNUI:ApplyFontToText(fontString, fontName, fontSize, fontOutline, shadowSettings)
     if not fontString then return false end
 
-    -- Defaults
     fontName = fontName or "Friz Quadrata TT"
     fontSize = (fontSize and fontSize > 0) and fontSize or 14
     fontOutline = fontOutline or "OUTLINE"
     shadowSettings = shadowSettings or {}
 
-    -- Softoutline mode
+    local success = self:ApplyFont(fontString, fontName, fontSize, fontOutline)
+
     if fontOutline == "SOFTOUTLINE" then
-        local success = self:ApplyFont(fontString, fontName, fontSize, "SOFTOUTLINE")
         fontString:SetShadowOffset(0, 0)
         fontString:SetShadowColor(0, 0, 0, 0)
 
         local fontPath = self:GetFontPath(fontName)
-
         if not fontString.softOutline then
             fontString.softOutline = self:CreateSoftOutline(fontString, {
-                thickness = 1,
-                color = { 0, 0, 0 },
-                alpha = 0.9,
                 fontPath = fontPath,
                 fontSize = fontSize,
             })
-        else
-            fontString.softOutline:SetFont(fontPath, fontSize, "")
-            fontString.softOutline:SetText(fontString:GetText() or "")
-            fontString.softOutline:SetShown(true)
         end
-
-        return success
+        fontString.softOutline:SetFont(fontPath, fontSize)
+        fontString.softOutline:SetShown(true)
     else
-        -- Hide soft outline if it exists
         if fontString.softOutline then
             fontString.softOutline:SetShown(false)
         end
 
-        local success = self:ApplyFont(fontString, fontName, fontSize, fontOutline)
-
-        -- Apply shadow settings
         if shadowSettings.Enabled then
-            local shadowColor = shadowSettings.Color or { 0, 0, 0, 1 }
-            local shadowAlpha = (shadowColor[4] and shadowColor[4] > 0) and shadowColor[4] or 0.9
-            fontString:SetShadowColor(shadowColor[1], shadowColor[2], shadowColor[3], shadowAlpha)
+            local c = shadowSettings.Color or { 0, 0, 0, 1 }
+            fontString:SetShadowColor(c[1], c[2], c[3], (c[4] and c[4] > 0) and c[4] or 0.9)
             fontString:SetShadowOffset(shadowSettings.OffsetX or 1, shadowSettings.OffsetY or -1)
         else
             fontString:SetShadowOffset(0, 0)
             fontString:SetShadowColor(0, 0, 0, 0)
         end
-
-        return success
     end
+
+    return success
 end

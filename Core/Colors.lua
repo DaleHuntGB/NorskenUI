@@ -91,8 +91,10 @@ function NRSKNUI:ColorTextByClass(text, classToken)
     return "|cFF" .. hex .. text .. "|r"
 end
 
--- RGBAToHex
--- Convert RGBA (0-1) to hex string "RRGGBB"
+---@param r number
+---@param g number
+---@param b number
+---@return string
 function NRSKNUI:RGBAToHex(r, g, b)
     r = math_floor((r or 1) * 255 + 0.5)
     g = math_floor((g or 1) * 255 + 0.5)
@@ -109,8 +111,8 @@ function NRSKNUI:GetThemeColorHex()
     return "e51039"
 end
 
--- ColorTextByTheme
--- Wrap text in theme accent color
+---@param text string
+---@return string
 function NRSKNUI:ColorTextByTheme(text)
     local hex = self:GetThemeColorHex()
     return "|cFF" .. hex .. text .. "|r"

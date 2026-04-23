@@ -60,14 +60,18 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
     local card1 = GUIFrame:CreateCard(scrollChild, "Raid Manager", yOffset)
 
     local row1 = GUIFrame:CreateRow(card1.content, 40)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Raid Manager Styling", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Raid Manager Styling", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyModuleState(checked)
             UpdateAllWidgetStates()
         end,
-        true, "Raid Manager Styling", "On", "Off"
-    )
+        msgPopup = true,
+        msgText = "Raid Manager Styling",
+        msgOn = "On",
+        msgOff = "Off",
+    })
     row1:AddWidget(enableCheck, 1)
     card1:AddRow(row1, 40)
 
@@ -81,12 +85,14 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
 
     -- Speed Font Size
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local ySlider = GUIFrame:CreateSlider(row2, "Y Offset", -1100, 100, 1,
-        db.Position.YOffset, nil,
-        function(val)
+    local ySlider = GUIFrame:CreateSlider(row2, "Y Offset", {
+        min = -1100, max = 100, step = 1,
+        value = db.Position.YOffset,
+        callback = function(val)
             db.Position.YOffset = val
             ApplySettings()
-        end)
+        end
+    })
     row2:AddWidget(ySlider, 1)
     table_insert(allWidgets, ySlider)
     card2:AddRow(row2, 40)
@@ -101,12 +107,14 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
 
     -- Toggle mouseover
     local row3 = GUIFrame:CreateRow(card3.content, 40)
-    local useFade = GUIFrame:CreateCheckbox(row3, "Enable Mouseover", db.FadeOnMouseOut ~= false,
-        function(checked)
+    local useFade = GUIFrame:CreateCheckbox(row3, "Enable Mouseover", {
+        value = db.FadeOnMouseOut ~= false,
+        callback = function(checked)
             db.FadeOnMouseOut = checked
             ApplySettings()
             UpdateAllWidgetStates()
-        end)
+        end,
+    })
     row3:AddWidget(useFade, 1)
     table_insert(allWidgets, useFade)
     card3:AddRow(row3, 40)
@@ -120,34 +128,46 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
 
     -- Fade in slider
     local row4 = GUIFrame:CreateRow(card3.content, 40)
-    local FadeInDuration = GUIFrame:CreateSlider(row4, "Fade In Duration", 0, 20, 0.1,
-        db.FadeInDuration, nil,
-        function(val)
+    local FadeInDuration = GUIFrame:CreateSlider(row4, "Fade In Duration", {
+        min = 0,
+        max = 20,
+        step = 0.1,
+        value = db.FadeInDuration,
+        callback = function(val)
             db.FadeInDuration = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(FadeInDuration, 0.5)
     table_insert(allWidgets, FadeInDuration)
 
     -- Fade out slider
-    local FadeOutDuration = GUIFrame:CreateSlider(row4, "Fade Out Duration", 0, 20, 0.1,
-        db.FadeOutDuration, nil,
-        function(val)
+    local FadeOutDuration = GUIFrame:CreateSlider(row4, "Fade Out Duration", {
+        min = 0,
+        max = 20,
+        step = 0.1,
+        value = db.FadeOutDuration,
+        callback = function(val)
             db.FadeOutDuration = val
             ApplySettings()
-        end)
+        end
+    })
     row4:AddWidget(FadeOutDuration, 0.5)
     table_insert(allWidgets, FadeOutDuration)
     card3:AddRow(row4, 40)
 
     -- Alpha slider
     local row5 = GUIFrame:CreateRow(card3.content, 40)
-    local Alpha = GUIFrame:CreateSlider(row5, "Alpha", 0, 1, 0.1,
-        db.Alpha, nil,
-        function(val)
+    local Alpha = GUIFrame:CreateSlider(row5, "Alpha", {
+        min = 0,
+        max = 1,
+        step = 0.1,
+        value = db.Alpha,
+        callback = function(val)
             db.Alpha = val
             ApplySettings()
-        end)
+        end
+    })
     row5:AddWidget(Alpha, 1)
     table_insert(allWidgets, Alpha)
     card3:AddRow(row5, 40)

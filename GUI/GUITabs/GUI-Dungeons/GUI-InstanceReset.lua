@@ -63,17 +63,15 @@ GUIFrame:RegisterContent("InstanceReset", function(scrollChild, yOffset)
 
     -- Enable Checkbox
     local row1 = GUIFrame:CreateRow(card1.content, 36)
-    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Instance Reset Message", db.Enabled ~= false,
-        function(checked)
+    local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Instance Reset Message", {
+        value = db.Enabled ~= false,
+        callback = function(checked)
             db.Enabled = checked
             ApplyEnableState(checked)
             UpdateAllWidgetStates()
         end,
-        true,
-        "Instance Reset",
-        "On",
-        "Off"
-    )
+        msgPopup = true, msgText = "Instance Reset", msgOn = "On", msgOff = "Off"
+    })
     row1:AddWidget(enableCheck, 0.5)
     card1:AddRow(row1, 36)
 
@@ -87,10 +85,13 @@ GUIFrame:RegisterContent("InstanceReset", function(scrollChild, yOffset)
 
     -- Message EditBox
     local row2 = GUIFrame:CreateRow(card2.content, 40)
-    local messageBox = GUIFrame:CreateEditBox(row2, "Message", db.Message or "Instance reset!", function(text)
-        db.Message = text
-        ApplySettings()
-    end)
+    local messageBox = GUIFrame:CreateEditBox(row2, "Message", {
+        value = db.Message or "Instance reset!",
+        callback = function(text)
+            db.Message = text
+            ApplySettings()
+        end
+    })
     row2:AddWidget(messageBox, 1)
     table.insert(allWidgets, messageBox)
     card2:AddRow(row2, 40)
