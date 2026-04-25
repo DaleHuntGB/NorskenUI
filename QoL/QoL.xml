@@ -8,7 +8,6 @@
     <Script file="XPBar.lua"/>
     <Script file="DurabilityUtil.lua"/>
     <Script file="CooldownStrings.lua"/>
-    <Script file="FocusCastbar.lua"/>
     <Script file="GateUsable.lua"/>
     <Script file="MiscVars.lua"/>
     <Script file="HuntersMark.lua"/>
