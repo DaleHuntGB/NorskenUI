@@ -185,6 +185,7 @@ end
 
 function CT:HidePreview()
     self.isPreview = false
+    if not self.frame then return end
     if not self.running then
         self.frame:SetScript("OnUpdate", nil)
         if self.db.CombatOnly then
