@@ -39,7 +39,8 @@ local HOVER_DURATION = 0.12
 
 local function SafeApplyPreviewFont(fontString, fontPath, size)
     if not fontString or not fontPath then return false end
-    local success = fontString:SetFont(fontPath, size or FONT_PREVIEW_SIZE, "")
+    fontString:SetShadowColor(0, 0, 0, 0)
+    local success = fontString:SetFont(fontPath, size or FONT_PREVIEW_SIZE, "OUTLINE")
     if not success then fontString:SetFontObject("GameFontHighlightSmall") end
     return success
 end
