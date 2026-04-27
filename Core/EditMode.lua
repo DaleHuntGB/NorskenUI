@@ -14,6 +14,7 @@ local tonumber = tonumber
 local IsMouseButtonDown = IsMouseButtonDown
 local STANDARD_TEXT_FONT = STANDARD_TEXT_FONT
 local UIParent = UIParent
+local math_floor = math.floor
 
 -- EditMode module
 local EditMode = {}
@@ -301,8 +302,8 @@ function EditMode:SetupDragHandlers(overlay, element)
         local newPos = {
             AnchorFrom = anchorFrom,
             AnchorTo = anchorTo,
-            XOffset = finalX,
-            YOffset = finalY,
+            XOffset = math_floor(finalX + 0.5),
+            YOffset = math_floor(finalY + 0.5),
         }
 
         element.setPosition(newPos)
@@ -846,8 +847,8 @@ function EditMode:CreateNudgeFrame()
         local newPos = {
             AnchorFrom = currentPos.AnchorFrom,
             AnchorTo = currentPos.AnchorTo,
-            XOffset = newX,
-            YOffset = newY,
+            XOffset = math_floor(newX + 0.5),
+            YOffset = math_floor(newY + 0.5),
         }
 
         element.setPosition(newPos)
@@ -1061,8 +1062,8 @@ function EditMode:UpdateNudgeFrameInfo()
 
     local pos = element.getPosition()
     if pos then
-        frame.xEditBox:SetText(string.format("%.1f", pos.XOffset or 0))
-        frame.yEditBox:SetText(string.format("%.1f", pos.YOffset or 0))
+        frame.xEditBox:SetText(string.format("%d", math_floor((pos.XOffset or 0) + 0.5)))
+        frame.yEditBox:SetText(string.format("%d", math_floor((pos.YOffset or 0) + 0.5)))
     end
 end
 
@@ -1136,12 +1137,11 @@ function EditMode:NudgeSelectedElement(deltaX, deltaY)
     local currentPos = element.getPosition()
     if not currentPos then return end
 
-    -- Calculate new position
     local newPos = {
         AnchorFrom = currentPos.AnchorFrom,
         AnchorTo = currentPos.AnchorTo,
-        XOffset = (currentPos.XOffset or 0) + deltaX,
-        YOffset = (currentPos.YOffset or 0) + deltaY,
+        XOffset = math_floor((currentPos.XOffset or 0) + deltaX + 0.5),
+        YOffset = math_floor((currentPos.YOffset or 0) + deltaY + 0.5),
     }
 
     -- Save and apply

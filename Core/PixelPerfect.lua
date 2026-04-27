@@ -105,20 +105,23 @@ function NRSKNUI:CalculateFramePosition(frame)
 end
 
 ---@param frame Frame?
----@param forceAbsolute boolean? If true, always snap to UIParent-relative position
+---@param forceAbsolute boolean? If true, recalculate anchor from screen position
 function NRSKNUI:SnapFrameToPixels(frame, forceAbsolute)
     if not frame then return end
 
     local point, relativeTo, relativePoint, xOfs, yOfs = frame:GetPoint(1)
     if not point then return end
 
-    if forceAbsolute or not relativeTo or relativeTo == UIParent then
+    if forceAbsolute then
         local newPoint, x, y = self:CalculateFramePosition(frame)
         frame:ClearAllPoints()
         frame:SetPoint(newPoint, UIParent, newPoint, x, y)
     else
+        local scale = UIParent:GetEffectiveScale()
+        local snappedX = math_floor((xOfs or 0) * scale + 0.5) / scale
+        local snappedY = math_floor((yOfs or 0) * scale + 0.5) / scale
         frame:ClearAllPoints()
-        frame:SetPoint(point, relativeTo, relativePoint, math_floor((xOfs or 0) + 0.5), math_floor((yOfs or 0) + 0.5))
+        frame:SetPoint(point, relativeTo or UIParent, relativePoint or point, snappedX, snappedY)
     end
 end
 
