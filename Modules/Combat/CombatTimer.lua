@@ -202,6 +202,9 @@ function CT:OnEnable()
     self:CreateFrame()
     self:ApplySettings()
 
+    -- Need to have a delayed positioning so that frames properly exists when trying to anchor to them on load
+    C_Timer.After(0.5, function() self:ApplyPosition() end)
+
     self:RegisterEvent("PLAYER_REGEN_DISABLED", function() self:StartTimer(false) end)
     self:RegisterEvent("PLAYER_REGEN_ENABLED", function() self:StopTimer(false) end)
     self:RegisterEvent("ENCOUNTER_START", function() self:StartTimer(true) end)
