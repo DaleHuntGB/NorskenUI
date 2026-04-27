@@ -53,6 +53,7 @@ function GUIFrame:CreateCheckbox(parent, labelText, config)
     NRSKNUI:ApplyThemeFont(label, "small")
     label:SetText(labelText or "")
     label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    label:SetShadowColor(0, 0, 0, 0)
     row.label = label
 
     local toggle = CreateFrame("Frame", nil, row, "BackdropTemplate")
@@ -327,9 +328,11 @@ function GUIFrame:CreateCheckbox(parent, labelText, config)
                 if oldEnter then oldEnter(self, ...) end
                 GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
                 GameTooltip:SetText(labelText or "", Theme.accent[1], Theme.accent[2], Theme.accent[3])
-                GameTooltip:AddLine(tooltipText, Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], true)
+                GameTooltip:AddLine(tooltipText, Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3],
+                    true)
                 if tooltipDefault ~= nil then
-                    local defaultStr = type(tooltipDefault) == "boolean" and (tooltipDefault and "On" or "Off") or tostring(tooltipDefault)
+                    local defaultStr = type(tooltipDefault) == "boolean" and (tooltipDefault and "On" or "Off") or
+                    tostring(tooltipDefault)
                     GameTooltip:AddLine("Default: " .. defaultStr, Theme.success[1], Theme.success[2], Theme.success[3])
                 end
                 GameTooltip:Show()

@@ -113,7 +113,8 @@ function TSP:ApplySettings()
     self.frame.icon:SetTexture(self:GetDisplayIcon())
 
     self.frame.text:SetText(self.db.TextLabel)
-    NRSKNUI:ApplyFontToText(self.frame.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, self.db.FontShadow or {})
+    NRSKNUI:ApplyFontToText(self.frame.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline,
+        self.db.FontShadow or {})
 
     local textColor = self.db.TextColor
     self.frame.text:SetTextColor(textColor[1], textColor[2], textColor[3], textColor[4])
@@ -122,7 +123,8 @@ function TSP:ApplySettings()
         self.frame.text.softOutline:SetShown(self.db.ShowText and self.db.FontOutline == "SOFTOUTLINE")
     end
 
-    NRSKNUI:ApplyFontToText(self.timerText, self.db.FontFace, self.db.TimerFontSize, self.db.FontOutline, self.db.FontShadow or {})
+    NRSKNUI:ApplyFontToText(self.timerText, self.db.FontFace, self.db.TimerFontSize, self.db.FontOutline,
+        self.db.FontShadow or {})
 
     local timerColor = self.db.TimerTextColor
     self.timerText:SetTextColor(timerColor[1], timerColor[2], timerColor[3], timerColor[4])
@@ -153,7 +155,8 @@ function TSP:StartGlow()
     local glowType = db.GlowType
 
     if glowType == "pixel" then
-        LCG.PixelGlow_Start(self.frame, db.GlowColor, db.GlowLines, db.GlowFrequency, db.GlowLength, db.GlowThickness, 0, 0, db.GlowBorder, nil)
+        LCG.PixelGlow_Start(self.frame, db.GlowColor, db.GlowLines, db.GlowFrequency, db.GlowLength, db.GlowThickness, 0,
+            0, db.GlowBorder, nil)
     elseif glowType == "autocast" then
         LCG.AutoCastGlow_Start(self.frame, db.GlowColor, db.GlowLines, db.GlowFrequency, db.GlowScale, 1, 1, nil)
     elseif glowType == "button" then
@@ -239,8 +242,7 @@ function TSP:HidePreview()
     self.isPreview = false
     self:StopGlow()
     self.durationObject = nil
-    self.timerText:SetText("")
-
+    if self.timerText then self.timerText:SetText("") end
     if self.frame then self.frame:Hide() end
 end
 
