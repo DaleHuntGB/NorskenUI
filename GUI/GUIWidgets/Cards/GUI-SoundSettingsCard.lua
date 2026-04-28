@@ -55,8 +55,7 @@ function GUIFrame:CreateSoundSettingsCard(scrollChild, yOffset, config)
         callback = function()
             local soundName = db[keys.onShowSound]
             if soundName and soundName ~= "None" and LSM then
-                local file = LSM:Fetch("sound", soundName)
-                if file then PlaySoundFile(file, "Master") end
+                NRSKNUI:PlaySound(LSM:Fetch("sound", soundName))
             end
         end,
     })
@@ -83,8 +82,7 @@ function GUIFrame:CreateSoundSettingsCard(scrollChild, yOffset, config)
         callback = function()
             local soundName = db[keys.onHideSound]
             if soundName and soundName ~= "None" and LSM then
-                local file = LSM:Fetch("sound", soundName)
-                if file then PlaySoundFile(file, "Master") end
+                NRSKNUI:PlaySound(LSM:Fetch("sound", soundName))
             end
         end,
     })

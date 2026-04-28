@@ -5,9 +5,7 @@ local GUIFrame = NRSKNUI.GUIFrame
 local LSM = NRSKNUI.LSM
 local Theme = NRSKNUI.Theme
 
--- Localization Setup
 local table_insert = table.insert
-local PlaySoundFile = PlaySoundFile
 local pairs, ipairs = pairs, ipairs
 
 -- Helper to get Misc module
@@ -114,15 +112,13 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
     row2a:AddWidget(whisperDropdown, 0.6)
     table_insert(allWidgets, whisperDropdown)
 
-    -- Test Whisper button
     local testWhisperBtn = GUIFrame:CreateButton(row2a, "Test", {
         width = 60,
         height = 24,
         callback = function()
             local soundName = db.WhisperSound
             if soundName and soundName ~= "None" and LSM then
-                local file = LSM:Fetch("sound", soundName)
-                if file then PlaySoundFile(file, "Master") end
+                NRSKNUI:PlaySound(LSM:Fetch("sound", soundName))
             end
         end,
     })
@@ -144,15 +140,13 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
     row2b:AddWidget(bnetDropdown, 0.6)
     table_insert(allWidgets, bnetDropdown)
 
-    -- Test BNet button
     local testBnetBtn = GUIFrame:CreateButton(row2b, "Test", {
         width = 60,
         height = 24,
         callback = function()
             local soundName = db.BNetWhisperSound
             if soundName and soundName ~= "None" and LSM then
-                local file = LSM:Fetch("sound", soundName)
-                if file then PlaySoundFile(file, "Master") end
+                NRSKNUI:PlaySound(LSM:Fetch("sound", soundName))
             end
         end,
     })

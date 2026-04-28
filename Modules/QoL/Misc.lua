@@ -13,29 +13,19 @@ end
 ---@class Misc: AceModule, AceEvent-3.0
 local MISC = NorskenUI:NewModule("Misc", "AceEvent-3.0")
 
--- Localization Setup
-local PlaySoundFile = PlaySoundFile
-
--- Update db, used for profile changes
 function MISC:UpdateDB()
     self.db = NRSKNUI.db.profile.Miscellaneous.WhisperSounds
 end
 
--- Module init
 function MISC:OnInitialize()
     self:UpdateDB()
     self:SetEnabledState(false)
 end
 
--- Play whisper sound
 function MISC:PlayWhisperSound(soundName)
     if not soundName or soundName == "None" then return end
-
-    -- Fetch sound file
     local file = LSM:Fetch("sound", soundName)
-    if file then
-        PlaySoundFile(file, "Master")
-    end
+    NRSKNUI:PlaySound(file)
 end
 
 -- Initialize whisper sounds
