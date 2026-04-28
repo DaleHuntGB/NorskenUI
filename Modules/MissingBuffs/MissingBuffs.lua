@@ -794,7 +794,7 @@ local function CreateStanceTextFrame()
     NRSKNUI:ApplyFontToText(stanceTextFrame.text, textDb.FontFace, textDb.FontSize, textDb.FontOutline, textDb.FontShadow)
 
     -- Text alignment based on anchor point
-    local textPoint = NRSKNUI:GetTextPointFromAnchor(textDb.Position.AnchorFrom)
+    local textPoint = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
     local textJustify = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
     stanceTextFrame.text:ClearAllPoints()
     stanceTextFrame.text:SetPoint(textPoint, stanceTextFrame, textPoint, 0, 0)
@@ -905,7 +905,7 @@ local function UpdateStanceTextDisplay()
         NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
 
         -- Update text alignment based on anchor point
-        local textPoint = NRSKNUI:GetTextPointFromAnchor(textDb.Position.AnchorFrom)
+        local textPoint = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
         local textJustify = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
         stanceTextFrame.text:ClearAllPoints()
         stanceTextFrame.text:SetPoint(textPoint, stanceTextFrame, textPoint, 0, 0)
@@ -1585,7 +1585,7 @@ function MBUFFS:ApplySettings()
         NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
 
         -- Update text alignment based on anchor point
-        local textPoint = NRSKNUI:GetTextPointFromAnchor(textDb.Position.AnchorFrom)
+        local textPoint = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
         local textJustify = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
         stanceTextFrame.text:ClearAllPoints()
         stanceTextFrame.text:SetPoint(textPoint, stanceTextFrame, textPoint, 0, 0)
@@ -1690,7 +1690,7 @@ local function ShowPreviewIcons()
             NRSKNUI:ApplyFramePosition(stanceTextFrame, textDb.Position, textDb)
 
             -- Update text alignment based on anchor point
-            local textPoint = NRSKNUI:GetTextPointFromAnchor(textDb.Position.AnchorFrom)
+            local textPoint = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
             local textJustify = NRSKNUI:GetTextJustifyFromAnchor(textDb.Position.AnchorFrom)
             stanceTextFrame.text:ClearAllPoints()
             stanceTextFrame.text:SetPoint(textPoint, stanceTextFrame, textPoint, 0, 0)

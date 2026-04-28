@@ -190,7 +190,7 @@ function FCB:ApplySettings()
 
     if self.targetText then
         local targetSettings = db.TargetNames
-        local anchorPoint = NRSKNUI:GetTextPointFromAnchor(targetSettings.Anchor)
+        local anchorPoint = NRSKNUI:GetTextJustifyFromAnchor(targetSettings.Anchor)
         self.targetText:ClearAllPoints()
         self.targetText:SetPoint(anchorPoint, self.frame, anchorPoint, targetSettings.XOffset, targetSettings.YOffset)
         self.targetText:SetJustifyH(anchorPoint)
@@ -199,7 +199,7 @@ function FCB:ApplySettings()
 
     if self.targetMarker then
         local markerSettings = db.TargetMarker
-        local anchorPoint = NRSKNUI:GetTextPointFromAnchor(markerSettings.Anchor)
+        local anchorPoint = NRSKNUI:GetTextJustifyFromAnchor(markerSettings.Anchor)
         self.targetMarker:SetSize(markerSettings.Size, markerSettings.Size)
         self.targetMarker:ClearAllPoints()
         self.targetMarker:SetPoint(anchorPoint, self.frame, anchorPoint, markerSettings.XOffset, markerSettings.YOffset)

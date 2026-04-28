@@ -91,17 +91,11 @@ function CT:ApplySettings()
     self.refreshRate = (self.db.Format == "MM:SS:MS") and 0.1 or 0.25
     NRSKNUI:ApplyFontToText(self.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, {})
 
-    local point = NRSKNUI:GetTextPointFromAnchor(self.db.Position.AnchorFrom)
+    local point = NRSKNUI:GetTextJustifyFromAnchor(self.db.Position.AnchorFrom)
+    local xOffset = point == "LEFT" and 4 or point == "RIGHT" and -4 or 0
     self.text:ClearAllPoints()
-    self.text:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(self.db.Position.AnchorFrom))
-
-    if point == "LEFT" then
-        self.text:SetPoint("LEFT", self.frame, "LEFT", 4, 0)
-    elseif point == "RIGHT" then
-        self.text:SetPoint("RIGHT", self.frame, "RIGHT", -4, 0)
-    else
-        self.text:SetPoint("CENTER")
-    end
+    self.text:SetPoint(point, self.frame, point, xOffset, 0)
+    self.text:SetJustifyH(point)
 
     local textColor = (self.running or self.db.CombatOnly) and self.db.ColorInCombat or self.db.ColorOutOfCombat
     self.text:SetTextColor(textColor[1], textColor[2], textColor[3], textColor[4])
@@ -111,14 +105,10 @@ function CT:ApplySettings()
         self.frame:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8X8",
             edgeFile = "Interface\\Buttons\\WHITE8X8",
-            tile = false,
-            tileSize = 0,
             edgeSize = backdrop.BorderSize,
-            insets = { left = 0, right = 0, top = 0, bottom = 0 }
         })
-        self.frame:SetBackdropColor(backdrop.Color[1], backdrop.Color[2], backdrop.Color[3], backdrop.Color[4])
-        self.frame:SetBackdropBorderColor(backdrop.BorderColor[1], backdrop.BorderColor[2], backdrop.BorderColor[3],
-            backdrop.BorderColor[4])
+        self.frame:SetBackdropColor(unpack(backdrop.Color))
+        self.frame:SetBackdropBorderColor(unpack(backdrop.BorderColor))
     else
         self.frame:SetBackdrop(nil)
     end
