@@ -366,3 +366,17 @@ function CC:OnDisable()
     if self.gcdFrame then self.gcdFrame:Hide() end
     self:UnregisterAllEvents()
 end
+
+function CC:ShowPreview()
+    self.isPreview = true
+    if not self.frame then self:CreateFrame() end
+    if self.frame then self.frame:Show() end
+    self:UpdateGCDVisibility()
+end
+
+function CC:HidePreview()
+    self.isPreview = false
+    if not self.db.Enabled and self.frame then
+        self.frame:Hide()
+    end
+end
