@@ -4,6 +4,8 @@ local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 
+--TODO: Update
+
 -- Helper to get InstanceReset module
 local function GetModule()
     if NorskenUI then

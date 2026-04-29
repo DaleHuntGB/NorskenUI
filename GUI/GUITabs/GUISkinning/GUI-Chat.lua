@@ -5,6 +5,8 @@ local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 local LSM = NRSKNUI.LSM
 
+--TODO: Update
+
 -- Localization Setup
 local table_insert = table.insert
 local pairs, ipairs = pairs, ipairs
