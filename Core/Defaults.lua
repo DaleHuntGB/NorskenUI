@@ -419,7 +419,7 @@ local Defaults = {
 
             BenchAlert = {
                 Enabled = false,
-                Text = "GROUP 8, TP OUT",
+                Text = "BENCH CUH",
                 Color = { 1, 0.3, 0.3, 1 },
                 FontFace = "Expressway",
                 FontSize = 36,
