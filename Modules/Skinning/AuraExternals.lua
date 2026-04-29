@@ -270,7 +270,6 @@ local function GetFrameSize(db)
 end
 
 function EXTERNALS:ApplySettings()
-    if NRSKNUI:ShouldNotLoadModule() then return end
     for button in pairs(self.buttons) do
         ApplyButtonSettings(button, self.db)
         if button:IsShown() and button.isExternal then
@@ -320,7 +319,6 @@ function EXTERNALS:UNIT_AURA(_, unit)
 end
 
 function EXTERNALS:OnEnable()
-    if NRSKNUI:ShouldNotLoadModule() then return end
     if not self.db.Enabled then return end
     self:CreateFrame()
     self:RegisterEvent("UNIT_AURA")
