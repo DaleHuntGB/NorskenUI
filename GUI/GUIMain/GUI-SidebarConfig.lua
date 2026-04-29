@@ -41,7 +41,7 @@ GUIFrame.SidebarConfig = {
             }
         },
         {
-            id = "miscellaneous_section",
+            id = "class_section",
             type = "header",
             text = "Class Util",
             defaultExpanded = false,
@@ -120,6 +120,15 @@ GUIFrame.SidebarConfig = {
                 { id = "Dungeon_PitOfSaron",        text = "Pit of Saron" },
                 { id = "Dungeon_SeatOfTriumvirate", text = "Seat of the Triumvirate" },
                 { id = "Dungeon_Skyreach",          text = "Skyreach" },
+            }
+        },
+        {
+            id = "misc_section",
+            type = "header",
+            text = "Random Utility",
+            defaultExpanded = false,
+            items = {
+                { id = "BenchAlert", text = "Bench Alert" },
             }
         },
     },

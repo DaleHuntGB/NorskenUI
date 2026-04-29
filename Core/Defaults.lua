@@ -416,6 +416,31 @@ local Defaults = {
 
         -- Miscellaneous Settings
         Miscellaneous = {
+
+            BenchAlert = {
+                Enabled = false,
+                Text = "GROUP 8, TP OUT",
+                Color = { 1, 0.3, 0.3, 1 },
+                FontFace = "Expressway",
+                FontSize = 36,
+                FontOutline = "SOFTOUTLINE",
+                FontShadow = {
+                    Enabled = false,
+                    Color = { 0, 0, 0, 1 },
+                    OffsetX = 1,
+                    YOffset = -1,
+                },
+                Strata = "HIGH",
+                anchorFrameType = "UIPARENT",
+                ParentFrame = "UIParent",
+                Position = {
+                    AnchorFrom = "CENTER",
+                    AnchorTo = "CENTER",
+                    XOffset = 0,
+                    YOffset = -250,
+                },
+            },
+
             Recuperate = {
                 Enabled = true,
                 LoadInRaid = true,
@@ -548,9 +573,15 @@ local Defaults = {
                 hideWhenMax = true,
                 width = 400,
                 height = 24,
-                FontFace = "Expressway", -- Font face
-                FontOutline = "OUTLINE", -- Font outline
+                FontFace = "Expressway",
+                FontOutline = "OUTLINE",
                 FontSize = 14,
+                FontShadow = {
+                    Enabled = false,
+                    Color = { 0, 0, 0, 1 },
+                    OffsetX = 1,
+                    OffsetY = -1,
+                },
                 Strata = "HIGH",
                 anchorFrameType = "UIPARENT", -- Anchor frame type
                 ParentFrame = "UIParent",     -- Parent frame name

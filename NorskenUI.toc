@@ -23,6 +23,7 @@ Modules/ClassUtil/ClassUtil.xml
 Modules/QoL/QoL.xml
 Modules/Skinning/Skinning.xml
 Modules/Dungeons/Dungeons.xml
+Modules/Miscellaneous/Miscellaneous.xml
 
 # Load GUI
 GUI/GUI.xml

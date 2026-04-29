@@ -94,6 +94,7 @@
 
     <!-- GUI Miscellaneous Tabs -->
     <Script file="GUITabs\GUI-Miscellaneous\GUI-IncarnStacks.lua" />
+    <Script file="GUITabs\GUI-Miscellaneous\GUI-BenchAlert.lua" />
 
     <Script file="GUIMain\GUI-MainFrame.lua" />
 </Ui>
