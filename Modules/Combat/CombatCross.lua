@@ -53,7 +53,7 @@ function CC:UpdateRangeColor()
         if self.lastInRange == false then self:ResetColor() end
         return
     end
-
+    if not self.rangeAbility then return end
     local inRange = C_Spell.IsSpellInRange(self.rangeAbility, "target")
     if inRange == nil then
         if self.lastInRange ~= nil then self:ResetColor() end
