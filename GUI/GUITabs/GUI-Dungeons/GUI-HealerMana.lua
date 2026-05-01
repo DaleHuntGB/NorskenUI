@@ -1,335 +1,155 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
-local LSM = NRSKNUI.LSM or LibStub("LibSharedMedia-3.0", true)
 
---TODO: Update
-
--- Localization
 local table_insert = table.insert
 local ipairs = ipairs
 
--- Helper to get HealerMana module
-local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("HealerMana", true)
-    end
-    return nil
-end
-
--- Register HealerMana tab content
 GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
-    -- Safety check for database
     local db = NRSKNUI.db and NRSKNUI.db.profile.HealerMana
-    if not db then
-        local errorCard = GUIFrame:CreateCard(scrollChild, "Error", yOffset)
-        errorCard:AddLabel("Database not available")
-        return yOffset + errorCard:GetContentHeight() + Theme.paddingMedium
-    end
+    if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local HM = GetModule()
+    ---@type HealerMana?
+    local HM = NorskenUI and NorskenUI:GetModule("HealerMana", true)
+    local manager = GUIFrame:CreateWidgetStateManager()
+    local postUpdateCallbacks = {}
 
-    -- Apply settings
     local function ApplySettings()
-        if HM then
-            HM:UpdateDB()
-            HM:ApplySettings()
-        end
+        if HM then HM:ApplySettings() end
     end
 
-    -- Refresh (recreate frames)
     local function Refresh()
-        if HM then
-            HM:Refresh()
-        end
+        if HM then HM:Refresh() end
     end
 
-    -- Helper to apply enable state
-    local function ApplyEnableState(enabled)
-        if not HM then return end
-        HM.db.Enabled = enabled
-        if enabled then
-            NorskenUI:EnableModule("HealerMana")
-        else
-            NorskenUI:DisableModule("HealerMana")
-        end
-    end
-
-    -- Track widgets for enable/disable logic
-    local allWidgets = {}
-
-    -- Update all widget states based on main toggle
     local function UpdateAllWidgetStates()
-        local mainEnabled = db.Enabled ~= false
-        for _, widget in ipairs(allWidgets) do
-            if widget.SetEnabled then
-                widget:SetEnabled(mainEnabled)
+        manager:UpdateAll(db.Enabled)
+        if db.Enabled then
+            for _, callback in ipairs(postUpdateCallbacks) do
+                callback()
             end
         end
     end
 
-    ----------------------------------------------------------------
-    -- Card 1: General Settings
-    ----------------------------------------------------------------
+    -- Card 1: Enable
     local card1 = GUIFrame:CreateCard(scrollChild, "Healer Mana Tracker", yOffset)
 
-    -- Enable Checkbox
-    local row1 = GUIFrame:CreateRow(card1.content, 36)
+    local row1 = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
     local enableCheck = GUIFrame:CreateCheckbox(row1, "Enable Healer Mana Tracker", {
-        value = db.Enabled ~= false,
+        value = db.Enabled,
         callback = function(checked)
             db.Enabled = checked
-            ApplyEnableState(checked)
+            if HM then
+                if checked then NorskenUI:EnableModule("HealerMana") else NorskenUI:DisableModule("HealerMana") end
+            end
             UpdateAllWidgetStates()
         end,
-        msgPopup = true, msgText = "Healer Mana", msgOn = "On", msgOff = "Off"
+        msgPopup = true,
+        msgText = "Healer Mana",
     })
-    row1:AddWidget(enableCheck, 0.5)
-    card1:AddRow(row1, 36)
+    row1:AddWidget(enableCheck, 1)
+    card1:AddRow(row1, Theme.rowHeightLast, 0)
 
-    yOffset = yOffset + card1:GetContentHeight() + Theme.paddingSmall
+    yOffset = card1:GetNextOffset()
 
-    ----------------------------------------------------------------
-    -- Card 2: Size Settings
-    ----------------------------------------------------------------
-    local card2 = GUIFrame:CreateCard(scrollChild, "Size Settings", yOffset)
-    table_insert(allWidgets, card2)
+    -- Card 2: Appearance
+    local card2 = GUIFrame:CreateCard(scrollChild, "Appearance", yOffset)
+    manager:Register(card2, "all")
 
-    -- Icon Size
-    local rowIcon = GUIFrame:CreateRow(card2.content, 36)
-    local iconSlider = GUIFrame:CreateSlider(rowIcon, "Icon Size", {
+    local row2a = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+    local iconSlider = GUIFrame:CreateSlider(row2a, "Icon Size", {
         min = 16,
         max = 64,
         step = 1,
         value = db.IconSize,
-        labelWidth = 30,
         callback = function(value)
             db.IconSize = value
             Refresh()
         end
     })
-    rowIcon:AddWidget(iconSlider, 1)
-    table_insert(allWidgets, iconSlider)
-    card2:AddRow(rowIcon, 36)
+    row2a:AddWidget(iconSlider, 1)
+    manager:Register(iconSlider, "all")
+    card2:AddRow(row2a, Theme.rowHeight)
 
-    yOffset = yOffset + card2:GetContentHeight() + Theme.paddingSmall
+    local sep1 = GUIFrame:CreateSeparator(card2.content)
+    card2:AddRow(sep1, Theme.rowHeightSeparator)
 
-    ----------------------------------------------------------------
-    -- Card 3: Name Text Settings
-    ----------------------------------------------------------------
-    local card3 = GUIFrame:CreateCard(scrollChild, "Name Text", yOffset)
-    table_insert(allWidgets, card3)
-
-    -- Name Font Size + X Offset
-    local rowName1 = GUIFrame:CreateRow(card3.content, 36)
-    local nameSizeSlider = GUIFrame:CreateSlider(rowName1, "Font Size", {
-        min = 8,
-        max = 44,
-        step = 1,
-        value = db.NameFontSize,
-        labelWidth = 30,
-        callback = function(value)
-            db.NameFontSize = value
-            Refresh()
-        end
-    })
-    rowName1:AddWidget(nameSizeSlider, 1)
-    table_insert(allWidgets, nameSizeSlider)
-    card3:AddRow(rowName1, 36)
-
-    -- Separator
-    local sepRow = GUIFrame:CreateRow(card3.content, 8)
-    local sep = GUIFrame:CreateSeparator(sepRow)
-    sepRow:AddWidget(sep, 1)
-    card3:AddRow(sepRow, 8)
-
-    local rowName3 = GUIFrame:CreateRow(card3.content, 36)
-    local nameXSlider = GUIFrame:CreateSlider(rowName3, "X Offset", {
-        min = -40,
-        max = 40,
-        step = 1,
-        value = db.NameXOffset,
-        labelWidth = 30,
-        callback = function(value)
-            db.NameXOffset = value
-            Refresh()
-        end
-    })
-    rowName3:AddWidget(nameXSlider, 0.5)
-    table_insert(allWidgets, nameXSlider)
-
-    -- Name Y Offset
-    local nameYSlider = GUIFrame:CreateSlider(rowName3, "Y Offset", {
-        min = -40,
-        max = 40,
+    local row2b = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+    local nameYSlider = GUIFrame:CreateSlider(row2b, "Name Y Offset", {
+        min = -30,
+        max = 30,
         step = 1,
         value = db.NameYOffset,
-        labelWidth = 30,
         callback = function(value)
             db.NameYOffset = value
             Refresh()
         end
     })
-    rowName3:AddWidget(nameYSlider, 0.5)
-    table_insert(allWidgets, nameYSlider)
-    card3:AddRow(rowName3, 36)
+    row2b:AddWidget(nameYSlider, 0.5)
+    manager:Register(nameYSlider, "all")
 
-    yOffset = yOffset + card3:GetContentHeight() + Theme.paddingSmall
-
-    ----------------------------------------------------------------
-    -- Card 4: Mana Text Settings
-    ----------------------------------------------------------------
-    local card4 = GUIFrame:CreateCard(scrollChild, "Mana Text", yOffset)
-    table_insert(allWidgets, card4)
-
-    -- Mana Font Size + X Offset
-    local rowMana1 = GUIFrame:CreateRow(card4.content, 36)
-    local manaSizeSlider = GUIFrame:CreateSlider(rowMana1, "Font Size", {
-        min = 8,
-        max = 44,
-        step = 1,
-        value = db.ManaFontSize,
-        labelWidth = 30,
-        callback = function(value)
-            db.ManaFontSize = value
-            Refresh()
-        end
-    })
-    rowMana1:AddWidget(manaSizeSlider, 1)
-    table_insert(allWidgets, manaSizeSlider)
-    card4:AddRow(rowMana1, 36)
-
-    -- Separator
-    local sepRow2 = GUIFrame:CreateRow(card4.content, 8)
-    local sep2 = GUIFrame:CreateSeparator(sepRow2)
-    sepRow2:AddWidget(sep2, 1)
-    card4:AddRow(sepRow2, 8)
-
-    local rowMana2 = GUIFrame:CreateRow(card4.content, 36)
-    local manaXSlider = GUIFrame:CreateSlider(rowMana2, "X Offset", {
-        min = -40,
-        max = 40,
-        step = 1,
-        value = db.ManaXOffset,
-        labelWidth = 30,
-        callback = function(value)
-            db.ManaXOffset = value
-            Refresh()
-        end
-    })
-    rowMana2:AddWidget(manaXSlider, 0.5)
-    table_insert(allWidgets, manaXSlider)
-
-    -- Mana Y Offset
-    local manaYSlider = GUIFrame:CreateSlider(rowMana2, "Y Offset", {
-        min = -40,
-        max = 40,
+    local manaYSlider = GUIFrame:CreateSlider(row2b, "Mana Y Offset", {
+        min = -30,
+        max = 30,
         step = 1,
         value = db.ManaYOffset,
-        labelWidth = 30,
         callback = function(value)
             db.ManaYOffset = value
             Refresh()
         end
     })
-    rowMana2:AddWidget(manaYSlider, 0.5)
-    table_insert(allWidgets, manaYSlider)
-    card4:AddRow(rowMana2, 36)
+    row2b:AddWidget(manaYSlider, 0.5)
+    manager:Register(manaYSlider, "all")
+    card2:AddRow(row2b, Theme.rowHeight)
 
-    yOffset = yOffset + card4:GetContentHeight() + Theme.paddingSmall
+    local sep2 = GUIFrame:CreateSeparator(card2.content)
+    card2:AddRow(sep2, Theme.rowHeightSeparator)
 
-    ----------------------------------------------------------------
-    -- Card 5: Mana Text Color
-    ----------------------------------------------------------------
-    local card5 = GUIFrame:CreateCard(scrollChild, "Mana Text Color", yOffset)
-    table_insert(allWidgets, card5)
-
-    -- Mana Color
-    local rowColor = GUIFrame:CreateRow(card5.content, 37)
-    local manaColorPicker = GUIFrame:CreateColorPicker(rowColor, "Mana Text Color", {
+    local row2c = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+    local manaColorPicker = GUIFrame:CreateColorPicker(row2c, "Mana Text Color", {
         color = db.HighManaColor,
         callback = function(r, g, b, a)
             db.HighManaColor = { r, g, b, a }
             ApplySettings()
         end
     })
-    rowColor:AddWidget(manaColorPicker, 0.5)
-    table_insert(allWidgets, manaColorPicker)
-    card5:AddRow(rowColor, 37)
+    row2c:AddWidget(manaColorPicker, 1)
+    manager:Register(manaColorPicker, "all")
+    card2:AddRow(row2c, Theme.rowHeightLast, 0)
 
-    yOffset = yOffset + card5:GetContentHeight() + Theme.paddingSmall
+    yOffset = card2:GetNextOffset()
 
-    ----------------------------------------------------------------
-    -- Card 6: Font Settings
-    ----------------------------------------------------------------
-    local card6 = GUIFrame:CreateCard(scrollChild, "Font Settings", yOffset)
-    table_insert(allWidgets, card6)
-
-    -- Font Face + Outline
-    local fontList = {}
-    if LSM then
-        for name in pairs(LSM:HashTable("font")) do fontList[name] = name end
-    else
-        fontList["Friz Quadrata TT"] = "Friz Quadrata TT"
-    end
-
-    local rowFont = GUIFrame:CreateRow(card6.content, 40)
-    local fontDropdown = GUIFrame:CreateDropdown(rowFont, "Font", {
-        options = fontList,
-        value = db.FontFace or "Expressway",
-        callback = function(value)
-            db.FontFace = value
-            Refresh()
-        end,
-        searchable = true,
-        isFontPreview = true
+    -- Card 3: Font Settings
+    local fontCard, fontOffset, fontWidgets = GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, {
+        db = db,
+        includeSoftOutline = true,
+        fontSizes = {
+            { label = "Name Size", dbKey = "NameFontSize" },
+            { label = "Mana Size", dbKey = "ManaFontSize" },
+        },
+        fontSizeRange = { 8, 44 },
+        onChangeCallback = Refresh,
     })
-    rowFont:AddWidget(fontDropdown, 0.5)
-    table_insert(allWidgets, fontDropdown)
+    manager:Register(fontCard, "all")
+    manager:RegisterGroup(fontWidgets, "all")
+    if fontCard.UpdateShadowState then table_insert(postUpdateCallbacks, fontCard.UpdateShadowState) end
 
-    local outlineList = {
-        { key = "NONE",         text = "None" },
-        { key = "OUTLINE",      text = "Outline" },
-        { key = "THICKOUTLINE", text = "Thick" },
-        { key = "SOFTOUTLINE",  text = "Soft" },
-    }
-    local outlineDropdown = GUIFrame:CreateDropdown(rowFont, "Outline", {
-        options = outlineList,
-        value = db.FontOutline or "SOFTOUTLINE",
-        callback = function(value)
-            db.FontOutline = value
-            Refresh()
-        end
-    })
-    rowFont:AddWidget(outlineDropdown, 0.5)
-    table_insert(allWidgets, outlineDropdown)
-    card6:AddRow(rowFont, 40)
+    yOffset = fontOffset
 
-    yOffset = yOffset + card6:GetContentHeight() + Theme.paddingSmall
-
-    ----------------------------------------------------------------
-    -- Card 7: Position
-    ----------------------------------------------------------------
-    local card7, newOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
+    -- Card 4: Position
+    local posCard, posOffset = GUIFrame:CreatePositionCard(scrollChild, yOffset, {
         db = db,
         showAnchorFrameType = true,
         showStrata = true,
-        onChangeCallback = ApplySettings,
+        onChangeCallback = function() if HM then HM:ApplyPosition() end end,
     })
+    manager:Register(posCard, "all")
+    if posCard.positionWidgets then manager:RegisterGroup(posCard.positionWidgets, "all") end
 
-    if card7.positionWidgets then
-        for _, widget in ipairs(card7.positionWidgets) do
-            table_insert(allWidgets, widget)
-        end
-    end
-    table_insert(allWidgets, card7)
+    yOffset = posOffset
 
-    yOffset = newOffset
-
-    -- Apply initial widget states
     UpdateAllWidgetStates()
-    yOffset = yOffset - Theme.paddingSmall
+
     return yOffset
 end)
