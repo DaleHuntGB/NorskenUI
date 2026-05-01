@@ -54,6 +54,18 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
         end
     end
 
+    local function RelayoutCards()
+        local y = allCards[1] and allCards[1]:GetNextOffset() or yOffset
+        for i = 2, #allCards do
+            local card = allCards[i]
+            card:ClearAllPoints()
+            card:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", Theme.paddingSmall, -y)
+            card:SetPoint("RIGHT", scrollChild, "RIGHT", -Theme.paddingSmall, 0)
+            card._yOffset = y
+            y = card:GetNextOffset()
+        end
+    end
+
     local statusbarList = {}
     if LSM then
         for name in pairs(LSM:HashTable("statusbar")) do
@@ -254,6 +266,25 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
     table_insert(postUpdateCallbacks, UpdateHoldTimerState)
 
     yOffset = card3:GetNextOffset()
+
+    -- Card: Important Spell Glow
+    local glowCard, glowOffset, glowWidgets = GUIFrame:CreateGlowSettingsCard(scrollChild, yOffset, {
+        title = "Important Spell Glow",
+        db = db.ImportantGlow,
+        glowTypes = { "pixel", "autocast" },
+        onChangeCallback = function()
+            if FCB then FCB:ResetGlow() end
+            ApplySettings()
+            RelayoutCards()
+        end,
+        onHeightChange = RelayoutCards,
+    })
+    table_insert(allCards, glowCard)
+    manager:Register(glowCard, "all")
+    manager:RegisterGroup(glowWidgets, "all")
+    if glowCard.updateTypeVisibility then table_insert(postUpdateCallbacks, glowCard.updateTypeVisibility) end
+
+    yOffset = glowOffset
 
     -- Card 4: Target Names
     local card4 = GUIFrame:CreateCard(scrollChild, "Target Names", yOffset)

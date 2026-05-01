@@ -22,11 +22,14 @@ local CreateColor = CreateColor
 local GetTime = GetTime
 local UnitSpellTargetName = UnitSpellTargetName
 local UnitSpellTargetClass = UnitSpellTargetClass
-local GetPlayerInfoByGUID = GetPlayerInfoByGUID
+local UnitNameFromGUID = UnitNameFromGUID
+local UnitClassFromGUID = UnitClassFromGUID
 local GetRaidTargetIndex = GetRaidTargetIndex
 local SetRaidTargetIconTexture = SetRaidTargetIconTexture
 local random = math.random
 local ipairs = ipairs
+
+local LCG = LibStub("LibCustomGlow-1.0", true)
 
 local FALLBACK_ICON = 136243
 local INTERRUPTED = "Interrupted"
@@ -209,6 +212,7 @@ function FCB:ApplySettings()
 
     if self.isPreview then
         self:RefreshPreviewSoftOutlines()
+        self:RefreshPreviewGlow()
     end
 end
 
@@ -229,6 +233,20 @@ function FCB:RefreshPreviewSoftOutlines()
     end
 end
 
+function FCB:RefreshPreviewGlow()
+    if not self.isPreview then return end
+
+    self:ResetGlow()
+
+    if self.db.ImportantGlow.GlowEnabled and self.casting then
+        self:InitGlow()
+        local glowFrame = self:GetGlowFrame()
+        if glowFrame then
+            glowFrame:SetAlpha(1)
+        end
+    end
+end
+
 function FCB:UpdateBarColor(interruptDuration)
     if not self.castBar then return end
     local kick = self.db.KickIndicator
@@ -241,20 +259,19 @@ function FCB:UpdateBarColor(interruptDuration)
         return
     end
 
-    if kick.Enabled and self.interruptId and hasActiveCast then
-        local cooldown = interruptDuration or C_Spell.GetSpellCooldownDuration(self.interruptId)
-        if not cooldown then return end
-
-        local interruptibleColor = C_CurveUtil.EvaluateColorFromBoolean(
-            cooldown:IsZero(),
-            self.colors.Cast,
-            self.colors.NotReady
-        )
-        texture:SetVertexColorFromBoolean(self.notInterruptible, self.colors.Uninterruptible, interruptibleColor)
-        return
-    end
-
     if kick.Enabled and hasActiveCast then
+        if self.interruptId then
+            local cooldown = interruptDuration or C_Spell.GetSpellCooldownDuration(self.interruptId)
+            if cooldown then
+                local interruptibleColor = C_CurveUtil.EvaluateColorFromBoolean(
+                    cooldown:IsZero(),
+                    self.colors.Cast,
+                    self.colors.NotReady
+                )
+                texture:SetVertexColorFromBoolean(self.notInterruptible, self.colors.Uninterruptible, interruptibleColor)
+                return
+            end
+        end
         texture:SetVertexColorFromBoolean(self.notInterruptible, self.colors.Uninterruptible, self.colors.NotReady)
         return
     end
@@ -434,6 +451,68 @@ function FCB:SetupKickCooldownBar()
     end
 end
 
+function FCB:GetGlowFrame()
+    if not self.frame then return nil end
+    local glowType = self.db.ImportantGlow.GlowType
+    if glowType == "pixel" then
+        return self.frame._PixelGlow
+    elseif glowType == "autocast" then
+        return self.frame._AutoCastGlow
+    end
+    return self.frame._PixelGlow
+end
+
+function FCB:InitGlow()
+    if not self.frame or not LCG then return end
+    if self.glowInitialized then return end
+
+    local glowDb = self.db.ImportantGlow
+    local glowType = glowDb.GlowType
+
+    if glowType == "autocast" then
+        LCG.AutoCastGlow_Start(self.frame, glowDb.GlowColor, glowDb.GlowLines, glowDb.GlowFrequency,
+            glowDb.GlowScale, 1, 1, nil)
+    else
+        LCG.PixelGlow_Start(self.frame, glowDb.GlowColor, glowDb.GlowLines, glowDb.GlowFrequency,
+            glowDb.GlowLength, glowDb.GlowThickness, 0, 0, glowDb.GlowBorder, nil)
+    end
+
+    local glowFrame = self:GetGlowFrame()
+    if glowFrame then
+        glowFrame:SetAlpha(0)
+    end
+
+    self.glowInitialized = true
+end
+
+function FCB:ShowGlow(isImportant)
+    if not self.db.ImportantGlow.GlowEnabled then return end
+    if not LCG then return end
+
+    self:InitGlow()
+
+    local glowFrame = self:GetGlowFrame()
+    if glowFrame then
+        glowFrame:SetAlphaFromBoolean(isImportant)
+    end
+end
+
+function FCB:HideGlow()
+    local glowFrame = self:GetGlowFrame()
+    if glowFrame then
+        glowFrame:SetAlpha(0)
+    end
+end
+
+function FCB:ResetGlow()
+    if not self.frame or not LCG then return end
+
+    LCG.PixelGlow_Stop(self.frame)
+    LCG.AutoCastGlow_Stop(self.frame)
+
+    self.glowInitialized = false
+end
+
 function FCB:OnCastEvent(event, unit, ...)
     if unit ~= "focus" then return end
     if event:find("START") then
@@ -530,6 +609,10 @@ function FCB:StartCast()
     self:SetupKickCooldownBar()
     self:EnsureOnUpdate()
     self.frame:Show()
+
+    if self.db.ImportantGlow.GlowEnabled and spellID then
+        self:ShowGlow(C_Spell.IsSpellImportant(spellID))
+    end
 end
 
 function FCB:EndCast(showHold, wasInterrupted, interruptedBy)
@@ -540,6 +623,7 @@ function FCB:EndCast(showHold, wasInterrupted, interruptedBy)
     if not holdSettings.Enabled then
         self.spark:Hide()
         self:HideTargetText()
+        self:HideGlow()
         self:ResetCastState()
         self.frame:Hide()
         return
@@ -548,6 +632,7 @@ function FCB:EndCast(showHold, wasInterrupted, interruptedBy)
     self.spark:Hide()
     self.kickTick:SetAlpha(0)
     self:HideTargetText()
+    self:HideGlow()
 
     self.castBar:SetMinMaxValues(0, 1)
     self.castBar:SetValue(1)
@@ -559,7 +644,8 @@ function FCB:EndCast(showHold, wasInterrupted, interruptedBy)
     if wasInterrupted then
         local displayText, plainText = INTERRUPTED, INTERRUPTED
         if interruptedBy then
-            local _, classToken, _, _, _, name = GetPlayerInfoByGUID(interruptedBy)
+            local name = UnitNameFromGUID(interruptedBy)
+            local classToken = select(2, UnitClassFromGUID(interruptedBy))
             if name then
                 local color = classToken and C_ClassColor.GetClassColor(classToken)
                 local coloredName = color and color:WrapTextInColorCode(name) or name
@@ -710,6 +796,14 @@ function FCB:ShowPreview()
     self:EnsureOnUpdate()
     self.frame:Show()
 
+    if self.db.ImportantGlow.GlowEnabled then
+        self:InitGlow()
+        local glowFrame = self:GetGlowFrame()
+        if glowFrame then
+            glowFrame:SetAlpha(1)
+        end
+    end
+
     if self.targetText then
         local name = UnitName("player")
         local classToken = select(2, UnitClass("player"))
@@ -748,6 +842,7 @@ function FCB:ShowPreviewInterrupted()
     self.kickTick:SetAlpha(0)
     self.kickCooldownBar:SetValue(0)
     self:HideTargetText()
+    self:HideGlow()
     if self.targetMarker then self.targetMarker:Hide() end
 
     self.castBar:SetMinMaxValues(0, 1)
@@ -817,6 +912,14 @@ function FCB:StartPreviewCast()
             self.targetMarker:Hide()
         end
     end
+
+    if self.db.ImportantGlow.GlowEnabled then
+        self:InitGlow()
+        local glowFrame = self:GetGlowFrame()
+        if glowFrame then
+            glowFrame:SetAlpha(1)
+        end
+    end
 end
 
 function FCB:HidePreview()
@@ -831,6 +934,7 @@ function FCB:HidePreview()
         self.previewHoldTimer = nil
     end
     self:HideTargetText()
+    self:ResetGlow()
     self.kickTick:SetAlpha(0)
     self.kickCooldownBar:SetValue(0)
     if self.targetMarker then

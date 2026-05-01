@@ -35,6 +35,20 @@ function GUIFrame:CreateGlowSettingsCard(scrollChild, yOffset, config)
     local dbKeys = config.dbKeys or {}
     local onChange = config.onChangeCallback
     local onHeightChange = config.onHeightChange
+    local allowedTypes = config.glowTypes
+
+    local glowTypeOptions = GLOW_TYPES
+    if allowedTypes then
+        glowTypeOptions = {}
+        for _, glowType in ipairs(GLOW_TYPES) do
+            for _, allowed in ipairs(allowedTypes) do
+                if glowType.key == allowed then
+                    table_insert(glowTypeOptions, glowType)
+                    break
+                end
+            end
+        end
+    end
 
     local keys = {
         enabled = dbKeys.enabled or "GlowEnabled",
@@ -77,7 +91,7 @@ function GUIFrame:CreateGlowSettingsCard(scrollChild, yOffset, config)
     table_insert(widgets, enableCheck)
 
     local typeDropdown = GUIFrame:CreateDropdown(row1, "Type", {
-        options = GLOW_TYPES,
+        options = glowTypeOptions,
         value = db[keys.type],
         callback = function(val)
             setValue(keys.type, val)
