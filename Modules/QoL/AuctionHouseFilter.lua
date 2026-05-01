@@ -9,7 +9,6 @@ end
 ---@class AuctionHouseFilter: AceModule, AceEvent-3.0
 local AHF = NorskenUI:NewModule("AuctionHouseFilter", "AceEvent-3.0")
 
-local GetExpansionLevel = GetExpansionLevel
 local C_Timer = C_Timer
 local C_AddOns = C_AddOns
 
@@ -84,25 +83,16 @@ end
 
 function AHF:ApplyAuctionatorFilter()
     if not self.db.Enabled then return end
+    if not self.db.Auctionator.FocusSearchBar then return end
     if not C_AddOns.IsAddOnLoaded("Auctionator") then return end
 
     C_Timer.After(0, function()
-        local frame = _G["AuctionatorShoppingTabItemFrame"]
+        local frame = _G["AuctionatorShoppingFrame"]
         if not frame then return end
 
-        if self.db.Auctionator.CurrentExpansion then
-            local dropdown = frame.ExpansionContainer and frame.ExpansionContainer.DropDown
-            if dropdown and dropdown.SetValue then
-                local currentExpansion = GetExpansionLevel() or 12
-                dropdown:SetValue(currentExpansion)
-            end
-        end
-
-        if self.db.Auctionator.FocusSearchBar then
-            local searchBox = frame.SearchBox or (frame.SearchContainer and frame.SearchContainer.SearchBox)
-            if searchBox and searchBox.SetFocus then
-                searchBox:SetFocus()
-            end
+        local searchBox = frame.SearchOptions and frame.SearchOptions.SearchString
+        if searchBox and searchBox.SetFocus then
+            searchBox:SetFocus()
         end
     end)
 end

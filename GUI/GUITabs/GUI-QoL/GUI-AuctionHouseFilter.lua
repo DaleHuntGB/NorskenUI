@@ -113,20 +113,6 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     local card4 = GUIFrame:CreateCard(scrollChild, auctionatorTitle, yOffset)
     manager:Register(card4, "all")
 
-    local row4a = GUIFrame:CreateRow(card4.content, Theme.rowHeight)
-    local atrExpansionCheck = GUIFrame:CreateCheckbox(row4a, "Current Expansion Only", {
-        value = db.Auctionator.CurrentExpansion,
-        callback = function(checked)
-            db.Auctionator.CurrentExpansion = checked
-        end
-    })
-    row4a:AddWidget(atrExpansionCheck, 1)
-    manager:Register(atrExpansionCheck, "all", "auctionator")
-    card4:AddRow(row4a, Theme.rowHeight)
-
-    local sepRow3 = GUIFrame:CreateSeparator(card4.content)
-    card4:AddRow(sepRow3, Theme.rowHeightSeparator)
-
     local row4b = GUIFrame:CreateRow(card4.content, Theme.rowHeightLast)
     local atrFocusCheck = GUIFrame:CreateCheckbox(row4b, "Auto Focus Search Bar", {
         value = db.Auctionator.FocusSearchBar,
