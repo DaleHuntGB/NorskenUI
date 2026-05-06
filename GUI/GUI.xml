@@ -91,7 +91,9 @@
     <Script file="GUITabs\GUISkinning\GUI-UICleanup.lua" />
     <Script file="GUITabs\GUISkinning\GUI-BlizzardRaidmanager.lua" />
     <Script file="GUITabs\GUISkinning\GUI-UIWidgetsTab.lua" />
+    <Script file="GUITabs\GUISkinning\GUI-BnetFrame.lua" />
     <Include file="GUITabs\GUISkinning\CustomSkin\CustomSkin.xml" />
+
 
     <!-- GUI Dungeons Tabs -->
     <Script file="GUITabs\GUI-Dungeons\GUI-InstanceReset.lua" />

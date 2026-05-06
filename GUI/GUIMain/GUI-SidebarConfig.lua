@@ -95,6 +95,7 @@ GUIFrame.SidebarConfig = {
                 { id = "DetailsBackdrop",    text = "Details Backdrop" },
                 { id = "BlizzardRM",         text = "Raid Manager" },
                 { id = "UIWidgets",          text = "UI Widgets" },
+                { id = "Battlenet",          text = "Battlenet Popup" },
             }
         },
         {
