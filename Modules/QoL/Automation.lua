@@ -21,6 +21,13 @@ local GetMoney = GetMoney
 local GetGuildBankWithdrawMoney = GetGuildBankWithdrawMoney
 local CinematicFrame_CancelCinematic = CinematicFrame_CancelCinematic
 local GameMovieFinished = GameMovieFinished
+local GetNumQuestChoices = GetNumQuestChoices
+local GetQuestReward = GetQuestReward
+local GetNumActiveQuests = GetNumActiveQuests
+local GetActiveTitle = GetActiveTitle
+local ipairs = ipairs
+local AcceptQuest = AcceptQuest
+local GetNumAvailableQuests = GetNumAvailableQuests
 
 function AUTO:UpdateDB()
     self.db = NRSKNUI.db.profile.Miscellaneous.Automation
@@ -133,6 +140,68 @@ local function ApplyAutoLoot()
     C_CVar.SetCVar("autoLootDefault", AUTO.db.AutoLoot and "1" or "0")
 end
 
+local questCompleteFrame = nil
+local function SetupAutoCompleteQuest()
+    if not AUTO.db.AutoCompleteQuest then return end
+    if questCompleteFrame then return end
+
+    questCompleteFrame = CreateFrame("Frame")
+    questCompleteFrame:RegisterEvent("QUEST_COMPLETE")
+    questCompleteFrame:RegisterEvent("QUEST_GREETING")
+    questCompleteFrame:RegisterEvent("GOSSIP_SHOW")
+    questCompleteFrame:SetScript("OnEvent", function(_, event)
+        if IsShiftKeyDown() then return end
+
+        if event == "QUEST_COMPLETE" then
+            local numChoices = GetNumQuestChoices()
+            if numChoices <= 1 then GetQuestReward(numChoices) end
+        elseif event == "QUEST_GREETING" then
+            local numActive = GetNumActiveQuests()
+            for i = 1, numActive do
+                local _, isComplete = GetActiveTitle(i)
+                if isComplete then
+                    C_GossipInfo.SelectActiveQuest(i)
+                    return
+                end
+            end
+        elseif event == "GOSSIP_SHOW" then
+            local activeQuests = C_GossipInfo.GetActiveQuests()
+            if activeQuests then
+                for _, quest in ipairs(activeQuests) do
+                    if quest.isComplete then
+                        C_GossipInfo.SelectActiveQuest(quest.questID)
+                        return
+                    end
+                end
+            end
+        end
+    end)
+end
+
+local questAcceptFrame = nil
+local function SetupAutoAcceptQuest()
+    if not AUTO.db.AutoAcceptQuest then return end
+    if questAcceptFrame then return end
+
+    questAcceptFrame = CreateFrame("Frame")
+    questAcceptFrame:RegisterEvent("QUEST_DETAIL")
+    questAcceptFrame:RegisterEvent("QUEST_GREETING")
+    questAcceptFrame:RegisterEvent("GOSSIP_SHOW")
+    questAcceptFrame:SetScript("OnEvent", function(_, event)
+        if IsShiftKeyDown() then return end
+
+        if event == "QUEST_DETAIL" then
+            AcceptQuest()
+        elseif event == "QUEST_GREETING" then
+            local numQuests = GetNumAvailableQuests()
+            if numQuests > 0 then C_GossipInfo.SelectAvailableQuest(1) end
+        elseif event == "GOSSIP_SHOW" then
+            local quests = C_GossipInfo.GetAvailableQuests()
+            if quests and #quests > 0 then C_GossipInfo.SelectAvailableQuest(quests[1].questID) end
+        end
+    end)
+end
+
 local function ApplyHideHelptips()
     if not AUTO.db.HideHelptips then return end
     C_CVar.RegisterCVar("hideHelptips", 1)
@@ -150,6 +219,8 @@ function AUTO:ApplySettings()
     SetupAutoFillDelete()
     ApplyAutoLoot()
     ApplyHideHelptips()
+    SetupAutoCompleteQuest()
+    SetupAutoAcceptQuest()
 end
 
 function AUTO:OnEnable()

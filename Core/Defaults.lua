@@ -681,6 +681,8 @@ local Defaults = {
                 AutoRoleCheck = true,
                 AutoFillDelete = true,
                 AutoLoot = true,
+                AutoCompleteQuest = false,
+                AutoAcceptQuest = false,
             },
             DragonRiding = {
                 Enabled = true,
