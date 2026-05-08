@@ -19,6 +19,8 @@ local table_sort = table.sort
 local tContains = tContains
 local CreateFrame = CreateFrame
 local UnitAffectingCombat = UnitAffectingCombat
+local UnitLevel = UnitLevel
+local GetMaxLevelForLatestExpansion = GetMaxLevelForLatestExpansion
 local UIParent = UIParent
 local C_Container = C_Container
 local C_Item = C_Item
@@ -46,6 +48,7 @@ local textPool = {}
 local activeTexts = {}
 local itemCountCache = {}
 local itemLinkCache = {}
+local pendingItemLoads = {}
 
 local function ScanBags()
     wipe(itemCountCache)
@@ -275,6 +278,11 @@ local function UpdateDisplay()
         return
     end
 
+    if UnitLevel("player") < GetMaxLevelForLatestExpansion() then
+        if containerFrame then containerFrame:Hide() end
+        return
+    end
+
     local activeGroup = db.ActiveGroup
     local items = db.Items or {}
 
@@ -312,15 +320,26 @@ local function UpdateDisplay()
                     end
 
                     if count <= threshold then
-                        local itemName = C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
-                        table_insert(missingItems, {
-                            itemID = itemID,
-                            name = itemName,
-                            count = count,
-                            threshold = threshold,
-                            color = itemSettings.color or db.Display.DefaultColor,
-                            breakdown = breakdown,
-                        })
+                        local itemName = C_Item.GetItemNameByID(itemID)
+                        if not itemName then
+                            if not pendingItemLoads[itemID] then
+                                pendingItemLoads[itemID] = true
+                                local item = Item:CreateFromItemID(itemID)
+                                item:ContinueOnItemLoad(function()
+                                    pendingItemLoads[itemID] = nil
+                                    UpdateDisplay()
+                                end)
+                            end
+                        else
+                            table_insert(missingItems, {
+                                itemID = itemID,
+                                name = itemName,
+                                count = count,
+                                threshold = threshold,
+                                color = itemSettings.color or db.Display.DefaultColor,
+                                breakdown = breakdown,
+                            })
+                        end
                     end
                 end
             end
@@ -361,6 +380,18 @@ function MITEMS:OnInitialize()
     self:SetEnabledState(false)
 end
 
+local function PreCacheItems()
+    local db = MITEMS.db
+    if not db or not db.Items then return end
+
+    for itemID in pairs(db.Items) do
+        if not C_Item.GetItemNameByID(itemID) then
+            local item = Item:CreateFromItemID(itemID)
+            item:ContinueOnItemLoad(function() end)
+        end
+    end
+end
+
 function MITEMS:OnEnable()
     self:UpdateDB()
     CreateContainerFrame()
@@ -376,7 +407,8 @@ function MITEMS:OnEnable()
         LS.RegisterPlayerSpecChange(self, UpdateDisplay)
     end
 
-    UpdateDisplay()
+    PreCacheItems()
+    C_Timer.After(0.5, UpdateDisplay)
 end
 
 function MITEMS:RegisterEditModeElements()
@@ -463,6 +495,12 @@ local function GetItemsBelowThreshold()
                                 threshold = threshold,
                                 buyQuantity = buyQty,
                             })
+                        elseif not pendingItemLoads[itemID] then
+                            pendingItemLoads[itemID] = true
+                            local item = Item:CreateFromItemID(itemID)
+                            item:ContinueOnItemLoad(function()
+                                pendingItemLoads[itemID] = nil
+                            end)
                         end
                     end
                 end
