@@ -151,6 +151,7 @@ GUIFrame:RegisterPanel("missingItems", function(container)
         sidebarWidth = SIDEBAR_WIDTH,
         listPadding = LIST_PADDING,
         itemHeight = ITEM_HEIGHT,
+        activeItem = true,
 
         getItems = GetSidebarItems,
         getItemKey = function(item) return item.key end,

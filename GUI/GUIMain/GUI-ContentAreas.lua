@@ -198,6 +198,7 @@ function NRSKNUI.GUI.CreateMiniSidebar(container, options)
     local listPadding = options.listPadding or 4
     local itemHeight = options.itemHeight or 26
     local itemSpacing = options.itemSpacing or 1
+    local activeItem = options.activeItem or false
 
     local getItems = options.getItems
     local renderItem = options.renderItem
@@ -587,7 +588,11 @@ function NRSKNUI.GUI.CreateMiniSidebar(container, options)
         for _, item in ipairs(items) do
             if item.type == "separator" then
                 local sep = GetPooledSeparator()
-                sep._label:SetText(("Active: " .. item.name) or "")
+                if activeItem then
+                    sep._label:SetText(("Active: " .. item.name) or "")
+                else
+                    sep._label:SetText((item.name) or "")
+                end
                 sep:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -yOffset)
                 sep:SetPoint("TOPRIGHT", listChild, "TOPRIGHT", 0, -yOffset)
                 activeSeparators[#activeSeparators + 1] = sep

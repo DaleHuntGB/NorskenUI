@@ -997,10 +997,31 @@ function GUIFrame:RefreshContent()
                 yOffset = result
             end
         else
+            for _, child in ipairs({ scrollChild:GetChildren() }) do
+                child:Hide()
+                child:SetParent(nil)
+            end
+            yOffset = Theme.paddingSmall
+
             local errorCard = self:CreateCard(scrollChild, "Error", yOffset)
-            local errorMsg = errorCard:AddLabel("Content builder failed: " .. tostring(result))
-            errorMsg:SetTextColor(Theme.error[1], Theme.error[2], Theme.error[3], 1)
-            errorCard:AddSpacing(Theme.paddingSmall)
+
+            local errorLabel = errorCard.content:CreateFontString(nil, "OVERLAY")
+            errorLabel:SetPoint("TOPLEFT", errorCard.content, "TOPLEFT", 0, -errorCard.currentY)
+            errorLabel:SetPoint("TOPRIGHT", errorCard.content, "TOPRIGHT", 0, -errorCard.currentY)
+            errorLabel:SetJustifyH("LEFT")
+            errorLabel:SetJustifyV("TOP")
+            errorLabel:SetWordWrap(true)
+            errorLabel:SetNonSpaceWrap(true)
+            errorLabel:SetSpacing(2)
+            NRSKNUI:ApplyThemeFont(errorLabel, "normal")
+            errorLabel:SetText(tostring(result))
+            errorLabel:SetTextColor(Theme.error[1], Theme.error[2], Theme.error[3], 1)
+
+            local textHeight = errorLabel:GetStringHeight() or 20
+            errorCard.currentY = errorCard.currentY + textHeight + Theme.paddingMedium
+            errorCard.content:SetHeight(errorCard.currentY)
+            errorCard:UpdateHeight()
+
             yOffset = errorCard:GetNextOffset()
         end
     else
