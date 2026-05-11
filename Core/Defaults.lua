@@ -1741,10 +1741,19 @@ local Defaults = {
                     BIG_DEFENSIVE = false,
                     IMPORTANT = false,
                 },
-                Blocklist = {},
+                Blocklist = {
+                    [390435] = "BL (Hunter)",
+                    [57723] = "BL (Drums)",
+                    [95809] = "BL (Hunter)",
+                    [80354] = "BL (Mage)",
+                    [308312] = "Time Trial",
+                    [57724] = "BL (Shaman)",
+                    [160455] = "BL (Hunter)",
+                    [264689] = "BL (Hunter)",
+                },
             },
 
-            -- ExternalBuffTracking (External defensive buffs like Pain Suppression, Ironbark, etc.)
+            -- ExternalBuffTracking
             ExternalBuffTracking = {
                 Enabled = true,
                 ShowBigDefensives = false,
