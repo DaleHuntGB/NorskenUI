@@ -874,7 +874,7 @@ local Defaults = {
 
                 -- Important Spell Glow
                 ImportantGlow = {
-                    GlowEnabled = false,
+                    GlowEnabled = true,
                     GlowType = "pixel",
                     GlowColor = { 1, 0.8, 0, 1 },
                     GlowLines = 8,
@@ -1669,7 +1669,7 @@ local Defaults = {
                 -- Icon settings
                 IconSize = 52,
                 IconSpacing = 1,
-                IconsPerRow = 12,
+                IconsPerRow = 5,
                 MaxRows = 1,
                 IconZoom = 0.32,
                 Swipe = true,
@@ -1708,19 +1708,19 @@ local Defaults = {
                 StackPosition = {
                     AnchorFrom = "BOTTOMRIGHT",
                     AnchorTo = "BOTTOMRIGHT",
-                    XOffset = -1,
-                    YOffset = 1,
+                    XOffset = 0,
+                    YOffset = 2,
                 },
 
                 -- Position
                 Strata = "MEDIUM",
-                anchorFrameType = "SELECTFRAME",
-                ParentFrame = "Minimap",
+                anchorFrameType = "UIPARENT",
+                ParentFrame = "UIParent",
                 Position = {
-                    AnchorFrom = "TOPRIGHT",
-                    AnchorTo = "BOTTOMLEFT",
-                    XOffset = -1,
-                    YOffset = 9,
+                    AnchorFrom = "RIGHT",
+                    AnchorTo = "CENTER",
+                    XOffset = -214,
+                    YOffset = 0,
                 },
 
                 -- Growth direction
