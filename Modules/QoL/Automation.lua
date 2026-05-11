@@ -47,6 +47,7 @@ local function SetupSkipCinematics()
     cinematicFrame:RegisterEvent("CINEMATIC_START")
     cinematicFrame:RegisterEvent("PLAY_MOVIE")
     cinematicFrame:SetScript("OnEvent", function(_, event)
+        if NRSKNUI:IsFullyRestricted() then return end
         if event == "CINEMATIC_START" then
             CinematicFrame_CancelCinematic()
         elseif event == "PLAY_MOVIE" then
@@ -83,6 +84,8 @@ local function SetupAutoSellRepair()
     merchantFrame = CreateFrame("Frame")
     merchantFrame:RegisterEvent("MERCHANT_SHOW")
     merchantFrame:SetScript("OnEvent", function()
+        if NRSKNUI:IsFullyRestricted() then return end
+
         if AUTO.db.AutoSellJunk then
             if not IsShiftKeyDown() and C_MerchantFrame.GetNumJunkItems() > 0 then
                 C_MerchantFrame.SellAllJunkItems()
@@ -112,6 +115,7 @@ local function SetupAutoRoleCheck()
     if LFGListApplicationDialog and not AUTO._lfgHooked then
         AUTO._lfgHooked = true
         LFGListApplicationDialog:HookScript("OnShow", function()
+            if NRSKNUI:IsFullyRestricted() then return end
             if not IsShiftKeyDown() and LFGListApplicationDialog.SignUpButton then
                 LFGListApplicationDialog.SignUpButton:Click()
             end
@@ -121,6 +125,7 @@ local function SetupAutoRoleCheck()
     if LFDRoleCheckPopup and not AUTO._lfdHooked then
         AUTO._lfdHooked = true
         LFDRoleCheckPopup:HookScript("OnShow", function()
+            if NRSKNUI:IsFullyRestricted() then return end
             if not IsShiftKeyDown() and LFDRoleCheckPopupAcceptButton then LFDRoleCheckPopupAcceptButton:Click() end
         end)
     end
@@ -150,6 +155,7 @@ local function SetupAutoCompleteQuest()
     questCompleteFrame:RegisterEvent("QUEST_GREETING")
     questCompleteFrame:RegisterEvent("GOSSIP_SHOW")
     questCompleteFrame:SetScript("OnEvent", function(_, event)
+        if NRSKNUI:IsFullyRestricted() then return end
         if IsShiftKeyDown() then return end
 
         if event == "QUEST_COMPLETE" then
@@ -188,6 +194,7 @@ local function SetupAutoAcceptQuest()
     questAcceptFrame:RegisterEvent("QUEST_GREETING")
     questAcceptFrame:RegisterEvent("GOSSIP_SHOW")
     questAcceptFrame:SetScript("OnEvent", function(_, event)
+        if NRSKNUI:IsFullyRestricted() then return end
         if IsShiftKeyDown() then return end
 
         if event == "QUEST_DETAIL" then
