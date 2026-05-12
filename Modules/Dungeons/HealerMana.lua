@@ -35,6 +35,7 @@ local C_Timer_After = C_Timer.After
 HM.healerFrames = {}
 HM.currentHealers = {}
 HM.inspectQueue = {}
+HM.specCache = {}
 
 local FALLBACK_ICON = 135915
 local PREVIEW_SPECS = { 105, 270, 65, 256, 257, 264, 1468 }
@@ -247,6 +248,7 @@ function HM:OnInspectReady(guid)
 
     local specID = GetInspectSpecialization(healer.unit)
     if specID and specID > 0 then
+        self.specCache[guid] = specID
         healer.specID = specID
         self:UpdateHealerFrame(healer)
     end
@@ -268,6 +270,9 @@ function HM:OnSpecChanged(_, unit)
 
     for _, healer in ipairs(self.currentHealers) do
         if healer.unit == unit then
+            if healer.guid then
+                self.specCache[healer.guid] = nil
+            end
             healer.specID = nil
             self:QueueInspect(healer)
             return
@@ -365,6 +370,7 @@ function HM:AddHealer(unit, frameIndex)
         classColor = NRSKNUI:GetClassColor(healerClass),
         connected = UnitIsConnected(unit),
         frameIndex = frameIndex,
+        specID = self.specCache[guid],
     }
 
     self.currentHealers[#self.currentHealers + 1] = healer
@@ -558,6 +564,7 @@ function HM:OnDisable()
     self:StopUpdates()
     self:UnregisterAllEvents()
     wipe(self.currentHealers)
+    wipe(self.specCache)
     self:ClearInspectQueue()
     self.lastGroupType = nil
     self.isPreview = false
