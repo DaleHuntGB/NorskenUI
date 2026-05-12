@@ -461,7 +461,7 @@ function DEBUFFS:OnEnable()
     if not self.db.Enabled then return end
 
     --TODO: Figure out if i want to still have standard non filtered debuff tracking in top right
-    --NRSKNUI:Hide('DebuffFrame')
+    NRSKNUI:Hide('DebuffFrame')
 
     self:CreateFrame()
     self:RegisterEvent("UNIT_AURA")
