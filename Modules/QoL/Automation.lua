@@ -28,6 +28,9 @@ local GetActiveTitle = GetActiveTitle
 local ipairs = ipairs
 local AcceptQuest = AcceptQuest
 local GetNumAvailableQuests = GetNumAvailableQuests
+local CompleteQuest = CompleteQuest
+local GetQuestID = GetQuestID
+local IsQuestCompletable = IsQuestCompletable
 
 function AUTO:UpdateDB()
     self.db = NRSKNUI.db.profile.Miscellaneous.Automation
@@ -184,6 +187,17 @@ local function SetupAutoCompleteQuest()
     end)
 end
 
+local VOIDCORES_GOLD_QUEST_ID = 95279
+local function ShouldSkipForVoidcores(quests)
+    if not AUTO.db.AutoVoidcoresGold then return false end
+    if C_QuestLog.IsQuestFlaggedCompleted(VOIDCORES_GOLD_QUEST_ID) then return false end
+    if not quests then return false end
+    for _, quest in ipairs(quests) do
+        if quest.questID == VOIDCORES_GOLD_QUEST_ID then return true end
+    end
+    return false
+end
+
 local questAcceptFrame = nil
 local function SetupAutoAcceptQuest()
     if not AUTO.db.AutoAcceptQuest then return end
@@ -204,7 +218,48 @@ local function SetupAutoAcceptQuest()
             if numQuests > 0 then C_GossipInfo.SelectAvailableQuest(1) end
         elseif event == "GOSSIP_SHOW" then
             local quests = C_GossipInfo.GetAvailableQuests()
+            if ShouldSkipForVoidcores(quests) then return end
             if quests and #quests > 0 then C_GossipInfo.SelectAvailableQuest(quests[1].questID) end
+        end
+    end)
+end
+
+local voidcoresFrame = nil
+local function SetupAutoVoidcoresGold()
+    if not AUTO.db.AutoVoidcoresGold then return end
+    if voidcoresFrame then return end
+
+    voidcoresFrame = CreateFrame("Frame")
+    voidcoresFrame:RegisterEvent("GOSSIP_SHOW")
+    voidcoresFrame:RegisterEvent("QUEST_DETAIL")
+    voidcoresFrame:RegisterEvent("QUEST_PROGRESS")
+    voidcoresFrame:SetScript("OnEvent", function(_, event)
+        if NRSKNUI:IsFullyRestricted() then return end
+        if IsShiftKeyDown() then return end
+        if C_QuestLog.IsQuestFlaggedCompleted(VOIDCORES_GOLD_QUEST_ID) then return end
+
+        if event == "GOSSIP_SHOW" then
+            local quests = C_GossipInfo.GetAvailableQuests()
+            if quests then
+                for _, quest in ipairs(quests) do
+                    if quest.questID == VOIDCORES_GOLD_QUEST_ID then
+                        C_GossipInfo.SelectAvailableQuest(VOIDCORES_GOLD_QUEST_ID)
+                        return
+                    end
+                end
+            end
+        elseif event == "QUEST_DETAIL" then
+            if QuestInfoFrame and QuestInfoFrame.questLog and QuestInfoFrame.questLog.questID == VOIDCORES_GOLD_QUEST_ID then
+                AcceptQuest()
+            elseif GetQuestID and GetQuestID() == VOIDCORES_GOLD_QUEST_ID then
+                AcceptQuest()
+            end
+        elseif event == "QUEST_PROGRESS" then
+            if GetQuestID and GetQuestID() == VOIDCORES_GOLD_QUEST_ID then
+                if IsQuestCompletable and IsQuestCompletable() then
+                    CompleteQuest()
+                end
+            end
         end
     end)
 end
@@ -228,6 +283,7 @@ function AUTO:ApplySettings()
     ApplyHideHelptips()
     SetupAutoCompleteQuest()
     SetupAutoAcceptQuest()
+    SetupAutoVoidcoresGold()
 end
 
 function AUTO:OnEnable()

@@ -183,7 +183,7 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
     manager:Register(autoFillDeleteCheck, "all")
     card5:AddRow(row5a, Theme.rowHeight)
 
-    local row5b = GUIFrame:CreateRow(card5.content, Theme.rowHeight)
+    local row5b = GUIFrame:CreateRow(card5.content, Theme.rowHeightLast)
     local autoLootCheck = GUIFrame:CreateCheckbox(row5b, "Auto Loot", {
         value = db.AutoLoot,
         callback = function(checked)
@@ -193,10 +193,16 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
     })
     row5b:AddWidget(autoLootCheck, 1)
     manager:Register(autoLootCheck, "all")
-    card5:AddRow(row5b, Theme.rowHeight)
+    card5:AddRow(row5b, Theme.rowHeightLast, 0)
 
-    local row5c = GUIFrame:CreateRow(card5.content, Theme.rowHeight)
-    local autoAcceptQuestCheck = GUIFrame:CreateCheckbox(row5c, "Auto Accept Quests", {
+    yOffset = card5:GetNextOffset()
+
+    -- Card 6: Quests
+    local card6 = GUIFrame:CreateCard(scrollChild, "Quests", yOffset)
+    manager:Register(card6, "all")
+
+    local row6a = GUIFrame:CreateRow(card6.content, Theme.rowHeight)
+    local autoAcceptQuestCheck = GUIFrame:CreateCheckbox(row6a, "Auto Accept Quests", {
         value = db.AutoAcceptQuest,
         tooltip = "Automatically accept quests from NPCs. Hold |cffffffffShift|r to skip.",
         callback = function(checked)
@@ -204,12 +210,12 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
             ApplySettings()
         end
     })
-    row5c:AddWidget(autoAcceptQuestCheck, 1)
+    row6a:AddWidget(autoAcceptQuestCheck, 1)
     manager:Register(autoAcceptQuestCheck, "all")
-    card5:AddRow(row5c, Theme.rowHeight)
+    card6:AddRow(row6a, Theme.rowHeight)
 
-    local row5d = GUIFrame:CreateRow(card5.content, Theme.rowHeightLast)
-    local autoCompleteQuestCheck = GUIFrame:CreateCheckbox(row5d, "Auto Complete Quests", {
+    local row6b = GUIFrame:CreateRow(card6.content, Theme.rowHeight)
+    local autoCompleteQuestCheck = GUIFrame:CreateCheckbox(row6b, "Auto Complete Quests", {
         value = db.AutoCompleteQuest,
         tooltip = "Automatically complete quests when there is no reward choice. Hold |cffffffffShift|r to skip.",
         callback = function(checked)
@@ -217,11 +223,24 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
             ApplySettings()
         end
     })
-    row5d:AddWidget(autoCompleteQuestCheck, 1)
+    row6b:AddWidget(autoCompleteQuestCheck, 1)
     manager:Register(autoCompleteQuestCheck, "all")
-    card5:AddRow(row5d, Theme.rowHeightLast, 0)
+    card6:AddRow(row6b, Theme.rowHeight)
 
-    yOffset = card5:GetNextOffset()
+    local row6c = GUIFrame:CreateRow(card6.content, Theme.rowHeightLast)
+    local autoVoidcoresCheck = GUIFrame:CreateCheckbox(row6c, "Auto Voidcores: Gold (Decimus)", {
+        value = db.AutoVoidcoresGold,
+        tooltip = "Automatically accept and complete the weekly |cffffffffNebulous Voidcores: Gold|r quest from Decimus. Hold |cffffffffShift|r to skip.",
+        callback = function(checked)
+            db.AutoVoidcoresGold = checked
+            ApplySettings()
+        end
+    })
+    row6c:AddWidget(autoVoidcoresCheck, 1)
+    manager:Register(autoVoidcoresCheck, "all")
+    card6:AddRow(row6c, Theme.rowHeightLast, 0)
+
+    yOffset = card6:GetNextOffset()
 
     UpdateAllWidgetStates()
 
