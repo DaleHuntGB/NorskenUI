@@ -65,6 +65,7 @@ GUIFrame.SidebarConfig = {
                 { id = "PetTexts",     text = "Pet Status Texts" },
                 { id = "gateway",      text = "Gateway Alert" },
                 { id = "TotemTracker", text = "Totem Tracker" },
+                { id = "SpellAlert",   text = "Spell Alert Overlay" },
             }
         },
         {

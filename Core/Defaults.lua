@@ -552,6 +552,16 @@ local Defaults = {
                 },
             },
 
+            SpellAlert = {
+                Enabled = true,
+                UseGlobal = true,
+                Global = {
+                    Scale = 1.0,
+                    Alpha = 1.0,
+                },
+                Specs = {},
+            },
+
             Recuperate = {
                 Enabled = true,
                 LoadInRaid = true,

@@ -7,4 +7,5 @@
     <Script file="IncarnStacks.lua"/>
     <Script file="PetTexts.lua"/>
     <Script file="TotemTracker.lua"/>
+    <Script file="SpellAlert.lua" />
 </Ui>
