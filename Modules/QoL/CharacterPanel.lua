@@ -64,9 +64,9 @@ local ITEM_TRACKS = {
 }
 
 local CRAFTED_TRACKS = {
-    { minIlvl = 285, letter = "C", color = { 1.00, 0.50, 0.00 } }, -- Mythic Crafted
-    { minIlvl = 272, letter = "C", color = { 0.78, 0.30, 0.78 } }, -- Heroic Crafted
-    { minIlvl = 259, letter = "C", color = { 0.00, 0.70, 1.00 } }, -- Normal Crafted
+    { minIlvl = 295, letter = "C", color = { 1.00, 0.50, 0.00 } }, -- Mythic Crafted
+    { minIlvl = 282, letter = "C", color = { 0.78, 0.30, 0.78 } }, -- Heroic Crafted
+    { minIlvl = 269, letter = "C", color = { 0.00, 0.70, 1.00 } }, -- Normal Crafted
 }
 
 local qualityAtlasPattern = "|A:(Professions%-ChatIcon%-Quality%-[^:]+):%d+:%d+"
@@ -200,7 +200,7 @@ function CHAR:GetItemTrack(slotID)
     for _, line in ipairs(data.lines) do
         local text = line.leftText
         if text then
-            if text:find("Upgrade Level:") then
+            if text:find("Upgrade Level:") or text:find("Ascendant Voidforged:") then
                 for _, track in ipairs(ITEM_TRACKS) do if text:find(track.keyword) then return track end end
             end
             if text:find("Crafted") then isCrafted = true end
