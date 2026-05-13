@@ -13,9 +13,10 @@ local CHAR = NorskenUI:NewModule("CharacterPanel", "AceEvent-3.0", "AceHook-3.0"
 local GetAverageItemLevel = GetAverageItemLevel
 local GetInventoryItemLink = GetInventoryItemLink
 local GetDetailedItemLevelInfo = GetDetailedItemLevelInfo
-local C_Item = C_Item
-local C_Container = C_Container
 local CreateFrame = CreateFrame
+local UnitRace = UnitRace
+local UnitFactionGroup = UnitFactionGroup
+local hooksecurefunc = hooksecurefunc
 local pairs = pairs
 local ipairs = ipairs
 local format = string.format
@@ -23,6 +24,8 @@ local floor, abs, min, max = math.floor, math.abs, math.min, math.max
 local tinsert = table.insert
 local wipe = table.wipe
 local C_Timer = C_Timer
+local C_Item = C_Item
+local C_Container = C_Container
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS or 4
 local LE_ITEM_CLASS_GEM = Enum.ItemClass.Gem or 3
@@ -358,8 +361,46 @@ function CHAR:SetupLevelTextHook()
     hooksecurefunc("PaperDollFrame_SetLevel", function()
         if self.db.Enabled then
             self:UpdateLevelTextWithFaction()
+            self:UpdateRaceTextPosition()
         end
     end)
+end
+
+function CHAR:CreateRaceText()
+    if self._raceText then return self._raceText end
+
+    local text = PaperDollFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall2")
+    text:SetPoint("TOP", CharacterLevelText, "BOTTOM", 0, 5)
+    text:SetText(UnitRace("player"))
+    text:Hide()
+
+    self._raceText = text
+    return text
+end
+
+function CHAR:UpdateRaceTextPosition()
+    if not self._raceText then return end
+    if not self.db.ShowRaceText then return end
+    CharacterLevelText:SetPointsOffset(0, -37)
+end
+
+function CHAR:ShowRaceText()
+    if not self.db.ShowRaceText then return end
+
+    local text = self:CreateRaceText()
+    self:ApplyFont(text, self.db.LevelTextSize or 12)
+    text:SetText(UnitRace("player"))
+    text:Show()
+    self:UpdateRaceTextPosition()
+end
+
+function CHAR:HideRaceText()
+    if self._raceText then
+        self._raceText:Hide()
+    end
+    if CharacterLevelText then
+        CharacterLevelText:SetPointsOffset(0, 0)
+    end
 end
 
 function CHAR:ApplySettings()
@@ -372,6 +413,11 @@ function CHAR:ApplySettings()
     self:UpdateLevelTextWithFaction()
     self:SetupGemSocketHelper()
     self:SetupTrackIndicators()
+    if self.db.ShowRaceText then
+        self:ShowRaceText()
+    else
+        self:HideRaceText()
+    end
     if self.db.GemSocketHelper.Enabled and PaperDollFrame and PaperDollFrame:IsShown() then
         self:RefreshSocketButtons()
     end
@@ -389,6 +435,7 @@ function CHAR:OnDisable()
     self:UpdateItemLevelText()
     self:DisableGemSocketHelper()
     self:HideAllTrackIndicators()
+    self:HideRaceText()
 end
 
 -- Gem Socket Helper --

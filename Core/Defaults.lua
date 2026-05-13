@@ -44,6 +44,7 @@ local Defaults = {
         CharacterPanel = {
             Enabled = true,
             DecimalItemLevel = true,
+            ShowRaceText = true,
             FontFace = "Expressway",
             FontOutline = "OUTLINE",
             StatsFontSize = 11,

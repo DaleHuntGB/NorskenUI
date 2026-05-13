@@ -36,7 +36,7 @@ GUIFrame:RegisterContent("CharacterPanel", function(scrollChild, yOffset)
     local sep1 = GUIFrame:CreateSeparator(card1.content)
     card1:AddRow(sep1, Theme.rowHeightSeparator)
 
-    local row2 = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
+    local row2 = GUIFrame:CreateRow(card1.content, Theme.rowHeight)
     local decimalCheck = GUIFrame:CreateCheckbox(row2, "Show Decimal Item Level", {
         value = db.DecimalItemLevel,
         callback = function(checked)
@@ -49,7 +49,26 @@ GUIFrame:RegisterContent("CharacterPanel", function(scrollChild, yOffset)
     })
     row2:AddWidget(decimalCheck, 1)
     manager:Register(decimalCheck, "all")
-    card1:AddRow(row2, Theme.rowHeightLast, 0)
+    card1:AddRow(row2, Theme.rowHeight)
+
+    local row2b = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
+    local raceTextCheck = GUIFrame:CreateCheckbox(row2b, "Show Race Text", {
+        value = db.ShowRaceText,
+        callback = function(checked)
+            db.ShowRaceText = checked
+            if CharacterPanel then
+                if checked then
+                    CharacterPanel:ShowRaceText()
+                else
+                    CharacterPanel:HideRaceText()
+                end
+            end
+        end,
+        tooltip = "Shows your character's race below the level text on the character panel",
+    })
+    row2b:AddWidget(raceTextCheck, 1)
+    manager:Register(raceTextCheck, "all")
+    card1:AddRow(row2b, Theme.rowHeightLast, 0)
 
     yOffset = card1:GetNextOffset()
 
