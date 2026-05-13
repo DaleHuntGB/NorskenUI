@@ -12,7 +12,6 @@ local CreateFrame = CreateFrame
 local unpack = unpack
 
 GUIFrame:RegisterContent("CustomSkin_Debuffs", function(scrollChild, yOffset)
-    if NRSKNUI:ShouldNotLoadModule() then return yOffset end
     local db = NRSKNUI.db and NRSKNUI.db.profile.Skinning.DebuffTracking
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 

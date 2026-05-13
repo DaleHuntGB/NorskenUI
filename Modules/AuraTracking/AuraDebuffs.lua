@@ -441,7 +441,6 @@ local function ApplyButtonSettings(button, db)
 end
 
 function DEBUFFS:ApplySettings()
-    if NRSKNUI:ShouldNotLoadModule() then return end
 
     self:BuildFilterStrings()
 
@@ -481,7 +480,6 @@ function DEBUFFS:UpdatePosition(pos)
 end
 
 function DEBUFFS:OnEnable()
-    if NRSKNUI:ShouldNotLoadModule() then return end
     if not self.db.Enabled then return end
 
     --TODO: Figure out if i want to still have standard non filtered debuff tracking in top right
