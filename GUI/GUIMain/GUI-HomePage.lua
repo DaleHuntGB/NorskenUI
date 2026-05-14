@@ -36,7 +36,7 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
     mapIconRow:AddWidget(mapIconCheck, 1)
     welcomeCard:AddRow(mapIconRow, Theme.rowHeight)
 
-    local loginMsgRow = GUIFrame:CreateRow(welcomeCard.content, Theme.rowHeightLast)
+    local loginMsgRow = GUIFrame:CreateRow(welcomeCard.content, Theme.rowHeight)
     local loginMsgCheck = GUIFrame:CreateCheckbox(loginMsgRow, "Show Login Message", {
         value = db.Minimap.LoginMessage,
         callback = function(checked) db.Minimap.LoginMessage = checked end,
@@ -44,7 +44,27 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
         msgText = "Login Message",
     })
     loginMsgRow:AddWidget(loginMsgCheck, 1)
-    welcomeCard:AddRow(loginMsgRow, Theme.rowHeightLast, 0)
+    welcomeCard:AddRow(loginMsgRow, Theme.rowHeight)
+
+    local Sep1a = GUIFrame:CreateSeparator(welcomeCard.content)
+    welcomeCard:AddRow(Sep1a, Theme.rowHeightSeparator)
+
+    local quickActionRowHeight = 32
+    local quickActionRow = GUIFrame:CreateRow(welcomeCard.content, quickActionRowHeight)
+    local editModeBtn = GUIFrame:CreateButton(quickActionRow, "Toggle Anchors", {
+        height = 32,
+        callback = function()
+            if NRSKNUI.EditMode then NRSKNUI.EditMode:Toggle() end
+        end
+    })
+    quickActionRow:AddWidget(editModeBtn, 0.5)
+
+    local reloadBtn = GUIFrame:CreateButton(quickActionRow, "Reload UI", {
+        height = 32,
+        callback = function() ReloadUI() end
+    })
+    quickActionRow:AddWidget(reloadBtn, 0.5)
+    welcomeCard:AddRow(quickActionRow, quickActionRowHeight)
 
     yOffset = welcomeCard:GetNextOffset()
 
@@ -85,7 +105,8 @@ GUIFrame:RegisterContent("HomePage", function(scrollChild, yOffset)
     supportCard:AddLabel("Found a bug or have a suggestion?")
     supportCard:AddSpacing(4)
 
-    supportCard:AddLabel("Join the " .. NRSKNUI:ColorTextByTheme("Discord") .. " or open an issue on " .. NRSKNUI:ColorTextByTheme("GitHub"))
+    supportCard:AddLabel("Join the " ..
+        NRSKNUI:ColorTextByTheme("Discord") .. " or open an issue on " .. NRSKNUI:ColorTextByTheme("GitHub"))
 
     yOffset = supportCard:GetNextOffset()
 
