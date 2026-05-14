@@ -64,7 +64,8 @@ local ITEM_TRACKS = {
 }
 
 local CRAFTED_TRACKS = {
-    { minIlvl = 295, letter = "C", color = { 1.00, 0.50, 0.00 } }, -- Mythic Crafted
+    { minIlvl = 295, letter = "C", color = { 1.00, 0.50, 0.00 }, weaponOnly = true }, -- Mythic Crafted (Weapons only)
+    { minIlvl = 285, letter = "C", color = { 1.00, 0.50, 0.00 } }, -- Mythic Crafted (Non-Weapons)
     { minIlvl = 282, letter = "C", color = { 0.78, 0.30, 0.78 } }, -- Heroic Crafted
     { minIlvl = 269, letter = "C", color = { 0.00, 0.70, 1.00 } }, -- Normal Crafted
 }
@@ -212,7 +213,12 @@ function CHAR:GetItemTrack(slotID)
         if itemLink then
             local ilvl = GetDetailedItemLevelInfo(itemLink)
             if ilvl then
-                for _, track in ipairs(CRAFTED_TRACKS) do if ilvl >= track.minIlvl then return track end end
+                local isWeapon = slotID == 16 or slotID == 17
+                for _, track in ipairs(CRAFTED_TRACKS) do
+                    if ilvl >= track.minIlvl and (not track.weaponOnly or isWeapon) then
+                        return track
+                    end
+                end
             end
         end
     end
