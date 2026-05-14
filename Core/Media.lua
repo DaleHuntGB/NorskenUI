@@ -154,6 +154,11 @@ function NRSKNUI:ApplyFont(fontString, fontName, fontSize, fontOutline)
     local size = (fontSize and fontSize > 0) and fontSize or 12
     local outline = self:GetFontOutline(fontOutline)
 
+    local fontObj = fontString:GetFontObject()
+    if fontObj then
+        fontString:SetFontObject(nil)
+    end
+
     if fontString:SetFont(fontPath, size, outline) then
         return true
     end

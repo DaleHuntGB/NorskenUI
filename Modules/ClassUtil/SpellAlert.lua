@@ -9,9 +9,10 @@ end
 ---@class SpellAlert: AceModule, AceEvent-3.0
 local SA = NorskenUI:NewModule("SpellAlert", "AceEvent-3.0")
 
-local GetSpecialization = GetSpecialization
-local GetSpecializationInfo = GetSpecializationInfo
+local LS = LibStub("LibSpecialization", true)
+
 local C_Timer = C_Timer
+local GetCVar = GetCVar
 local SetCVar = SetCVar
 
 local SpellActivationOverlayFrame = SpellActivationOverlayFrame
@@ -25,36 +26,18 @@ function SA:OnInitialize()
     self:SetEnabledState(false)
 end
 
-function SA:GetCurrentSpecID()
-    local specIndex = GetSpecialization()
-    if not specIndex then return nil end
-    local specID = GetSpecializationInfo(specIndex)
-    return specID
-end
-
 function SA:GetCurrentSettings()
-    if self.db.UseGlobal then
-        return self.db.Global
-    end
+    if self.db.UseGlobal then return self.db.Global end
 
-    local specID = self:GetCurrentSpecID()
-    if specID and self.db.Specs[specID] then
-        local specSettings = self.db.Specs[specID]
-        if specSettings.UseGlobal then return self.db.Global end
-        return specSettings
-    end
-
+    local specID = NRSKNUI.MySpec.id
+    if specID and self.db.Specs[specID] then return self.db.Specs[specID] end
     return self.db.Global
 end
 
 function SA:EnsureSpecEntry(specID)
     if not specID then return end
     if not self.db.Specs[specID] then
-        self.db.Specs[specID] = {
-            Scale = self.db.Global.Scale,
-            Alpha = self.db.Global.Alpha,
-            UseGlobal = true,
-        }
+        self.db.Specs[specID] = { Scale = self.db.Global.Scale, Alpha = self.db.Global.Alpha, }
     end
 end
 
@@ -66,51 +49,29 @@ function SA:ApplySettings()
     if not settings then return end
 
     SetCVar("displaySpellActivationOverlays", 1)
-    SetCVar("spellAlertOpacity", 1)
+    SetCVar("spellActivationOverlayOpacity", 1)
 
     SpellActivationOverlayFrame:SetScale(settings.Scale)
     SpellActivationOverlayFrame:SetAlpha(settings.Alpha)
-
-    self.currentSpecID = self:GetCurrentSpecID()
-end
-
-function SA:OnSpecChanged()
-    C_Timer.After(1, function()
-        if self:IsEnabled() then self:ApplySettings() end
-    end)
 end
 
 function SA:OnEnable()
     if not self.db.Enabled then return end
 
-    C_Timer.After(1, function() self:ApplySettings() end)
+    -- Save the original opacity to restore it later if module is turned off
+    self.savedOpacity = GetCVar("spellActivationOverlayOpacity")
 
-    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED", "OnSpecChanged")
-    self:RegisterEvent("PLAYER_ENTERING_WORLD", function()
-        C_Timer.After(0.5, function() self:ApplySettings() end)
-    end)
+    C_Timer.After(1, function() self:ApplySettings() end)
+    if LS then LS.RegisterPlayerSpecChange(self, function() if self:IsEnabled() then self:ApplySettings() end end) end
+    self:RegisterEvent("PLAYER_ENTERING_WORLD", function() C_Timer.After(0.5, function() self:ApplySettings() end) end)
 end
 
 function SA:OnDisable()
     self:UnregisterAllEvents()
 
-    if SpellActivationOverlayFrame then
-        SpellActivationOverlayFrame:SetScale(1.0)
-        SpellActivationOverlayFrame:SetAlpha(1.0)
-    end
-end
+    if LS then LS.UnregisterPlayerSpecChange(self) end
 
-function SA:ShowPreview()
-    self.isPreview = true
-    self:ApplySettings()
-end
-
-function SA:HidePreview()
-    self.isPreview = false
-    if not self.db.Enabled then
-        if SpellActivationOverlayFrame then
-            SpellActivationOverlayFrame:SetScale(1.0)
-            SpellActivationOverlayFrame:SetAlpha(1.0)
-        end
-    end
+    -- Restore original opacity and scale when the module is disabled
+    if self.savedOpacity then SetCVar("spellActivationOverlayOpacity", self.savedOpacity) end
+    if SpellActivationOverlayFrame then SpellActivationOverlayFrame:SetScale(1.0) end
 end
