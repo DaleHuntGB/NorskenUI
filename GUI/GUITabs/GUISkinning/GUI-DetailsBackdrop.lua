@@ -19,9 +19,20 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
     local DBG = NorskenUI:GetModule("DetailsBackdrop", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
-    local curEdit = db.currentEdit or 1
+    -- Santize older profiles old string format to new numeric format so that dropdown shows correct value.
+    local curEdit = db.currentEdit
+    if curEdit == "bgOne" then
+        curEdit = 1
+    elseif curEdit == "bgTwo" then
+        curEdit = 2
+    else
+        curEdit = tonumber(curEdit) or 1
+    end
+    db.currentEdit = curEdit
+
     local backdropName = "Backdrop " .. curEdit
 
+    -- Ensure the current edit backdrop exists in the DB, if not create it with default values, otherwise the tab will break.
     if not db.backdrops[curEdit] then
         db.backdrops[curEdit] = CopyTable(NRSKNUI.db.defaults.profile.Skinning.DetailsBackdrop.backdrops[1])
     end
