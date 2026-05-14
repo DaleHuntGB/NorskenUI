@@ -43,7 +43,7 @@ Data.RESTRICTED_BUFFS = {
     { spellId = 431972,  category = "Flask" },
     { spellId = 431974,  category = "Flask" },
     { spellId = 431973,  category = "Flask" },
-    { spellId = 1264426, category = "Rune", itemId = 224572 },
+    { spellId = 1264426, category = "Rune", itemId = 259085 },
 }
 
 Data.TARGETED_BUFFS = {
