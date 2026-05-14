@@ -553,6 +553,10 @@ function HM:OnEnable()
             currentPos.YOffset = pos.YOffset
             self:ApplyPosition()
         end,
+        getAnchorFrom = function()
+            local pos = self:GetCurrentPosition()
+            return self:GetGrowAnchor(pos.AnchorFrom)
+        end,
         getParentFrame = function()
             return NRSKNUI:ResolveAnchorFrame(self.db.anchorFrameType, self.db.ParentFrame)
         end,
