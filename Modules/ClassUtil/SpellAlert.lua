@@ -59,6 +59,7 @@ function SA:EnsureSpecEntry(specID)
 end
 
 function SA:ApplySettings()
+    if not self:IsEnabled() then return end
     if not SpellActivationOverlayFrame then return end
 
     local settings = self:GetCurrentSettings()
