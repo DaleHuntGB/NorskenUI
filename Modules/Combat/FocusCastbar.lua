@@ -935,8 +935,12 @@ function FCB:HidePreview()
     end
     self:HideTargetText()
     self:ResetGlow()
-    self.kickTick:SetAlpha(0)
-    self.kickCooldownBar:SetValue(0)
+    if self.kickTick then
+        self.kickTick:SetAlpha(0)
+    end
+    if self.kickCooldownBar then
+        self.kickCooldownBar:SetValue(0)
+    end
     if self.targetMarker then
         self.targetMarker:Hide()
     end
