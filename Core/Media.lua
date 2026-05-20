@@ -97,7 +97,10 @@ function NRSKNUI:GetMediaPath(mediaType, name, fallback)
     return fallback
 end
 
-function NRSKNUI:GetFontPath(fontName) return self:GetMediaPath("font", fontName, "Fonts\\FRIZQT__.TTF") end
+function NRSKNUI:GetFontPath(fontName)
+    if fontName == "Expressway" then return NRSKNUI.FONT end
+    return self:GetMediaPath("font", fontName, "Fonts\\FRIZQT__.TTF")
+end
 
 function NRSKNUI:GetStatusbarPath(barName)
     return self:GetMediaPath("statusbar", barName,
@@ -149,8 +152,6 @@ function NRSKNUI:ApplyFont(fontString, fontName, fontSize, fontOutline)
     if not fontString then return false end
 
     local fontPath = self:GetFontPath(fontName)
-    if not self:IsFontValid(fontPath) then fontPath = "Fonts\\FRIZQT__.TTF" end
-
     local size = (fontSize and fontSize > 0) and fontSize or 12
     local outline = self:GetFontOutline(fontOutline)
 
@@ -159,6 +160,7 @@ function NRSKNUI:ApplyFont(fontString, fontName, fontSize, fontOutline)
         fontString:SetFontObject(nil)
     end
 
+    -- Try the requested font first, fall back to Blizzard font if it fails
     if fontString:SetFont(fontPath, size, outline) then
         return true
     end

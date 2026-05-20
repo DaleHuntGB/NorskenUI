@@ -10,6 +10,7 @@ local setmetatable = setmetatable
 local UIFrameFade, UIFrameFadeIn, UIFrameFadeOut = UIFrameFade, UIFrameFadeIn, UIFrameFadeOut
 local issecretvalue = issecretvalue
 local type = type
+local C_Timer = C_Timer
 
 local SOFT_OUTLINE_FADEOUT_SPEED = 0.85
 local fadeHookRunning = false
@@ -97,12 +98,10 @@ function SoftOutline:_ForEach(fn)
 end
 
 function SoftOutline:_ApplyOffsets()
-    local point = self.main:GetPoint(1)
-    local anchor = point or "CENTER"
     self:_ForEach(function(shadow, i)
         local offset = SHADOW_OFFSETS[i]
         shadow:ClearAllPoints()
-        shadow:SetPoint(anchor, self.main, anchor, offset[1] * self.thickness, offset[2] * self.thickness)
+        shadow:SetPoint("CENTER", self.main, "CENTER", offset[1] * self.thickness, offset[2] * self.thickness)
     end)
 end
 
@@ -353,8 +352,8 @@ end
 
 local function GetFontWithFallback(fontString, options)
     local font, size = fontString:GetFont()
-    font = (font and font ~= "") and font or options.fontPath or DEFAULT_FONT
-    size = (size and size > 0) and size or options.fontSize or 14
+    font = options.fontPath or (font and font ~= "" and font) or DEFAULT_FONT
+    size = options.fontSize or (size and size > 0 and size) or 14
     return font, size
 end
 
@@ -426,16 +425,23 @@ function NRSKNUI:ApplyFontToText(fontString, fontName, fontSize, fontOutline, sh
         blizzardOutline = "NONE"
     end
 
+    local fontPath = self:GetFontPath(fontName)
+
     local success = self:ApplyFont(fontString, fontName, fontSize, blizzardOutline)
 
     if useSoftOutline then
         fontString:SetShadowOffset(0, 0)
         fontString:SetShadowColor(0, 0, 0, 0)
 
-        if not fontString.softOutline then
-            fontString.softOutline = self:CreateSoftOutline(fontString, {})
-        end
-        fontString.softOutline:SetShown(true)
+        -- Defer soft outline creation to next frame to ensure font is fully applied
+        C_Timer.After(0, function()
+            if not fontString.softOutline then
+                fontString.softOutline = self:CreateSoftOutline(fontString, { fontPath = fontPath, fontSize = fontSize })
+            else
+                fontString.softOutline:SetFont(fontPath, fontSize)
+            end
+            fontString.softOutline:SetShown(true)
+        end)
     else
         if fontString.softOutline then
             fontString.softOutline:SetShown(false)
