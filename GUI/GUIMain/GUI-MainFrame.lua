@@ -80,6 +80,7 @@ function GUIFrame:CreateMainFrame()
     self:CreateFooter(frame)
     self:CreateContentArea(frame)
     self:CreateSidebar(frame)
+    self:CreateSearchHeader(frame)
 
     local borderFrame = CreateFrame("Frame", nil, frame)
     borderFrame:SetAllPoints(frame)

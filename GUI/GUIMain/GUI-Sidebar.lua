@@ -19,6 +19,7 @@ local itemHeight = 28
 local HOVER_DURATION = 0.12
 local ARROW_DURATION = 0.2
 local ACCENT_BAR_WIDTH = 2
+local SEARCH_BOX_HEIGHT = 30
 
 -- Release section headers
 function GUIFrame:ReleaseSectionHeaders()
@@ -38,6 +39,56 @@ function GUIFrame:ReleaseSectionHeaders()
         header:Hide()
         header:ClearAllPoints()
     end
+end
+
+function GUIFrame:CreateSearchHeader(parent)
+    if not parent then return end
+
+    local searchContainerBG = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    searchContainerBG:SetHeight(SEARCH_BOX_HEIGHT)
+    searchContainerBG:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -Theme.headerHeight + 1)
+    searchContainerBG:SetPoint("RIGHT", parent.content or parent, "LEFT", 0, 0)
+    searchContainerBG:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1, })
+    searchContainerBG:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
+    searchContainerBG:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+
+    local searchContainer = CreateFrame("Frame", nil, searchContainerBG, "BackdropTemplate")
+    searchContainer:SetHeight(SEARCH_BOX_HEIGHT)
+    searchContainer:SetPoint("TOPLEFT", searchContainerBG, "TOPLEFT", 4, -4)
+    searchContainer:SetPoint("BOTTOMRIGHT", searchContainerBG, "BOTTOMRIGHT", -4, 4)
+    searchContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1, })
+    searchContainer:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 0)
+    searchContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 0)
+
+    local searchEditBox = CreateFrame("EditBox", nil, searchContainer)
+    searchEditBox:SetPoint("TOPLEFT", searchContainer, "TOPLEFT", 6, -4)
+    searchEditBox:SetPoint("BOTTOMRIGHT", searchContainer, "BOTTOMRIGHT", -6, 4)
+    searchEditBox:SetFontObject("GameFontNormal")
+    searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
+    searchEditBox:SetAutoFocus(false)
+    searchEditBox:SetText("Search...")
+
+    searchEditBox:SetScript("OnTextChanged", function(self, userInput)
+        if not userInput then return end
+    end)
+
+    searchEditBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+    end)
+
+    searchEditBox:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+    end)
+
+    searchEditBox:SetScript("OnEditFocusGained", function()
+        searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    end)
+
+    searchEditBox:SetScript("OnEditFocusLost", function()
+        searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
+    end)
+
+    return searchContainer
 end
 
 function GUIFrame:CreateSectionHeader()
@@ -360,7 +411,7 @@ end
 
 function GUIFrame:CreateSidebar(parent)
     local sidebar = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-    sidebar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -Theme.headerHeight)
+    sidebar:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(Theme.headerHeight + SEARCH_BOX_HEIGHT - 1))
     sidebar:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, Theme.footerHeight)
     sidebar:SetPoint("RIGHT", parent.content or parent, "LEFT", 0, 0)
     sidebar:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8" })
