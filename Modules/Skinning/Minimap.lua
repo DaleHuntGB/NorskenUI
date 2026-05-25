@@ -17,6 +17,8 @@ local unpack = unpack
 local LibStub = LibStub
 local InCombatLockdown = InCombatLockdown
 local IsMouseButtonDown = IsMouseButtonDown
+local HideUIPanel = HideUIPanel
+local ShowUIPanel = ShowUIPanel
 local _G = _G
 local mailBtn = MiniMapMailIcon
 local qBtn = QueueStatusButton
@@ -59,11 +61,10 @@ function MAP:OnEnable()
     self:StripBlizzMap()
     self:CreateBugSackButton()
     self:ApplySettings()
+    self:ApplyButtonReg()
 
     if not hooked.queuePosition then
-        hooksecurefunc(QueueStatusButton, "UpdatePosition", function()
-            self:UpdateQueueBtn()
-        end)
+        hooksecurefunc(QueueStatusButton, "UpdatePosition", function() self:UpdateQueueBtn() end)
         hooked.queuePosition = true
     end
 
@@ -103,9 +104,7 @@ function MAP:PLAYER_REGEN_ENABLED()
 end
 
 function MAP:PLAYER_ENTERING_WORLD()
-    C_Timer.After(0.1, function()
-        self:ApplySettings()
-    end)
+    C_Timer.After(0.1, function() self:ApplySettings() end)
 end
 
 function MAP:StripBlizzMap()
@@ -119,7 +118,7 @@ function MAP:StripBlizzMap()
     Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
     MinimapCompassTexture:SetTexture(nil)
 
-    NRSKNUI:Hide("MinimapCluster")
+    NRSKNUI:Hide("MinimapCluster") -- gtfo lilpup, does so much wierd shit so we yeet it
     NRSKNUI:Hide("MinimapCompassTexture")
     NRSKNUI:Hide("MinimapCluster", "BorderTop")
     NRSKNUI:Hide("MinimapCluster", "ZoneTextButton")
@@ -184,6 +183,33 @@ function MAP:SkinAddonCompartment()
     AddonCompartmentFrame.Text:SetShadowOffset(0, 0)
 end
 
+function MAP:ApplyButtonReg()
+    if self.clickOverlay then return end
+
+    local clickOverlay = CreateFrame("Frame", nil, Minimap)
+    clickOverlay:SetAllPoints()
+    clickOverlay:EnableMouse(true)
+    clickOverlay:SetPassThroughButtons("LeftButton")
+    clickOverlay:SetPropagateMouseMotion(true)
+    clickOverlay:SetScript("OnMouseUp", function(_, button)
+        if button == "MiddleButton" then -- Middle-click: open calendar
+            if InCombatLockdown() then
+                NRSKNUI:Print("Cannot open calendar in combat.")
+            else
+                if not C_AddOns.IsAddOnLoaded("Blizzard_Calendar") then C_AddOns.LoadAddOn("Blizzard_Calendar") end
+                if CalendarFrame:IsShown() then
+                    HideUIPanel(CalendarFrame)
+                else
+                    ShowUIPanel(CalendarFrame)
+                end
+            end
+        elseif button == "RightButton" then -- Right-click: open tracking menu
+            MinimapCluster.Tracking.Button:OpenMenu()
+        end
+    end)
+    self.clickOverlay = clickOverlay
+end
+
 function MAP:UpdateMinimapBorder()
     if not hooked.border then
         Minimap.Border = CreateFrame("Frame", nil, Minimap, "BackdropTemplate")
@@ -192,10 +218,7 @@ function MAP:UpdateMinimapBorder()
         hooked.border = true
     end
 
-    Minimap.Border:SetBackdrop({
-        edgeFile = "Interface\\Buttons\\WHITE8X8",
-        edgeSize = self.db.Border.Thickness,
-    })
+    Minimap.Border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = self.db.Border.Thickness, })
     Minimap.Border:SetBackdropBorderColor(unpack(self.db.Border.Color))
 end
 
@@ -350,7 +373,7 @@ function MAP:UpdateBugSackButton()
         btn:SetSize(db.Size, db.Size)
         btn:ClearAllPoints()
         btn:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
-        btn.Text:SetFont("Fonts\\FRIZQT__.TTF", db.Size-4, "OUTLINE")
+        btn.Text:SetFont("Fonts\\FRIZQT__.TTF", db.Size - 4, "OUTLINE")
         btn:Show()
     end
 end
