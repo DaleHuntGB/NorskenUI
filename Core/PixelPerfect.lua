@@ -27,8 +27,7 @@ function NRSKNUI:PixelBestSize()
 end
 
 function NRSKNUI:UIScale()
-    UIParent:SetScale(self.perfect)
-    self.uiScale = self.perfect
+    self.uiScale = UIParent:GetEffectiveScale()
     self:UIMult()
 end
 
