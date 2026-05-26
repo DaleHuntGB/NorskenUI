@@ -391,18 +391,32 @@ local function RenderTabsTab(scrollChild, db, manager)
     manager:Register(selectedTabColor, "all", "selectedColorWidgets")
     card1:AddRow(row1, Theme.rowHeight)
 
-    -- Row 2: Non-selected tab text color
+    -- Row 2: Non-selected tab color mode + custom color
     local row2 = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
+    local colorModeDropdown = GUIFrame:CreateDropdown(row2, "Inactive Tab Color Mode", {
+        options = NRSKNUI.ColorModeOptions,
+        value = db.TabTextColorMode or "custom",
+        callback = function(key)
+            db.TabTextColorMode = key
+            ApplySettings()
+            manager:UpdateAll(db.Enabled)
+        end
+    })
+    row2:AddWidget(colorModeDropdown, 0.5)
+    manager:Register(colorModeDropdown, "all")
+
+    manager:SetCondition("inactiveCustomColorWidgets", function() return (db.TabTextColorMode or "custom") == "custom" end)
+
     local tabTextColor = db.TabTextColor or { r = 1, g = 0.82, b = 0 }
-    local tabTextColorPicker = GUIFrame:CreateColorPicker(row2, "Inactive Tab Text Color", {
+    local tabTextColorPicker = GUIFrame:CreateColorPicker(row2, "Custom Color", {
         color = { tabTextColor.r or 1, tabTextColor.g or 0.82, tabTextColor.b or 0, 1 },
         callback = function(r, g, b)
             db.TabTextColor = { r = r, g = g, b = b }
             ApplySettings()
         end
     })
-    row2:AddWidget(tabTextColorPicker, 1)
-    manager:Register(tabTextColorPicker, "all")
+    row2:AddWidget(tabTextColorPicker, 0.5)
+    manager:Register(tabTextColorPicker, "all", "inactiveCustomColorWidgets")
     card1:AddRow(row2, Theme.rowHeightLast, 0)
 
     yOffset = card1:GetNextOffset()

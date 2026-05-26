@@ -1045,12 +1045,10 @@ function CHAT:OnFCFTab_UpdateColors(tab, selected)
         else
             if nameTextNotSecret and not selected then tab:SetText(name) end
 
-            local valueColor = db.TabTextColor
-            if valueColor then
-                tab.Text:SetTextColor(valueColor.r, valueColor.g, valueColor.b)
-            else
-                tab.Text:SetTextColor(1, 0.82, 0)
-            end
+            local colorMode = db.TabTextColorMode or "custom"
+            local customColor = db.TabTextColor or { r = 1, g = 0.82, b = 0 }
+            local r, g, b = NRSKNUI:GetAccentColor(colorMode, { customColor.r, customColor.g, customColor.b, 1 })
+            tab.Text:SetTextColor(r, g, b)
         end
     end
 end
