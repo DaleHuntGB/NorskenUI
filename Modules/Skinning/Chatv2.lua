@@ -1039,7 +1039,8 @@ function CHAT:OnFCFTab_UpdateColors(tab, selected)
             if tab.classColor then
                 tab.Text:SetTextColor(tab.classColor.r, tab.classColor.g, tab.classColor.b)
             else
-                tab.Text:SetTextColor(1, 1, 1)
+                local whisperInfo = _G.ChatTypeInfo and _G.ChatTypeInfo["WHISPER"]
+                if whisperInfo then tab.Text:SetTextColor(whisperInfo.r, whisperInfo.g, whisperInfo.b) end
             end
         else
             if nameTextNotSecret and not selected then tab:SetText(name) end
@@ -1478,10 +1479,17 @@ end
 function CHAT:StripTabTextures(tab)
     if not tab then return end
 
+    local tabName = tab:GetName()
+    local glowName = tabName and (tabName .. "Glow")
+
     for _, region in pairs({ tab:GetRegions() }) do
         if region:IsObjectType("Texture") then
-            region:SetTexture()
-            if region.SetAtlas then region:SetAtlas("") end
+            local regionName = region:GetName()
+            local isGlow = regionName and (regionName == glowName or regionName:find("Glow"))
+            if not isGlow then
+                region:SetTexture()
+                if region.SetAtlas then region:SetAtlas("") end
+            end
         end
     end
 
