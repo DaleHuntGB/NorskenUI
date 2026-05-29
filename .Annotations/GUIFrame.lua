@@ -173,7 +173,7 @@
 ---@field sidebarExpanded table<string, boolean>
 ---@field Show fun(self: GUIFrame)
 ---@field RefreshContent fun(self: GUIFrame)
----@field SelectSidebarItem fun(self: GUIFrame, itemId: string)
+---@field SelectSidebarItem fun(self: GUIFrame, itemId: string, searchResult: table?)
 
 ---@class NRSKNUI
 ---@field GUIFrame GUIFrame

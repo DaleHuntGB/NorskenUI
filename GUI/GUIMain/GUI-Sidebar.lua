@@ -8,7 +8,8 @@ local math = math
 local C_Timer = C_Timer
 local ipairs = ipairs
 local CreateFrame = CreateFrame
-local CreateColor = CreateColor
+local pairs = pairs
+local pcall = pcall
 local wipe = wipe
 
 GUIFrame.sidebarHeaderPool = {}
@@ -41,6 +42,153 @@ function GUIFrame:ReleaseSectionHeaders()
     end
 end
 
+-- Search functionality
+local PLACEHOLDER_TEXT = "Search..."
+GUIFrame.searchText = ""
+GUIFrame.searchResults = {}
+GUIFrame.widgetRegistry = {}
+GUIFrame.currentBuildingPageId = nil
+
+function GUIFrame:RegisterSearchableWidget(widget, labelText)
+    if not self.currentBuildingPageId or not labelText or labelText == "" then return end
+    if not self.widgetRegistry[self.currentBuildingPageId] then self.widgetRegistry[self.currentBuildingPageId] = {} end
+    table.insert(self.widgetRegistry[self.currentBuildingPageId], { widget = widget, label = labelText, })
+end
+
+function GUIFrame:ClearWidgetRegistry(pageId)
+    if pageId then self.widgetRegistry[pageId] = nil end
+end
+
+function GUIFrame:BuildSearchIndex()
+    local index = {}
+    for tabId, config in pairs(self.SidebarConfig) do
+        for _, section in ipairs(config) do
+            if section.type == "header" and section.items then
+                for _, item in ipairs(section.items) do
+                    table.insert(index, {
+                        id = item.id,
+                        text = item.text,
+                        sectionId = section.id,
+                        sectionText = section.text,
+                        tabId = tabId,
+                        elvUIDisabled = item.elvUIDisabled or section.elvUIDisabled,
+                        isPage = true,
+                    })
+                end
+            end
+        end
+    end
+    self.searchIndex = index
+    return index
+end
+
+function GUIFrame:PreBuildAllPagesForSearch()
+    if self.searchIndexBuilt then return end
+
+    local dummyFrame = CreateFrame("Frame", nil, UIParent)
+    dummyFrame:SetSize(600, 2000)
+    dummyFrame:Hide()
+
+    for _, config in pairs(self.SidebarConfig) do
+        for _, section in ipairs(config) do
+            if section.type == "header" and section.items then
+                for _, item in ipairs(section.items) do
+                    local pageId = item.id
+                    if self.ContentBuilders[pageId] and not self.widgetRegistry[pageId] then
+                        self.currentBuildingPageId = pageId
+                        pcall(self.ContentBuilders[pageId], dummyFrame, 0)
+                        self.currentBuildingPageId = nil
+
+                        for _, child in ipairs({ dummyFrame:GetChildren() }) do
+                            child:Hide()
+                            child:SetParent(nil)
+                        end
+                        for _, region in ipairs({ dummyFrame:GetRegions() }) do region:Hide() end
+                    end
+                end
+            end
+        end
+    end
+
+    dummyFrame:SetParent(nil)
+    self.searchIndexBuilt = true
+end
+
+function GUIFrame:GetPageInfoById(pageId)
+    for tabId, config in pairs(self.SidebarConfig) do
+        for _, section in ipairs(config) do
+            if section.type == "header" and section.items then
+                for _, item in ipairs(section.items) do
+                    if item.id == pageId then
+                        return {
+                            id = item.id,
+                            text = item.text,
+                            sectionId = section.id,
+                            sectionText = section.text,
+                            tabId = tabId,
+                            elvUIDisabled = item.elvUIDisabled or section.elvUIDisabled,
+                        }
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function GUIFrame:SearchSidebar(searchText)
+    wipe(self.searchResults)
+    if not searchText or searchText == "" then return self.searchResults end
+    if not self.searchIndex then self:BuildSearchIndex() end
+
+    local searchLower = searchText:lower()
+    local addedPages = {}
+
+    for _, entry in ipairs(self.searchIndex) do
+        local textLower = entry.text:lower()
+        local sectionLower = entry.sectionText:lower()
+        if textLower:find(searchLower, 1, true) or sectionLower:find(searchLower, 1, true) then
+            table.insert(self.searchResults, entry)
+            addedPages[entry.id] = true
+        end
+    end
+
+    for pageId, widgets in pairs(self.widgetRegistry) do
+        for _, widgetData in ipairs(widgets) do
+            local labelLower = widgetData.label:lower()
+            if labelLower:find(searchLower, 1, true) then
+                local pageInfo = self:GetPageInfoById(pageId)
+                if pageInfo and not addedPages[pageId] then
+                    table.insert(self.searchResults, pageInfo)
+                    addedPages[pageId] = true
+                end
+                table.insert(self.searchResults, {
+                    id = pageId,
+                    text = widgetData.label,
+                    sectionId = pageInfo and pageInfo.sectionId,
+                    sectionText = pageInfo and pageInfo.text or pageId,
+                    tabId = pageInfo and pageInfo.tabId,
+                    elvUIDisabled = pageInfo and pageInfo.elvUIDisabled,
+                    isWidget = true,
+                    widget = widgetData.widget,
+                })
+            end
+        end
+    end
+
+    return self.searchResults
+end
+
+function GUIFrame:ClearSearch()
+    self.searchText = ""
+    wipe(self.searchResults)
+    if self.searchEditBox then
+        self.searchEditBox:SetText(PLACEHOLDER_TEXT)
+        self.searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
+    end
+    self:RefreshSidebar()
+end
+
 function GUIFrame:CreateSearchHeader(parent)
     if not parent then return end
 
@@ -66,26 +214,36 @@ function GUIFrame:CreateSearchHeader(parent)
     searchEditBox:SetFontObject("GameFontNormal")
     searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
     searchEditBox:SetAutoFocus(false)
-    searchEditBox:SetText("Search...")
+    searchEditBox:SetText(PLACEHOLDER_TEXT)
+    self.searchEditBox = searchEditBox
 
-    searchEditBox:SetScript("OnTextChanged", function(self, userInput)
+    searchEditBox:SetScript("OnTextChanged", function(editBox, userInput)
         if not userInput then return end
+        local text = editBox:GetText()
+        if text == PLACEHOLDER_TEXT then
+            GUIFrame.searchText = ""
+        else
+            GUIFrame.searchText = text
+        end
+        GUIFrame:SearchSidebar(GUIFrame.searchText)
+        GUIFrame:RefreshSidebar()
     end)
 
-    searchEditBox:SetScript("OnEscapePressed", function(self)
-        self:ClearFocus()
+    searchEditBox:SetScript("OnEscapePressed", function(editBox)
+        editBox:ClearFocus()
+        if GUIFrame.searchText ~= "" then GUIFrame:ClearSearch() end
     end)
 
-    searchEditBox:SetScript("OnEnterPressed", function(self)
-        self:ClearFocus()
+    searchEditBox:SetScript("OnEnterPressed", function(editBox) editBox:ClearFocus() end)
+
+    searchEditBox:SetScript("OnEditFocusGained", function(editBox)
+        editBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+        if editBox:GetText() == PLACEHOLDER_TEXT then editBox:SetText("") end
     end)
 
-    searchEditBox:SetScript("OnEditFocusGained", function()
-        searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
-    end)
-
-    searchEditBox:SetScript("OnEditFocusLost", function()
-        searchEditBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
+    searchEditBox:SetScript("OnEditFocusLost", function(editBox)
+        editBox:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.6)
+        if editBox:GetText() == "" then editBox:SetText(PLACEHOLDER_TEXT) end
     end)
 
     return searchContainer
@@ -335,6 +493,7 @@ function GUIFrame:ReleaseStaticSidebarItems()
         item:ClearAllPoints()
         item.id = nil
         item.disabled = nil
+        item.searchResult = nil
     end
 end
 
@@ -373,36 +532,36 @@ function GUIFrame:CreateStaticSidebarItem()
     item.label = label
 
     item.hoverTarget = 0
-    item:SetScript("OnUpdate", function(self, elapsed)
+    item:SetScript("OnUpdate", function(sideItem, elapsed)
         local current = hoverBg:GetAlpha()
-        if math.abs(current - self.hoverTarget) > 0.01 then
+        if math.abs(current - sideItem.hoverTarget) > 0.01 then
             local speed = elapsed / HOVER_DURATION
-            if self.hoverTarget > current then
-                hoverBg:SetAlpha(math.min(current + speed, self.hoverTarget))
+            if sideItem.hoverTarget > current then
+                hoverBg:SetAlpha(math.min(current + speed, sideItem.hoverTarget))
             else
-                hoverBg:SetAlpha(math.max(current - speed, self.hoverTarget))
+                hoverBg:SetAlpha(math.max(current - speed, sideItem.hoverTarget))
             end
         end
     end)
 
-    item:SetScript("OnEnter", function(self)
-        if self.disabled then return end
-        self.hoverTarget = 1
-        if self.id ~= GUIFrame.selectedSidebarItem then
-            self.label:SetTextColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3], 1)
+    item:SetScript("OnEnter", function(sideItem)
+        if sideItem.disabled then return end
+        sideItem.hoverTarget = 1
+        if sideItem.id ~= GUIFrame.selectedSidebarItem then
+            sideItem.label:SetTextColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3], 1)
         end
     end)
 
-    item:SetScript("OnLeave", function(self)
-        self.hoverTarget = 0
-        if self.id ~= GUIFrame.selectedSidebarItem and not self.disabled then
-            self.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+    item:SetScript("OnLeave", function(sideItem)
+        sideItem.hoverTarget = 0
+        if sideItem.id ~= GUIFrame.selectedSidebarItem and not sideItem.disabled then
+            sideItem.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
         end
     end)
 
-    item:SetScript("OnClick", function(self, button)
-        if button == "LeftButton" and not self.disabled then
-            GUIFrame:SelectSidebarItem(self.id)
+    item:SetScript("OnClick", function(sideItem, button)
+        if button == "LeftButton" and not sideItem.disabled then
+            GUIFrame:SelectSidebarItem(sideItem.id, sideItem.searchResult)
         end
     end)
 
@@ -465,12 +624,8 @@ function GUIFrame:CreateSidebar(parent)
     sidebar.UpdateScrollBarVisibility = UpdateSidebarScrollBarVisibility
     scrollChild:HookScript("OnSizeChanged", UpdateSidebarScrollBarVisibility)
     scrollFrame:HookScript("OnSizeChanged", UpdateSidebarScrollBarVisibility)
-    scrollFrame:HookScript("OnShow", function()
-        C_Timer.After(0, UpdateSidebarScrollBarVisibility)
-    end)
-    sidebar:SetScript("OnSizeChanged", function()
-        UpdateSidebarScrollChildWidth()
-    end)
+    scrollFrame:HookScript("OnShow", function() C_Timer.After(0, UpdateSidebarScrollBarVisibility) end)
+    sidebar:SetScript("OnSizeChanged", function() UpdateSidebarScrollChildWidth() end)
     scrollChild:SetWidth(Theme.sidebarWidth - Theme.borderSize)
     sidebar.scrollFrame = scrollFrame
     sidebar.scrollChild = scrollChild
@@ -479,7 +634,67 @@ function GUIFrame:CreateSidebar(parent)
     return sidebar
 end
 
-function GUIFrame:SelectSidebarItem(itemId)
+function GUIFrame:FlashWidget(widget)
+    if not widget then return end
+
+    local flashOverlay = widget._searchFlashOverlay
+    if not flashOverlay then
+        flashOverlay = CreateFrame("Frame", nil, widget)
+        flashOverlay:SetAllPoints()
+        flashOverlay:SetFrameLevel(widget:GetFrameLevel() + 10)
+        local tex = flashOverlay:CreateTexture(nil, "OVERLAY")
+        tex:SetAllPoints()
+        tex:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.3)
+        flashOverlay.tex = tex
+        widget._searchFlashOverlay = flashOverlay
+    end
+
+    flashOverlay:Show()
+    flashOverlay:SetAlpha(1)
+
+    local fadeOut = flashOverlay:CreateAnimationGroup()
+    local fade = fadeOut:CreateAnimation("Alpha")
+    fade:SetFromAlpha(1)
+    fade:SetToAlpha(0)
+    fade:SetDuration(1.5)
+    fade:SetSmoothing("OUT")
+    fadeOut:SetScript("OnFinished", function() flashOverlay:Hide() end)
+    fadeOut:Play()
+end
+
+function GUIFrame:ScrollToWidget(widget)
+    if not widget or not self.contentArea or not self.contentArea.scrollFrame then return end
+
+    local scrollFrame = self.contentArea.scrollFrame
+    local scrollChild = self.contentArea.scrollChild
+    if not scrollChild then return end
+
+    C_Timer.After(0.05, function()
+        local widgetTop = widget:GetTop()
+        local scrollChildTop = scrollChild:GetTop()
+        local scrollFrameHeight = scrollFrame:GetHeight()
+
+        if not widgetTop or not scrollChildTop then return end
+
+        local relativeY = scrollChildTop - widgetTop
+        local maxScroll = scrollChild:GetHeight() - scrollFrameHeight
+        local targetScroll = math.max(0, math.min(relativeY - 50, maxScroll))
+
+        scrollFrame:SetVerticalScroll(targetScroll)
+        self:FlashWidget(widget)
+    end)
+end
+
+---@param itemId string
+---@param searchResult table?
+function GUIFrame:SelectSidebarItem(itemId, searchResult)
+    local widgetToHighlight = nil
+
+    if searchResult then
+        self.sidebarExpanded[searchResult.sectionId] = true
+        if searchResult.isWidget and searchResult.widget then widgetToHighlight = searchResult.widget end
+    end
+
     self.selectedSidebarItem = itemId
     for _, item in ipairs(self.staticSidebarItemPool) do
         if item.inUse then
@@ -498,6 +713,9 @@ function GUIFrame:SelectSidebarItem(itemId)
         end
     end
     self:RefreshContent()
+
+    -- Delay to let layout finish so widget has valid position data
+    if widgetToHighlight then C_Timer.After(0.1, function() self:ScrollToWidget(widgetToHighlight) end) end
 end
 
 GUIFrame.sidebarExpanded = GUIFrame.sidebarExpanded or {}
@@ -557,21 +775,90 @@ function GUIFrame:RefreshSidebarImmediate()
             region:SetText("")
         end
     end
-    local config = self.SidebarConfig[self.selectedTab]
+
     scrollFrame:ClearAllPoints()
     scrollFrame:SetPoint("TOPLEFT", self.sidebar, "TOPLEFT", 0, 0)
     scrollFrame:SetPoint("BOTTOMRIGHT", self.sidebar, "BOTTOMRIGHT", -Theme.borderSize, Theme.paddingSmall)
+
+    local yOffset = Theme.paddingSmall
+    local itemSpacing = 1
+    local horizontalPadding = Theme.paddingSmall
+
+    if self.sidebarEmptyText then self.sidebarEmptyText:Hide() end
+
+    if self.searchText and self.searchText ~= "" then
+        local results = self.searchResults
+        if #results == 0 then
+            if not self.sidebarEmptyText then
+                self.sidebarEmptyText = scrollChild:CreateFontString(nil, "OVERLAY")
+                NRSKNUI:ApplyThemeFont(self.sidebarEmptyText, "normal")
+                self.sidebarEmptyText:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary
+                    [3], 0.6)
+            end
+            self.sidebarEmptyText:SetText("No results found")
+            self.sidebarEmptyText:SetPoint("TOP", scrollChild, "TOP", 0, -yOffset - 10)
+            self.sidebarEmptyText:Show()
+            scrollChild:SetHeight(yOffset + 40)
+            return
+        end
+
+        for _, result in ipairs(results) do
+            local item = self:GetStaticSidebarItem()
+            item:SetParent(scrollChild)
+            item:SetFrameLevel(scrollChild:GetFrameLevel() + 2)
+            item:SetHeight(itemHeight)
+            item:SetAlpha(1)
+            item:ClearAllPoints()
+            item:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", horizontalPadding, -yOffset)
+            item:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -horizontalPadding, -yOffset)
+            item.id = result.id
+            item.searchResult = result
+            item.label:Show()
+            item.label:SetAlpha(1)
+            NRSKNUI:ApplyThemeFont(item.label, "normal")
+            local displayText
+            if result.isWidget then
+                displayText = "|cFFAAAAAA»|r " .. result.text
+            else
+                displayText = result.text .. " |cFF888888(" .. result.sectionText .. ")|r"
+            end
+            item.label:SetText(displayText)
+
+            local itemDisabled = result.elvUIDisabled and NRSKNUI:ShouldNotLoadModule()
+            if itemDisabled then
+                item.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.35)
+                item.accentBar:Hide()
+                item.selectedBg:Hide()
+                item:EnableMouse(false)
+                item.disabled = true
+            else
+                item.disabled = false
+                item:EnableMouse(true)
+                if result.id == self.selectedSidebarItem then
+                    item.accentBar:Show()
+                    item.selectedBg:Show()
+                    item.label:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+                else
+                    item.accentBar:Hide()
+                    item.selectedBg:Hide()
+                    item.label:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 1)
+                end
+            end
+            yOffset = yOffset + itemHeight + itemSpacing
+        end
+        scrollChild:SetHeight(yOffset + Theme.paddingSmall)
+        return
+    end
+
+    local config = self.SidebarConfig[self.selectedTab]
     if not config then
         scrollChild:SetHeight(1)
         return
     end
-    local yOffset = Theme.paddingSmall
-    local itemSpacing = 1
+
     local sectionSpacing = 4
     local itemIndent = 0
-    if self.sidebarEmptyText then
-        self.sidebarEmptyText:Hide()
-    end
+
     for _, sectionConfig in ipairs(config) do
         if sectionConfig.type == "header" then
             local isExpanded = self.sidebarExpanded[sectionConfig.id]
@@ -586,7 +873,6 @@ function GUIFrame:RefreshSidebarImmediate()
                     item:SetFrameLevel(scrollChild:GetFrameLevel() + 2)
                     item:SetHeight(itemHeight)
                     item:SetAlpha(1)
-                    local horizontalPadding = Theme.paddingSmall
                     item:ClearAllPoints()
                     item:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", horizontalPadding + itemIndent, -yOffset)
                     item:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -horizontalPadding, -yOffset)

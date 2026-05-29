@@ -564,5 +564,6 @@ function GUIFrame:CreateSlider(parent, labelText, config)
         SetupTooltip(rightStepper)
     end
 
+    self:RegisterSearchableWidget(row, labelText)
     return row
 end

@@ -992,7 +992,10 @@ function GUIFrame:RefreshContent()
     local yOffset = Theme.paddingSmall
 
     if itemId and self.ContentBuilders[itemId] then
+        self:ClearWidgetRegistry(itemId)
+        self.currentBuildingPageId = itemId
         local ok, result = pcall(self.ContentBuilders[itemId], scrollChild, yOffset)
+        self.currentBuildingPageId = nil
         if ok then
             if result then
                 yOffset = result
@@ -1053,6 +1056,9 @@ function GUIFrame:Show()
     if isFirstCreate then
         self:CreateMainFrame()
         GUIFrame:InitializeSidebarExpansion()
+        C_Timer.After(0.1, function()
+            self:PreBuildAllPagesForSearch()
+        end)
     end
 
     self:RestoreFramePosition()

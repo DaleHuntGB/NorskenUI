@@ -351,5 +351,6 @@ function GUIFrame:CreateCheckbox(parent, labelText, config)
         SetupTooltip(button)
     end
 
+    self:RegisterSearchableWidget(row, labelText)
     return row
 end

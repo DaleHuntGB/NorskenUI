@@ -917,5 +917,6 @@ function GUIFrame:CreateDropdown(parent, labelText, config)
 
     Mixin(row, NUIDropdownMixin)
 
+    self:RegisterSearchableWidget(row, labelText)
     return row
 end

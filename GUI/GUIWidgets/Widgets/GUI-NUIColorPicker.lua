@@ -168,5 +168,7 @@ function GUIFrame:CreateColorPicker(parent, labelText, config)
         end
         ColorPickerFrame:SetupColorPickerAndShow(info)
     end)
+
+    self:RegisterSearchableWidget(row, labelText)
     return row
 end
