@@ -102,6 +102,11 @@ local HYPERLINK_TYPES = {
     unit = true,
 }
 
+-- Cached values to avoid repeated lookups
+local cachedFontPath
+local cachedTabAccentColor = { r = 1, g = 0.82, b = 0 }
+local cachedThemeAccentColor = { r = 1, g = 1, b = 1 }
+
 local SHORT_CHANNELS = {
     GUILD = "G",
     PARTY = "P",
@@ -144,11 +149,22 @@ CHAT.originalStates = {}
 
 function CHAT:UpdateDB()
     self.db = NRSKNUI.db.profile.Skinning.Chatv2
+    cachedFontPath = LSM and LSM:Fetch("font", self.db.FontFace) or STANDARD_TEXT_FONT
+    local customColor = self.db.TabTextColor
+    if customColor then
+        cachedTabAccentColor.r = customColor.r or 1
+        cachedTabAccentColor.g = customColor.g or 0.82
+        cachedTabAccentColor.b = customColor.b or 0
+    end
+    cachedThemeAccentColor.r = Theme.accent[1]
+    cachedThemeAccentColor.g = Theme.accent[2]
+    cachedThemeAccentColor.b = Theme.accent[3]
 end
 
 function CHAT:OnInitialize()
     self:UpdateDB()
     self:SetEnabledState(false)
+    BuildShortChannelPatterns()
 end
 
 function CHAT:PlayWhisperSound(soundName)
@@ -164,21 +180,15 @@ function CHAT:RegisterWhisperSounds()
     self.whisperSoundsRegistered = true
 
     self:RegisterEvent("CHAT_MSG_WHISPER", function()
-        C_Timer.After(0, function() self:PlayWhisperSound(ws.WhisperSound) end)
+        self:PlayWhisperSound(ws.WhisperSound)
     end)
     self:RegisterEvent("CHAT_MSG_BN_WHISPER", function()
-        C_Timer.After(0, function() self:PlayWhisperSound(ws.BNetWhisperSound) end)
+        self:PlayWhisperSound(ws.BNetWhisperSound)
     end)
-end
-
--- Secret Message Protection
-local function canChangeMessage(arg1, id)
-    if id and arg1 == '' then return id end
 end
 
 function CHAT:MessageIsProtected(message)
-    if NRSKNUI:IsSecretValue(message) then return true end
-    return message and (message ~= gsub(message, '(:?|?)|K(.-)|k', canChangeMessage))
+    return NRSKNUI:IsSecretValue(message)
 end
 
 -- Chat Copy Feature
@@ -308,8 +318,7 @@ function CHAT:BuildCopyChatFrame()
     headerBorder:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
     local title = header:CreateFontString(nil, "OVERLAY")
-    local fontPath = LSM and LSM:Fetch("font", self.db.FontFace) or STANDARD_TEXT_FONT
-    title:SetFont(fontPath, 14, "OUTLINE")
+    title:SetFont(cachedFontPath, 14, "OUTLINE")
     title:SetPoint("LEFT", header, "LEFT", 6, 0)
     title:SetText("Chat Copy")
     title:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
@@ -357,7 +366,7 @@ function CHAT:BuildCopyChatFrame()
     frame.closeButton = closeBtn
 
     local hint = header:CreateFontString(nil, "OVERLAY")
-    hint:SetFont(fontPath, 11, "OUTLINE")
+    hint:SetFont(cachedFontPath, 11, "OUTLINE")
     hint:SetPoint("RIGHT", closeBtn, "LEFT", -12, 0)
     hint:SetText("CTRL+A to select all, CTRL+C to copy")
     hint:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.8)
@@ -397,7 +406,7 @@ function CHAT:BuildCopyChatFrame()
     editBox:SetMaxLetters(99999)
     editBox:EnableMouse(true)
     editBox:SetAutoFocus(false)
-    editBox:SetFont(fontPath, 12, "OUTLINE")
+    editBox:SetFont(cachedFontPath, 12, "OUTLINE")
     editBox:SetShadowColor(0, 0, 0, 0)
     editBox:SetShadowOffset(0, 0)
     editBox:SetTextColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3], 1)
@@ -465,16 +474,15 @@ function CHAT:CreateCopyButton(chat)
     copyButton:SetFrameLevel(chat:GetFrameLevel() + 5)
     chat.copyButton = copyButton
 
-    local fontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
     local text = copyButton:CreateFontString(nil, "OVERLAY")
-    text:SetFont(fontPath, 14, "OUTLINE")
+    text:SetFont(cachedFontPath, 14, "OUTLINE")
     text:SetPoint("CENTER", copyButton, "CENTER", 0, 0)
     text:SetText("C")
     copyButton.text = text
 
     local color = db.TabSelectedTextColor
     if not color or not db.TabSelectedTextEnabled then
-        color = { r = Theme.accent[1], g = Theme.accent[2], b = Theme.accent[3] }
+        color = cachedThemeAccentColor
     end
 
     text:SetTextColor(color.r, color.g, color.b, 0.5)
@@ -489,7 +497,6 @@ end
 function CHAT:OnEnable()
     if NRSKNUI:ShouldNotLoadModule() then return end
     self:UpdateDB()
-    BuildShortChannelPatterns()
     self:CreateChatPanel()
     self:SetupChat()
     self:RegisterEditMode()
@@ -1046,7 +1053,7 @@ function CHAT:OnFCFTab_UpdateColors(tab, selected)
             if nameTextNotSecret and not selected then tab:SetText(name) end
 
             local colorMode = db.TabTextColorMode or "custom"
-            local customColor = db.TabTextColor or { r = 1, g = 0.82, b = 0 }
+            local customColor = db.TabTextColor or cachedTabAccentColor
             local r, g, b = NRSKNUI:GetAccentColor(colorMode, { customColor.r, customColor.g, customColor.b, 1 })
             tab.Text:SetTextColor(r, g, b)
         end
@@ -1141,7 +1148,7 @@ function CHAT:OnFCFDockOverflowButton_UpdatePulseState(btn)
         end
     elseif not btn:IsMouseOver() then
         local colorMode = db.TabTextColorMode or "custom"
-        local customColor = db.TabTextColor or { r = 1, g = 0.82, b = 0 }
+        local customColor = db.TabTextColor or cachedTabAccentColor
         local r, g, b = NRSKNUI:GetAccentColor(colorMode, { customColor.r, customColor.g, customColor.b, 1 })
         btn.Texture:SetVertexColor(r, g, b)
     end
@@ -1710,8 +1717,7 @@ function CHAT:StyleEditbox(editbox)
     self:ApplyFrameStyle(editbox, nil, true)
 
     local charCount = editbox:CreateFontString(nil, "ARTWORK")
-    local fontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
-    charCount:SetFont(fontPath, 10, db.FontOutline or "")
+    charCount:SetFont(cachedFontPath, 10, db.FontOutline or "")
     charCount:SetTextColor(190 / 255, 190 / 255, 190 / 255, 0.4)
     charCount:SetPoint("TOPRIGHT", editbox, "TOPRIGHT", -5, 0)
     charCount:SetPoint("BOTTOMRIGHT", editbox, "BOTTOMRIGHT", -5, 0)
@@ -1811,10 +1817,9 @@ function CHAT:StyleChat(chat)
     local id = chat:GetID()
     local tab = self:GetTab(chat)
 
-    local fontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
     local _, fontSize = FCF_GetChatWindowInfo(id)
     local fontOutline = NormalizeFontOutline(db.FontOutline)
-    chat:SetFont(fontPath, fontSize, fontOutline)
+    chat:SetFont(cachedFontPath, fontSize, fontOutline)
 
     local shadow = db.FontShadow
     if shadow and shadow.Enabled then
@@ -1838,10 +1843,9 @@ function CHAT:StyleChat(chat)
     if tab and not IsCombatLog(chat) then tab:SetScript("OnClick", CHAT.Tab_OnClick) end
 
     if tab and tab.Text then
-        local tabFontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
         local tabFontSize = db.TabFontSize or 12
         local tabFontOutline = NormalizeFontOutline(db.FontOutline)
-        tab.Text:SetFont(tabFontPath, tabFontSize, tabFontOutline)
+        tab.Text:SetFont(cachedFontPath, tabFontSize, tabFontOutline)
 
         if shadow and shadow.Enabled then
             local shadowColor = shadow.Color or { 0, 0, 0, 1 }
@@ -2122,7 +2126,7 @@ function CHAT:StyleOverflowButton()
     local function ApplyInactiveColor()
         if not btn.Texture then return end
         local colorMode = self.db.TabTextColorMode or "custom"
-        local customColor = self.db.TabTextColor or { r = 1, g = 0.82, b = 0 }
+        local customColor = self.db.TabTextColor or cachedTabAccentColor
         local r, g, b = NRSKNUI:GetAccentColor(colorMode, { customColor.r, customColor.g, customColor.b, 1 })
         btn.Texture:SetVertexColor(r, g, b)
     end
@@ -2380,49 +2384,12 @@ end
 function CHAT:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
     self:UpdateDB()
-    local db = self.db
     self:UpdatePanel()
 
     for _, frameName in ipairs(_G.CHAT_FRAMES) do
         local chat = _G[frameName]
         if chat then
-            local id = chat:GetID()
-            local tab = self:GetTab(chat)
-
-            local fontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
-            local _, fontSize = FCF_GetChatWindowInfo(id)
-            local fontOutline = NormalizeFontOutline(db.FontOutline)
-            chat:SetFont(fontPath, fontSize, fontOutline)
-
-            local shadow = db.FontShadow
-            if shadow and shadow.Enabled then
-                local shadowColor = shadow.Color or { 0, 0, 0, 1 }
-                chat:SetShadowColor(shadowColor[1] or 0, shadowColor[2] or 0, shadowColor[3] or 0, shadowColor[4] or 1)
-                chat:SetShadowOffset(shadow.OffsetX or 1, shadow.OffsetY or -1)
-            else
-                chat:SetShadowOffset(0, 0)
-            end
-
-            chat:SetTimeVisible(db.FadeEnabled and db.FadeTime or 120)
-            chat:SetMaxLines(db.MaxLines or 500)
-            chat:SetFading(db.FadeEnabled ~= false)
-
-            if tab and tab.Text then
-                local tabFontPath = LSM and LSM:Fetch("font", db.FontFace) or STANDARD_TEXT_FONT
-                local tabFontSize = db.TabFontSize or 12
-                local tabFontOutline = NormalizeFontOutline(db.FontOutline)
-                tab.Text:SetFont(tabFontPath, tabFontSize, tabFontOutline)
-
-                if shadow and shadow.Enabled then
-                    local shadowColor = shadow.Color or { 0, 0, 0, 1 }
-                    tab.Text:SetShadowColor(shadowColor[1] or 0, shadowColor[2] or 0, shadowColor[3] or 0,
-                        shadowColor[4] or 1)
-                    tab.Text:SetShadowOffset(shadow.OffsetX or 1, shadow.OffsetY or -1)
-                else
-                    tab.Text:SetShadowOffset(0, 0)
-                end
-            end
-
+            self:StyleChat(chat)
             if _G.FCFTab_UpdateAlpha then _G.FCFTab_UpdateAlpha(chat) end
         end
     end
