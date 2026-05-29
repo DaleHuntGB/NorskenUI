@@ -843,11 +843,13 @@ function GUIFrame:RefreshSidebarImmediate()
             item.searchResult = result
             item.label:Show()
             item.label:SetAlpha(1)
-            NRSKNUI:ApplyThemeFont(item.label, "normal")
+
             local displayText
             if result.isWidget then
-                displayText = "|cFFAAAAAA»|r " .. result.text
+                NRSKNUI:ApplyThemeFont(item.label, "normal")
+                displayText = " |cFFAAAAAA» |r " .. result.text
             else
+                NRSKNUI:ApplyThemeFont(item.label, "large")
                 displayText = result.text .. " |cFF888888(" .. result.sectionText .. ")|r"
             end
             item.label:SetText(displayText)
