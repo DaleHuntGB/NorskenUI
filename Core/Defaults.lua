@@ -228,6 +228,13 @@ local Defaults = {
                 XOffset = 0,
                 YOffset = 0,
             },
+            LoadConditions = {
+                Enabled = false,
+                SelectedCategory = "Instance",
+                Instance = { Types = {} },
+                Group = { Types = {} },
+                Combat = {},
+            },
         },
 
         -- Combat Message Settings

@@ -90,6 +90,23 @@ GUIFrame:RegisterContent("PotionReady", function(scrollChild, yOffset)
 
     yOffset = posOffset
 
+    -- Load Conditions Card
+    db.LoadConditions = db.LoadConditions or NRSKNUI.LoadConditions:GetDefaults()
+
+    local loadCard, loadOffset = GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, {
+        db = db.LoadConditions,
+        onChangeCallback = function()
+            if POT then POT:UpdateCooldownState() end
+        end,
+        onRefreshCallback = function()
+            GUIFrame:RefreshContent()
+        end,
+    })
+    manager:Register(loadCard, "all")
+    if loadCard.conditionWidgets then manager:RegisterGroup(loadCard.conditionWidgets, "all") end
+
+    yOffset = loadOffset
+
     UpdateAllWidgetStates()
 
     return yOffset

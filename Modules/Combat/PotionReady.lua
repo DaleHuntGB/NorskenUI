@@ -47,12 +47,16 @@ function POT:OnEnable()
         if select(2, GetInstanceInfo()) == "raid" then POT:UpdateCooldownState() end
     end)
 
+    -- Register for load condition changes
+    NRSKNUI.LoadConditions:RegisterCallback(self, self.UpdateCooldownState)
+
     -- Check inital pot state, reloads and logins for example
     self:UpdateCooldownState()
 end
 
 function POT:OnDisable()
     self:UnregisterAllEvents()
+    NRSKNUI.LoadConditions:UnregisterCallback(self)
     if self.cooldownTimer then
         self.cooldownTimer:Cancel()
         self.cooldownTimer = nil
@@ -93,6 +97,8 @@ function POT:ApplySettings()
 end
 
 function POT:UpdateCooldownState()
+    if self.isPreview then return end
+
     if self.cooldownTimer then
         self.cooldownTimer:Cancel()
         self.cooldownTimer = nil
@@ -109,9 +115,11 @@ function POT:UpdateCooldownState()
         end)
     else
         potionOnCooldown = false
-        if self.db.Enabled and self.alertFrame then
+        if self.db.Enabled and self.alertFrame and NRSKNUI.LoadConditions:Check(self.db.LoadConditions) then
             self.alertFrame.text:SetText(self.db.Text)
             self.alertFrame:Show()
+        elseif self.alertFrame then
+            self.alertFrame:Hide()
         end
     end
 end
@@ -127,7 +135,11 @@ end
 
 function POT:HidePreview()
     self.isPreview = false
-    if not self.db.Enabled and self.alertFrame then self.alertFrame:Hide() end
+    if not self.db.Enabled and self.alertFrame then
+        self.alertFrame:Hide()
+    else
+        self:UpdateCooldownState()
+    end
 end
 
 function POT:EditModeReg()

@@ -250,10 +250,17 @@ local function AcquireItemButton(parent)
 
     local btnText = btn:CreateFontString(nil, "OVERLAY")
     btnText:SetPoint("LEFT", btn, "LEFT", 8, 0)
-    btnText:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
+    btnText:SetPoint("RIGHT", btn, "RIGHT", -24, 0)
     btnText:SetJustifyH("LEFT")
     NRSKNUI:ApplyThemeFont(btnText, "normal")
     btn._text = btnText
+
+    local indicator = btn:CreateFontString(nil, "OVERLAY")
+    indicator:SetPoint("RIGHT", btn, "RIGHT", -8, 0)
+    NRSKNUI:ApplyThemeFont(indicator, "large")
+    indicator:SetText("•")
+    indicator:Hide()
+    btn._indicator = indicator
 
     return btn
 end
@@ -270,6 +277,7 @@ local function ReleaseItemButton(btn)
     btn._itemText = nil
     btn._updateColor = nil
     btn._index = nil
+    if btn._indicator then btn._indicator:Hide() end
     table_insert(itemButtonPool, btn)
 end
 
@@ -336,6 +344,7 @@ function GUIFrame:CreateDropdown(parent, labelText, config)
 
     row._normalizedOptions = {}
     row._optionColors = {}
+    row._optionIndicators = {}
     row._orderedKeys = nil
     if type(options) == "table" then
         if options[1] and type(options[1]) == "table" and (options[1].value or options[1].key) then
@@ -348,6 +357,9 @@ function GUIFrame:CreateDropdown(parent, labelText, config)
                 end
                 if opt.tooltip then
                     row._optionTooltips[optKey] = opt.tooltip
+                end
+                if opt.indicator then
+                    row._optionIndicators[optKey] = opt.indicator
                 end
                 table_insert(row._orderedKeys, optKey)
             end
@@ -673,6 +685,14 @@ function GUIFrame:CreateDropdown(parent, labelText, config)
             end
             btn._updateColor = UpdateItemColor
             UpdateItemColor()
+
+            local indicatorColor = row._optionIndicators and row._optionIndicators[key]
+            if indicatorColor and btn._indicator then
+                btn._indicator:SetTextColor(indicatorColor[1], indicatorColor[2], indicatorColor[3], 1)
+                btn._indicator:Show()
+            elseif btn._indicator then
+                btn._indicator:Hide()
+            end
 
             btn:SetScript("OnClick", function() SelectValue(btn._itemValue) end)
 
