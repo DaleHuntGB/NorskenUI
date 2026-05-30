@@ -30,12 +30,14 @@ local C_Container = C_Container
 
 local NUM_BAG_SLOTS = NUM_BAG_SLOTS or 4
 local LE_ITEM_CLASS_GEM = Enum.ItemClass.Gem or 3
+local LE_ITEM_CLASS_ITEM_ENHANCEMENT = Enum.ItemClass.ItemEnhancement or 8
 local SocketInventoryItem = SocketInventoryItem
 local AcceptSockets = AcceptSockets
 local CloseSocketInfo = CloseSocketInfo
 local InCombatLockdown = InCombatLockdown
 local ClearCursor = ClearCursor
 local HideUIPanel = HideUIPanel
+local UseContainerItem = C_Container.UseContainerItem
 
 local SLOT_FRAMES = {
     [1] = "CharacterHeadSlot",
@@ -574,14 +576,21 @@ local ITEM_ROW_PADDING = 4
 local POPUP_PADDING = 2
 local STANDARD_BACKDROP = { bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 }
 
-local function IsMouseOverGemUI()
+local function IsMouseOverSocketUI()
     if CHAR.gemPopup and CHAR.gemPopup:IsMouseOver() then return true end
     if CHAR.gemPopup then
         for _, btn in pairs(CHAR.gemPopup.buttons) do
             if btn:IsShown() and btn:IsMouseOver() then return true end
         end
     end
+    if CHAR.enchantPopup and CHAR.enchantPopup:IsMouseOver() then return true end
+    if CHAR.enchantPopup then
+        for _, btn in pairs(CHAR.enchantPopup.buttons) do
+            if btn:IsShown() and btn:IsMouseOver() then return true end
+        end
+    end
     if CHAR.currentSocketBtn and CHAR.currentSocketBtn:IsMouseOver() then return true end
+    if CHAR.enchantButton and CHAR.enchantButton:IsMouseOver() then return true end
     if CHAR.socketContainer then
         for _, socketBtn in pairs(CHAR.socketContainer.buttons) do
             if socketBtn:IsShown() and socketBtn:IsMouseOver() then return true end
@@ -645,6 +654,7 @@ function CHAR:CreateSocketButton(index)
     btn.qualityFrame, btn.quality = CreateQualityOverlay(btn)
 
     btn:SetScript("OnEnter", function(self)
+        CHAR:HideEnchantPopup()
         CHAR.currentSocketBtn = self
         CHAR:ShowGemPopup(self)
         if self.socketInfo then
@@ -660,8 +670,9 @@ function CHAR:CreateSocketButton(index)
     btn:SetScript("OnLeave", function()
         GameTooltip:Hide()
         C_Timer.After(0.05, function()
-            if IsMouseOverGemUI() then return end
+            if IsMouseOverSocketUI() then return end
             CHAR:HideGemPopup()
+            CHAR:HideEnchantPopup()
             CHAR:HideSlotHighlight()
         end)
     end)
@@ -719,7 +730,7 @@ function CHAR:CreateGemPopup()
     end)
     popup:SetScript("OnLeave", function()
         C_Timer.After(0.05, function()
-            if IsMouseOverGemUI() then return end
+            if IsMouseOverSocketUI() then return end
             CHAR:HideGemPopup()
             CHAR:HideSlotHighlight()
         end)
@@ -803,7 +814,7 @@ function CHAR:CreateGemButton(index)
         self._hoverTarget = 0
         GameTooltip:Hide()
         C_Timer.After(0.05, function()
-            if IsMouseOverGemUI() then return end
+            if IsMouseOverSocketUI() then return end
             CHAR:HideGemPopup()
             CHAR:HideSlotHighlight()
         end)
@@ -882,10 +893,15 @@ function CHAR:RefreshSocketButtons()
 
     for i = buttonIndex, #self.socketContainer.buttons do self.socketContainer.buttons[i]:Hide() end
 
-    local totalWidth = (buttonIndex - 1) * (db.SocketButtonSize + db.SocketButtonSpacing)
+    self:RefreshEnchantButton()
+
+    local socketCount = buttonIndex - 1
+    local enchantCount = (self.enchantButton and self.enchantButton:IsShown()) and 1 or 0
+    local totalButtons = socketCount + enchantCount
+    local totalWidth = totalButtons * (db.SocketButtonSize + db.SocketButtonSpacing)
     self.socketContainer:SetWidth(totalWidth > 0 and totalWidth or 1)
 
-    if buttonIndex > 1 then
+    if totalButtons > 0 then
         self.socketContainer:Show()
     else
         self.socketContainer:Hide()
@@ -973,6 +989,20 @@ function CHAR:HideGemPopup()
     if self.gemPopup then self.gemPopup:Hide() end
 end
 
+function CHAR:CreateSlotHighlightFrame()
+    local frame = CreateFrame("Frame", nil, UIParent)
+    frame:SetFrameStrata("DIALOG")
+
+    frame.texture = frame:CreateTexture(nil, "OVERLAY")
+    frame.texture:SetAllPoints()
+    frame.texture:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.4)
+    frame.texture:SetBlendMode("ADD")
+
+    NRSKNUI:AddBorders(frame, { Theme.accent[1], Theme.accent[2], Theme.accent[3], 1 })
+    frame:Hide()
+    return frame
+end
+
 function CHAR:ShowSlotHighlight(slotID)
     self:HideSlotHighlight()
 
@@ -982,23 +1012,42 @@ function CHAR:ShowSlotHighlight(slotID)
     local slotFrame = _G[frameName]
     if not slotFrame then return end
 
-    if not self.slotHighlight then
-        self.slotHighlight = CreateFrame("Frame", nil, UIParent)
-        self.slotHighlight:SetFrameStrata("DIALOG")
-
-        self.slotHighlight.texture = self.slotHighlight:CreateTexture(nil, "OVERLAY")
-        self.slotHighlight.texture:SetAllPoints()
-        self.slotHighlight.texture:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.4)
-        self.slotHighlight.texture:SetBlendMode("ADD")
-
-        NRSKNUI:AddBorders(self.slotHighlight, { Theme.accent[1], Theme.accent[2], Theme.accent[3], 1 })
+    if not self.slotHighlights then self.slotHighlights = {} end
+    if not self.slotHighlights[1] then
+        self.slotHighlights[1] = self:CreateSlotHighlightFrame()
     end
-    self.slotHighlight:SetAllPoints(slotFrame)
-    self.slotHighlight:Show()
+
+    self.slotHighlights[1]:SetAllPoints(slotFrame)
+    self.slotHighlights[1]:Show()
+end
+
+function CHAR:ShowMultiSlotHighlight(slotIDs)
+    self:HideSlotHighlight()
+    if not slotIDs then return end
+
+    if not self.slotHighlights then self.slotHighlights = {} end
+
+    for i, slotID in ipairs(slotIDs) do
+        local frameName = SLOT_FRAMES[slotID]
+        if frameName then
+            local slotFrame = _G[frameName]
+            if slotFrame then
+                if not self.slotHighlights[i] then
+                    self.slotHighlights[i] = self:CreateSlotHighlightFrame()
+                end
+                self.slotHighlights[i]:SetAllPoints(slotFrame)
+                self.slotHighlights[i]:Show()
+            end
+        end
+    end
 end
 
 function CHAR:HideSlotHighlight()
-    if self.slotHighlight then self.slotHighlight:Hide() end
+    if self.slotHighlights then
+        for _, highlight in pairs(self.slotHighlights) do
+            highlight:Hide()
+        end
+    end
 end
 
 function CHAR:SetupGemSocketHelper()
@@ -1008,6 +1057,7 @@ function CHAR:SetupGemSocketHelper()
 
     self:CreateSocketContainer()
     self:CreateGemPopup()
+    self:CreateEnchantPopup()
 
     self:RegisterEvent("PLAYER_EQUIPMENT_CHANGED", "RefreshSocketButtons")
     self:RegisterEvent("BAG_UPDATE_DELAYED", function()
@@ -1021,6 +1071,7 @@ function CHAR:SetupGemSocketHelper()
         PaperDollFrame:HookScript("OnHide", function()
             if CHAR.socketContainer then CHAR.socketContainer:Hide() end
             CHAR:HideGemPopup()
+            CHAR:HideEnchantPopup()
             CHAR:HideSlotHighlight()
         end)
     end
@@ -1029,4 +1080,402 @@ end
 function CHAR:DisableGemSocketHelper()
     if self.socketContainer then self.socketContainer:Hide() end
     self:HideGemPopup()
+    self:HideEnchantPopup()
+end
+
+-- Enchant Helper --
+
+local enchantCache = {}
+local ENCHANT_BUTTON_ICON = 4620672
+
+local ENCHANT_SLOT_KEYWORDS = {
+    ["chest"] = { 5 },
+    ["cloak"] = { 15 },
+    ["back"] = { 15 },
+    ["cape"] = { 15 },
+    ["legs"] = { 7 },
+    ["leg"] = { 7 },
+    ["boot"] = { 8 },
+    ["feet"] = { 8 },
+    ["bracer"] = { 9 },
+    ["wrist"] = { 9 },
+    ["ring"] = { 11, 12 },
+    ["weapon"] = { 16, 17 },
+    ["staff"] = { 16 },
+    ["2h weapon"] = { 16 },
+    ["glove"] = { 10 },
+    ["hand"] = { 10 },
+    ["helm"] = { 1 },
+    ["head"] = { 1 },
+    ["shoulder"] = { 3 },
+    ["belt"] = { 6 },
+    ["waist"] = { 6 },
+    ["neck"] = { 2 },
+    ["trinket"] = { 13, 14 },
+}
+
+local function GetEnchantTargetSlots(itemLink)
+    if not itemLink then return nil end
+    local data = C_TooltipInfo.GetHyperlink(itemLink)
+    if not data or not data.lines then return nil end
+
+    for _, line in ipairs(data.lines) do
+        local text = line.leftText
+        if text then
+            local lowerText = text:lower()
+            for keyword, slots in pairs(ENCHANT_SLOT_KEYWORDS) do
+                if lowerText:find(keyword, 1, true) then
+                    return slots
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function GetEnchantName(itemLink)
+    if not itemLink then return nil end
+    local data = C_TooltipInfo.GetHyperlink(itemLink)
+    if not data or not data.lines or not data.lines[1] then return nil end
+    local name = data.lines[1].leftText
+    if name then
+        name = name:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    end
+    return name
+end
+
+local function IsRingEnchant(targetSlots)
+    if not targetSlots then return false end
+    for _, slotID in ipairs(targetSlots) do
+        if slotID == 11 or slotID == 12 then return true end
+    end
+    return false
+end
+
+function CHAR:ScanBagsForEnchants()
+    wipe(enchantCache)
+    for bag = 0, NUM_BAG_SLOTS do
+        local numSlots = C_Container.GetContainerNumSlots(bag)
+        for slot = 1, numSlots do
+            local info = C_Container.GetContainerItemInfo(bag, slot)
+            if info and info.itemID then
+                local _, _, _, _, _, classID = C_Item.GetItemInfoInstant(info.itemID)
+                if classID == LE_ITEM_CLASS_ITEM_ENHANCEMENT then
+                    local targetSlots = GetEnchantTargetSlots(info.hyperlink)
+                    if targetSlots then
+                        local existing = enchantCache[info.itemID]
+                        if existing then
+                            existing.count = existing.count + info.stackCount
+                        else
+                            enchantCache[info.itemID] = {
+                                itemID = info.itemID,
+                                icon = info.iconFileID,
+                                count = info.stackCount,
+                                link = info.hyperlink,
+                                bagID = bag,
+                                slotID = slot,
+                                targetSlots = targetSlots,
+                            }
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return enchantCache
+end
+
+function CHAR:CreateEnchantButton()
+    if self.enchantButton then return self.enchantButton end
+
+    local db = self.db.GemSocketHelper
+    local btn = CreateFrame("Button", nil, self.socketContainer)
+    btn:SetSize(db.SocketButtonSize, db.SocketButtonSize)
+
+    btn.icon = btn:CreateTexture(nil, "ARTWORK")
+    btn.icon:SetAllPoints()
+    btn.icon:SetTexture(ENCHANT_BUTTON_ICON)
+    NRSKNUI:ApplyZoom(btn.icon, NRSKNUI.GlobalZoom)
+
+    NRSKNUI:AddBorders(btn, Theme.border)
+
+    btn.highlight = btn:CreateTexture(nil, "HIGHLIGHT")
+    btn.highlight:SetPoint("TOPLEFT", btn, "TOPLEFT", 1, -1)
+    btn.highlight:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -1, 1)
+    btn.highlight:SetColorTexture(1, 1, 1, 0.2)
+    btn.highlight:SetBlendMode("ADD")
+
+    btn:SetScript("OnEnter", function()
+        CHAR:HideGemPopup()
+        CHAR:HideSlotHighlight()
+        CHAR:ShowEnchantPopup(btn)
+    end)
+
+    btn:SetScript("OnLeave", function()
+        C_Timer.After(0.05, function()
+            if IsMouseOverSocketUI() then return end
+            CHAR:HideGemPopup()
+            CHAR:HideEnchantPopup()
+            CHAR:HideSlotHighlight()
+        end)
+    end)
+
+    btn:Hide()
+    self.enchantButton = btn
+    return btn
+end
+
+function CHAR:CreateEnchantPopup()
+    if self.enchantPopup then return self.enchantPopup end
+
+    local popup = CreateFrame("Frame", "NRSKNUIEnchantPopup", UIParent, "BackdropTemplate")
+    popup:SetBackdrop(STANDARD_BACKDROP)
+    popup:SetBackdropColor(Theme.bgMedium[1], Theme.bgMedium[2], Theme.bgMedium[3], Theme.bgMedium[4])
+    popup:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+    popup:SetSize(280, 50)
+    popup:SetFrameStrata("TOOLTIP")
+    popup:SetClipsChildren(true)
+    popup:Hide()
+
+    popup.title = popup:CreateFontString(nil, "OVERLAY")
+    popup.title:SetPoint("TOPLEFT", 6, -6)
+    NRSKNUI:ApplyFontToText(popup.title, "Expressway", 14, "OUTLINE", {})
+    popup.title:SetText("Enchants")
+    popup.title:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3])
+
+    popup.separator = popup:CreateTexture(nil, "ARTWORK")
+    popup.separator:SetHeight(1)
+    popup.separator:SetPoint("TOPLEFT", popup, "TOPLEFT", 0, -TITLE_HEIGHT)
+    popup.separator:SetPoint("TOPRIGHT", popup, "TOPRIGHT", 0, -TITLE_HEIGHT)
+    popup.separator:SetColorTexture(Theme.border[1], Theme.border[2], Theme.border[3], 1)
+
+    popup.noEnchants = popup:CreateFontString(nil, "OVERLAY")
+    popup.noEnchants:SetPoint("CENTER", 0, -8)
+    NRSKNUI:ApplyFontToText(popup.noEnchants, "Expressway", 14, "OUTLINE", {})
+    popup.noEnchants:SetText("No enchants in bags")
+    popup.noEnchants:SetTextColor(Theme.textMuted[1], Theme.textMuted[2], Theme.textMuted[3])
+    popup.noEnchants:Hide()
+
+    popup:EnableMouse(true)
+    popup:SetScript("OnEnter", function() end)
+    popup:SetScript("OnLeave", function()
+        C_Timer.After(0.05, function()
+            if IsMouseOverSocketUI() then return end
+            CHAR:HideEnchantPopup()
+            CHAR:HideSlotHighlight()
+        end)
+    end)
+
+    popup.buttons = {}
+    self.enchantPopup = popup
+    return popup
+end
+
+function CHAR:CreateEnchantButton_Popup(index)
+    local popup = self.enchantPopup
+    local iconSize = POPUP_ICON_SIZE
+    local rowHeight = POPUP_ICON_SIZE + ITEM_ROW_PADDING
+
+    if popup.buttons[index] then return popup.buttons[index] end
+
+    local btn = CreateFrame("Button", "NRSKNUIEnchantBtn" .. index, popup)
+    btn:SetHeight(rowHeight)
+    btn:SetPoint("TOPLEFT", popup, "TOPLEFT", POPUP_PADDING, -TITLE_HEIGHT - (index - 1) * rowHeight)
+    btn:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -POPUP_PADDING, -TITLE_HEIGHT - (index - 1) * rowHeight)
+
+    btn.iconFrame = CreateFrame("Frame", nil, btn)
+    btn.iconFrame:SetSize(iconSize, iconSize)
+    btn.iconFrame:SetPoint("LEFT", 0, 0)
+    NRSKNUI:AddBorders(btn.iconFrame, Theme.border)
+
+    btn.icon = btn.iconFrame:CreateTexture(nil, "ARTWORK")
+    btn.icon:SetAllPoints()
+    NRSKNUI:ApplyZoom(btn.icon, NRSKNUI.GlobalZoom)
+
+    btn.qualityFrame, btn.quality = CreateQualityOverlay(btn, btn.iconFrame)
+
+    btn.stats = btn:CreateFontString(nil, "OVERLAY")
+    btn.stats:SetPoint("LEFT", btn.iconFrame, "RIGHT", 6, 0)
+    btn.stats:SetWidth(220)
+    btn.stats:SetJustifyH("LEFT")
+    btn.stats:SetWordWrap(true)
+    NRSKNUI:ApplyFontToText(btn.stats, "Expressway", 12, "OUTLINE", {})
+    btn.stats:SetTextColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3])
+    btn.stats:SetShadowColor(0, 0, 0, 0)
+
+    btn.count = btn:CreateFontString(nil, "OVERLAY")
+    btn.count:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+    NRSKNUI:ApplyFontToText(btn.count, "Expressway", 12, "OUTLINE", {})
+    btn.count:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3])
+    btn.count:SetShadowColor(0, 0, 0, 0)
+
+    local hoverBg = btn:CreateTexture(nil, "BACKGROUND")
+    hoverBg:SetAllPoints()
+    hoverBg:SetColorTexture(1, 1, 1, 0.05)
+    hoverBg:SetAlpha(0)
+    btn._hoverBg = hoverBg
+    btn._hoverTarget = 0
+
+    btn:SetScript("OnUpdate", function(self, elapsed)
+        local current = self._hoverBg:GetAlpha()
+        if abs(current - self._hoverTarget) > 0.01 then
+            local speed = elapsed / HOVER_DURATION
+            if self._hoverTarget > current then
+                self._hoverBg:SetAlpha(min(current + speed, self._hoverTarget))
+            else
+                self._hoverBg:SetAlpha(max(current - speed, self._hoverTarget))
+            end
+        end
+    end)
+
+    btn:SetScript("OnEnter", function(self)
+        self._hoverTarget = 1
+        if self.enchantData and IsRingEnchant(self.enchantData.targetSlots) then
+            CHAR:ShowMultiSlotHighlight(self.enchantData.targetSlots)
+        elseif self.targetSlotID then
+            CHAR:ShowSlotHighlight(self.targetSlotID)
+        end
+        if self.enchantData and self.enchantData.link then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 40, 0)
+            GameTooltip:SetHyperlink(self.enchantData.link)
+            GameTooltip:Show()
+        end
+    end)
+
+    btn:SetScript("OnLeave", function(self)
+        self._hoverTarget = 0
+        GameTooltip:Hide()
+        C_Timer.After(0.05, function()
+            if IsMouseOverSocketUI() then return end
+            CHAR:HideEnchantPopup()
+            CHAR:HideSlotHighlight()
+        end)
+    end)
+
+    btn:SetScript("OnClick", function(self)
+        if InCombatLockdown() then
+            NRSKNUI:Print("Cannot enchant during combat")
+            return
+        end
+        if self.enchantData then
+            UseContainerItem(self.enchantData.bagID, self.enchantData.slotID)
+            CHAR:HideEnchantPopup()
+            CHAR:HideSlotHighlight()
+        end
+    end)
+
+    popup.buttons[index] = btn
+    return btn
+end
+
+function CHAR:FindBestEnchantSlot(targetSlots)
+    if not targetSlots or #targetSlots == 0 then return nil end
+
+    for _, slotID in ipairs(targetSlots) do
+        local itemLink = GetInventoryItemLink("player", slotID)
+        if itemLink then
+            return slotID
+        end
+    end
+    return nil
+end
+
+function CHAR:ShowEnchantPopup(enchantBtn)
+    local popup = self:CreateEnchantPopup()
+    local enchants = self:ScanBagsForEnchants()
+
+    local enchantList = {}
+    for _, enchantData in pairs(enchants) do
+        local targetSlotID = self:FindBestEnchantSlot(enchantData.targetSlots)
+        if targetSlotID then
+            enchantData.resolvedSlotID = targetSlotID
+            tinsert(enchantList, enchantData)
+        end
+    end
+
+    local minWidth = popup.title:GetStringWidth() + 26
+    local minRowHeight = POPUP_ICON_SIZE + ITEM_ROW_PADDING
+
+    local targetHeight
+    if #enchantList == 0 then
+        popup.noEnchants:Show()
+        popup.separator:Hide()
+        for _, btn in pairs(popup.buttons) do btn:Hide() end
+        popup:SetWidth(max(200, minWidth))
+        targetHeight = 50
+    else
+        popup.noEnchants:Hide()
+        popup.separator:Show()
+
+        local yOffset = TITLE_HEIGHT
+        for i, enchantData in ipairs(enchantList) do
+            local btn = self:CreateEnchantButton_Popup(i)
+            btn.enchantData = enchantData
+            btn.targetSlotID = enchantData.resolvedSlotID
+            btn.icon:SetTexture(enchantData.icon)
+            btn.count:SetText(enchantData.count .. "x")
+            btn._hoverBg:SetAlpha(0)
+            btn._hoverTarget = 0
+
+            local name = GetEnchantName(enchantData.link)
+            btn.stats:SetText(name or "")
+
+            local textHeight = btn.stats:GetStringHeight()
+            local rowHeight = max(minRowHeight, textHeight + ITEM_ROW_PADDING)
+
+            btn:SetHeight(rowHeight)
+            btn:ClearAllPoints()
+            btn:SetPoint("TOPLEFT", popup, "TOPLEFT", POPUP_PADDING, -yOffset)
+            btn:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -POPUP_PADDING, -yOffset)
+            btn.iconFrame:SetSize(POPUP_ICON_SIZE, POPUP_ICON_SIZE)
+
+            local atlas = GetQualityAtlasFromLink(enchantData.link)
+            SetQualityAtlas(btn.quality, atlas)
+
+            btn:Show()
+            yOffset = yOffset + rowHeight
+        end
+        for i = #enchantList + 1, #popup.buttons do popup.buttons[i]:Hide() end
+
+        popup:SetWidth(280)
+        targetHeight = yOffset
+    end
+
+    popup:ClearAllPoints()
+    popup:SetPoint("TOPLEFT", enchantBtn, "BOTTOMLEFT", 0, -1)
+    popup:SetHeight(targetHeight)
+    popup:Show()
+end
+
+function CHAR:HideEnchantPopup()
+    if self.enchantPopup then self.enchantPopup:Hide() end
+end
+
+function CHAR:RefreshEnchantButton()
+    if not self.db.GemSocketHelper.EnchantHelper then
+        if self.enchantButton then self.enchantButton:Hide() end
+        return
+    end
+
+    local btn = self:CreateEnchantButton()
+    local db = self.db.GemSocketHelper
+
+    btn:SetSize(db.SocketButtonSize, db.SocketButtonSize)
+    btn:ClearAllPoints()
+
+    local lastSocketBtn = nil
+    for i = #self.socketContainer.buttons, 1, -1 do
+        if self.socketContainer.buttons[i]:IsShown() then
+            lastSocketBtn = self.socketContainer.buttons[i]
+            break
+        end
+    end
+
+    if lastSocketBtn then
+        btn:SetPoint("LEFT", lastSocketBtn, "RIGHT", db.SocketButtonSpacing, 0)
+    else
+        btn:SetPoint("LEFT", self.socketContainer, "LEFT", 0, 0)
+    end
+
+    btn:Show()
 end
