@@ -85,33 +85,69 @@ end
 function GUIFrame:PreBuildAllPagesForSearch()
     if self.searchIndexBuilt then return end
 
-    local dummyFrame = CreateFrame("Frame", nil, UIParent)
-    dummyFrame:SetSize(600, 2000)
-    dummyFrame:Hide()
-
+    local pagesToBuild = {}
     for _, config in pairs(self.SidebarConfig) do
         for _, section in ipairs(config) do
             if section.type == "header" and section.items then
                 for _, item in ipairs(section.items) do
-                    local pageId = item.id
-                    if self.ContentBuilders[pageId] and not self.widgetRegistry[pageId] then
-                        self.currentBuildingPageId = pageId
-                        pcall(self.ContentBuilders[pageId], dummyFrame, 0)
-                        self.currentBuildingPageId = nil
-
-                        for _, child in ipairs({ dummyFrame:GetChildren() }) do
-                            child:Hide()
-                            child:SetParent(nil)
-                        end
-                        for _, region in ipairs({ dummyFrame:GetRegions() }) do region:Hide() end
+                    if self.ContentBuilders[item.id] and not self.widgetRegistry[item.id] then
+                        table.insert(pagesToBuild, item.id)
                     end
                 end
             end
         end
     end
 
-    dummyFrame:SetParent(nil)
-    self.searchIndexBuilt = true
+    local totalPages = #pagesToBuild
+    if totalPages == 0 then
+        self.searchIndexBuilt = true
+        return
+    end
+
+    local header = self.mainFrame and self.mainFrame.header
+    if header and header.progressContainer then
+        header.progressContainer:Show()
+        header.progressBar:SetWidth(0)
+    end
+
+    local dummyFrame = CreateFrame("Frame", nil, UIParent)
+    dummyFrame:SetSize(600, 2000)
+    dummyFrame:Hide()
+
+    local currentIndex = 0
+    local maxBarWidth = header and header.progressContainer and (header.progressContainer:GetWidth() - 2) or 118
+
+    local function BuildNextPage()
+        currentIndex = currentIndex + 1
+        if currentIndex > totalPages then
+            dummyFrame:SetParent(nil)
+            self.searchIndexBuilt = true
+            if header and header.progressContainer then
+                header.progressContainer:Hide()
+            end
+            return
+        end
+
+        local pageId = pagesToBuild[currentIndex]
+        self.currentBuildingPageId = pageId
+        pcall(self.ContentBuilders[pageId], dummyFrame, 0)
+        self.currentBuildingPageId = nil
+
+        for _, child in ipairs({ dummyFrame:GetChildren() }) do
+            child:Hide()
+            child:SetParent(nil)
+        end
+        for _, region in ipairs({ dummyFrame:GetRegions() }) do region:Hide() end
+
+        if header and header.progressBar then
+            local progress = currentIndex / totalPages
+            header.progressBar:SetWidth(maxBarWidth * progress)
+        end
+
+        C_Timer.After(0.01, BuildNextPage)
+    end
+
+    C_Timer.After(0.01, BuildNextPage)
 end
 
 function GUIFrame:GetPageInfoById(pageId)
@@ -142,14 +178,14 @@ function GUIFrame:SearchSidebar(searchText)
     if not self.searchIndex then self:BuildSearchIndex() end
 
     local searchLower = searchText:lower()
-    local addedPages = {}
+    local pageMatches = {}
+    local widgetMatchesByPage = {}
 
     for _, entry in ipairs(self.searchIndex) do
         local textLower = entry.text:lower()
         local sectionLower = entry.sectionText:lower()
         if textLower:find(searchLower, 1, true) or sectionLower:find(searchLower, 1, true) then
-            table.insert(self.searchResults, entry)
-            addedPages[entry.id] = true
+            pageMatches[entry.id] = entry
         end
     end
 
@@ -157,12 +193,11 @@ function GUIFrame:SearchSidebar(searchText)
         for _, widgetData in ipairs(widgets) do
             local labelLower = widgetData.label:lower()
             if labelLower:find(searchLower, 1, true) then
-                local pageInfo = self:GetPageInfoById(pageId)
-                if pageInfo and not addedPages[pageId] then
-                    table.insert(self.searchResults, pageInfo)
-                    addedPages[pageId] = true
+                if not widgetMatchesByPage[pageId] then
+                    widgetMatchesByPage[pageId] = {}
                 end
-                table.insert(self.searchResults, {
+                local pageInfo = self:GetPageInfoById(pageId)
+                table.insert(widgetMatchesByPage[pageId], {
                     id = pageId,
                     text = widgetData.label,
                     sectionId = pageInfo and pageInfo.sectionId,
@@ -173,6 +208,32 @@ function GUIFrame:SearchSidebar(searchText)
                     widget = widgetData.widget,
                 })
             end
+        end
+    end
+
+    local allPageIds = {}
+    for pageId in pairs(pageMatches) do allPageIds[pageId] = true end
+    for pageId in pairs(widgetMatchesByPage) do allPageIds[pageId] = true end
+
+    for _, entry in ipairs(self.searchIndex) do
+        local pageId = entry.id
+        if allPageIds[pageId] then
+            if not pageMatches[pageId] then
+                local pageInfo = self:GetPageInfoById(pageId)
+                if pageInfo then
+                    table.insert(self.searchResults, pageInfo)
+                end
+            else
+                table.insert(self.searchResults, pageMatches[pageId])
+            end
+
+            if widgetMatchesByPage[pageId] then
+                for _, widgetEntry in ipairs(widgetMatchesByPage[pageId]) do
+                    table.insert(self.searchResults, widgetEntry)
+                end
+            end
+
+            allPageIds[pageId] = nil
         end
     end
 
@@ -843,13 +904,12 @@ function GUIFrame:RefreshSidebarImmediate()
             item.searchResult = result
             item.label:Show()
             item.label:SetAlpha(1)
+            NRSKNUI:ApplyThemeFont(item.label, "normal")
 
             local displayText
             if result.isWidget then
-                NRSKNUI:ApplyThemeFont(item.label, "normal")
                 displayText = " |cFFAAAAAA» |r " .. result.text
             else
-                NRSKNUI:ApplyThemeFont(item.label, "large")
                 displayText = result.text .. " |cFF888888(" .. result.sectionText .. ")|r"
             end
             item.label:SetText(displayText)

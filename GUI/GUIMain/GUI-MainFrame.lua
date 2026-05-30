@@ -338,6 +338,31 @@ function GUIFrame:CreateHeader(parent)
     header.logoN = logoN
     header.logoUI = logoUI
 
+    -- Search Index Progress Bar
+    local progressContainer = CreateFrame("Frame", nil, header, "BackdropTemplate")
+    progressContainer:SetSize(200, 10)
+    progressContainer:SetPoint("CENTER", header, "CENTER", 0, -8)
+    progressContainer:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+    progressContainer:SetBackdropColor(Theme.bgDark[1], Theme.bgDark[2], Theme.bgDark[3], 0.8)
+    progressContainer:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 0.6)
+    progressContainer:Hide()
+
+    local progressBar = progressContainer:CreateTexture(nil, "ARTWORK")
+    progressBar:SetPoint("TOPLEFT", progressContainer, "TOPLEFT", 1, -1)
+    progressBar:SetPoint("BOTTOMLEFT", progressContainer, "BOTTOMLEFT", 1, 1)
+    progressBar:SetWidth(0)
+    progressBar:SetColorTexture(Theme.accent[1], Theme.accent[2], Theme.accent[3], 0.9)
+
+    local progressLabel = progressContainer:CreateFontString(nil, "OVERLAY")
+    progressLabel:SetPoint("BOTTOM", progressContainer, "TOP", 0, 4)
+    NRSKNUI:ApplyThemeFont(progressLabel, "normal")
+    progressLabel:SetTextColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.8)
+    progressLabel:SetText("Indexing...")
+
+    header.progressContainer = progressContainer
+    header.progressBar = progressBar
+    header.progressLabel = progressLabel
+
     local function Lerp(a, b, t) return a + (b - a) * t end
 
     local function CreateHeaderButton(config)
