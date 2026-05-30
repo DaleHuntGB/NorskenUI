@@ -156,7 +156,7 @@ function POT:EditModeReg()
                 self.db.Position.YOffset = pos.YOffset
                 NRSKNUI:ApplyFramePosition(self.alertFrame, self.db.Position, self.db)
             end,
-            guiPath = "potionready",
+            guiPath = "PotionReady",
         })
         self.editModeRegistered = true
     end
