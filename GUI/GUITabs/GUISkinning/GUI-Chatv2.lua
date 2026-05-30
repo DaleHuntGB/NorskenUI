@@ -5,6 +5,7 @@ local Theme = NRSKNUI.Theme
 local LSM = NRSKNUI.LSM
 
 local pairs = pairs
+local ReloadUI = ReloadUI
 
 local SUB_TABS = {
     { id = "general", text = "General" },
@@ -61,10 +62,18 @@ local function RenderGeneralTab(scrollChild, db, manager)
             db.Enabled = checked
             if checked then
                 NorskenUI:EnableModule("Chatv2")
+                manager:UpdateAll(db.Enabled)
             else
                 NorskenUI:DisableModule("Chatv2")
+                manager:UpdateAll(db.Enabled)
+                NRSKNUI:CreatePrompt({
+                    title = "Chat Module Disabled",
+                    text = "The chat module has been disabled.\n\nA UI reload is recommended to fully restore the default chat.",
+                    onAccept = function() ReloadUI() end,
+                    acceptText = "Reload Now",
+                    cancelText = "Later",
+                })
             end
-            manager:UpdateAll(db.Enabled)
         end,
         msgPopup = true,
         msgText = "Chatv2",

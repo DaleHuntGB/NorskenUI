@@ -539,6 +539,9 @@ end
 -- Taint protection, forces whisper mode to be inline always
 -- Auto opening new tabs while in secret lockdown causes taint errors
 function CHAT:ForceInlineWhispers()
+    if self.inlineWhispersSetup then return end
+    self.inlineWhispersSetup = true
+
     C_CVar.SetCVar("whisperMode", "inline")
     local frame = CreateFrame("Frame")
     frame:RegisterEvent("VARIABLES_LOADED")
@@ -547,6 +550,9 @@ end
 
 -- Adds a warning label w/ tooltip that explains why i need to force inline mode
 function CHAT:AddWhisperModeWarning()
+    if self.whisperWarningSetup then return end
+    self.whisperWarningSetup = true
+
     local warningFrame = CreateFrame("Frame", nil, UIParent)
     warningFrame:SetSize(200, 20)
     warningFrame:SetFrameStrata("DIALOG")
@@ -880,6 +886,8 @@ function CHAT:ResetPanelSnap()
 end
 
 function CHAT:OnDockStateChanged(chat)
+    if self.isPositioning then return end
+
     self:ClearSnapReference(chat)
 
     if chat == _G.GeneralDockManager.primary then
@@ -2006,7 +2014,8 @@ function CHAT:SetupChatScripts(chat)
     local id = chat:GetID()
     local allowHooks = id and not IGNORE_FRAMES[id]
 
-    if not self:IsHooked(chat, "SetScript") then
+    if not chat.nrsknSetScriptHooked then
+        chat.nrsknSetScriptHooked = true
         hooksecurefunc(chat, "SetScript", function(frame, scriptType, handler)
             self:ChatFrame_SetScript(frame, scriptType, handler)
         end)
@@ -2019,7 +2028,9 @@ function CHAT:SetupChatScripts(chat)
         end)
     end
 
+    chat.nrsknSettingMouseWheel = true
     chat:SetScript("OnMouseWheel", function(frame, delta) self:ChatFrame_OnMouseWheel(frame, delta) end)
+    chat.nrsknSettingMouseWheel = nil
 
     if not self:IsHooked(chat, "OnHyperlinkEnter") then self:HookScript(chat, "OnHyperlinkEnter", "OnHyperlinkEnter") end
     if not self:IsHooked(chat, "OnHyperlinkLeave") then self:HookScript(chat, "OnHyperlinkLeave", "OnHyperlinkLeave") end
@@ -2184,6 +2195,7 @@ end
 
 function CHAT:PositionChat(chat)
     if not chat or not self.panel then return end
+    if self.isPositioning then return end
 
     if InCombatLockdown() then
         self:RegisterEvent("PLAYER_REGEN_ENABLED", function()
@@ -2193,6 +2205,7 @@ function CHAT:PositionChat(chat)
         return
     end
 
+    self.isPositioning = true
     self.ChatWindow = self:GetPanelAnchoredChat()
 
     local docker = _G.GeneralDockManager.primary
@@ -2240,6 +2253,8 @@ function CHAT:PositionChat(chat)
         chat.EditModeResizeButton:SetFrameStrata("HIGH")
         chat.EditModeResizeButton:SetFrameLevel(6)
     end
+
+    self.isPositioning = false
 end
 
 function CHAT:StyleCombatLog()
@@ -2297,10 +2312,12 @@ function CHAT:ChatFrame_OnMouseWheel(frame, delta)
 end
 
 function CHAT:ChatFrame_SetScript(frame, scriptType)
-    if scriptType == "OnMouseWheel" then
+    if scriptType == "OnMouseWheel" and not frame.nrsknSettingMouseWheel then
         C_Timer.After(0, function()
-            if frame and frame.scriptsSet then
+            if frame and frame.scriptsSet and not frame.nrsknSettingMouseWheel then
+                frame.nrsknSettingMouseWheel = true
                 frame:SetScript("OnMouseWheel", function(f, delta) self:ChatFrame_OnMouseWheel(f, delta) end)
+                frame.nrsknSettingMouseWheel = nil
             end
         end)
     end
@@ -2493,13 +2510,11 @@ function CHAT:LockChatInBlizzEditMode(chat)
     if not chat then return end
     if InCombatLockdown() then return end
 
-    chat:SetMovable(false)
-    chat:SetResizable(false)
-
     local selection = chat.Selection
     if selection then
         selection:SetScript("OnDragStart", nil)
         selection:SetScript("OnDragStop", nil)
+        selection:EnableMouse(false)
     end
 
     if chat.EditModeResizeButton then
@@ -2542,9 +2557,9 @@ function CHAT:SetupBlizzardEditModeLock()
             if chat then
                 if chat.SelectSystem then
                     hooksecurefunc(chat, "SelectSystem", function(cf)
-                        cf:SetMovable(false)
                         if EditModeSystemSettingsDialog.attachedToSystem == cf then EditModeSystemSettingsDialog:Hide() end
                         self:SetupBlizzEditModeLockHandlers(cf)
+                        if cf.Selection then cf.Selection:EnableMouse(false) end
                         if not self.blizzEditModeChatNoticeShown then
                             NRSKNUI:Print(
                                 "Chat position is managed by |cff00ff00/nui edit|r or |cff00ff00/nui|r settings.")
