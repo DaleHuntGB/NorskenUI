@@ -274,7 +274,7 @@ function GUIFrame:CreateSearchHeader(parent)
 
     local clearButton = CreateFrame("Button", nil, searchContainer)
     clearButton:SetSize(16, 16)
-    clearButton:SetPoint("RIGHT", searchContainer, "RIGHT", -4, 0)
+    clearButton:SetPoint("RIGHT", searchContainer, "RIGHT", 0, 0)
     clearButton:Hide()
 
     local clearIcon = clearButton:CreateTexture(nil, "ARTWORK")
@@ -284,10 +284,14 @@ function GUIFrame:CreateSearchHeader(parent)
     clearIcon:SetRotation(math.rad(45))
 
     clearButton:SetScript("OnEnter", function()
-        clearIcon:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+        clearIcon:SetVertexColor(Theme.textPrimary[1], Theme.textPrimary[2], Theme.textPrimary[3], 1)
     end)
     clearButton:SetScript("OnLeave", function()
-        clearIcon:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
+        if GUIFrame.searchText ~= "" then
+            clearIcon:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
+        else
+            clearIcon:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
+        end
     end)
     clearButton:SetScript("OnClick", function() GUIFrame:ClearSearch() end)
     self.searchClearButton = clearButton
@@ -311,8 +315,10 @@ function GUIFrame:CreateSearchHeader(parent)
         end
         if GUIFrame.searchText ~= "" then
             clearButton:Show()
+            clearIcon:SetVertexColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
         else
             clearButton:Hide()
+            clearIcon:SetVertexColor(Theme.textSecondary[1], Theme.textSecondary[2], Theme.textSecondary[3], 0.7)
         end
         GUIFrame:SearchSidebar(GUIFrame.searchText)
         GUIFrame:RefreshSidebar()
@@ -910,7 +916,8 @@ function GUIFrame:RefreshSidebarImmediate()
             if result.isWidget then
                 displayText = " |cFFAAAAAA» |r " .. result.text
             else
-                displayText = result.text .. " |cFF888888(" .. result.sectionText .. ")|r"
+                local accentHex = string.format("%02X%02X%02X", Theme.accent[1] * 255, Theme.accent[2] * 255, Theme.accent[3] * 255)
+                displayText = "|cFF" .. accentHex .. result.text .. "|r |cFF888888(" .. result.sectionText .. ")|r"
             end
             item.label:SetText(displayText)
 
