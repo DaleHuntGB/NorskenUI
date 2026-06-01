@@ -496,6 +496,7 @@ end
 
 function CHAT:OnEnable()
     if NRSKNUI:ShouldNotLoadModule() then return end
+    if not self.db.Enabled then return end
     self:UpdateDB()
     self:CreateChatPanel()
     self:SetupChat()
