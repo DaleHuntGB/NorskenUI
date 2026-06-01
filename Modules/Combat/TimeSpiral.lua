@@ -89,8 +89,6 @@ function TSP:CreateFrame()
     self.frame = frame
     self.cooldown = cooldown
     self.timerText = timerText
-
-    self:ApplySettings()
 end
 
 function TSP:FilterSpell(spellId)
@@ -263,7 +261,10 @@ function TSP:OnEnable()
 
     self:DetectPlayerSpell()
     self:CreateFrame()
-    C_Timer.After(0.5, function() self:ApplyPosition() end)
+    C_Timer.After(0.5, function()
+        self:ApplySettings()
+        self:ApplyPosition()
+    end)
 
     self.frame:SetScript("OnUpdate", function() self:OnUpdate() end)
 
