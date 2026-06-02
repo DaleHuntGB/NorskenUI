@@ -251,6 +251,7 @@ GUIFrame:RegisterContent("CharacterPanel", function(scrollChild, yOffset)
                 CharacterPanel:StyleCharacterTexts()
             end
         end,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     for _, widget in ipairs(fontWidgets) do

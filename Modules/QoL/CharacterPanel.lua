@@ -134,7 +134,7 @@ end
 
 function CHAR:ApplyFont(fontString, size)
     local db = self.db
-    local fontFace = db.FontFace or "Expressway"
+    local fontFace = NRSKNUI:GetEffectiveFont(db)
     local outline = db.FontOutline or "OUTLINE"
     local shadow = db.FontShadow or {}
 

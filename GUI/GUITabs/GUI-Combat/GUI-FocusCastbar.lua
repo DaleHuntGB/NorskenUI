@@ -124,7 +124,17 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
     manager:Register(heightSlider, "all")
     card2:AddRow(row2a, Theme.rowHeight)
 
-    local row2b = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+    local row2b = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+    local useGlobalBarCheck = GUIFrame:CreateCheckbox(row2b, "Use Global Bar", {
+        value = db.UseGlobalBar ~= false,
+        callback = function(checked)
+            db.UseGlobalBar = checked
+            ApplySettings()
+        end
+    })
+    row2b:AddWidget(useGlobalBarCheck, 0.5)
+    manager:Register(useGlobalBarCheck, "all")
+
     local statusbarDropdown = GUIFrame:CreateDropdown(row2b, "Bar Texture", {
         options = statusbarList,
         value = db.StatusBarTexture,
@@ -133,21 +143,24 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
     })
     row2b:AddWidget(statusbarDropdown, 0.5)
     manager:Register(statusbarDropdown, "all")
+    card2:AddRow(row2b, Theme.rowHeight)
 
-    local bgPicker = GUIFrame:CreateColorPicker(row2b, "Background", {
+    local row2c = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+
+    local bgPicker = GUIFrame:CreateColorPicker(row2c, "Background", {
         color = db.BackdropColor,
         callback = function(r, g, b, a) db.BackdropColor = { r, g, b, a }; ApplySettings() end
     })
-    row2b:AddWidget(bgPicker, 0.26)
+    row2c:AddWidget(bgPicker, 0.5)
     manager:Register(bgPicker, "all")
 
-    local borderPicker = GUIFrame:CreateColorPicker(row2b, "Border", {
+    local borderPicker = GUIFrame:CreateColorPicker(row2c, "Border", {
         color = db.BorderColor,
         callback = function(r, g, b, a) db.BorderColor = { r, g, b, a }; ApplySettings() end
     })
-    row2b:AddWidget(borderPicker, 0.24)
+    row2c:AddWidget(borderPicker, 0.5)
     manager:Register(borderPicker, "all")
-    card2:AddRow(row2b, Theme.rowHeightLast, 0)
+    card2:AddRow(row2c, Theme.rowHeightLast, 0)
 
     yOffset = card2:GetNextOffset()
 
@@ -373,6 +386,7 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
             { label = "Target Name", dbKey = "TargetNames.FontSize" },
         },
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     table_insert(allCards, fontCard)
     manager:Register(fontCard, "all")

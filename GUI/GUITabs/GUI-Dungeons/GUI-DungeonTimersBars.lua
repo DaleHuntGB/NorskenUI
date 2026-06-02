@@ -110,6 +110,42 @@ GUIFrame:RegisterContent("DT_Bars", function(scrollChild, yOffset)
     local displayCard = GUIFrame:CreateCard(scrollChild, "Bar Display Settings", yOffset)
     manager:Register(displayCard, "all")
 
+    -- Global font/bar override toggles
+    local barFontWidgets = {}
+    local function UpdateBarFontWidgetStates()
+        local useGlobal = db.BarDisplay.UseGlobalFont ~= false
+        for _, widget in ipairs(barFontWidgets) do
+            if widget.SetEnabled then
+                widget:SetEnabled(not useGlobal)
+            end
+        end
+    end
+
+    local rowOverride = GUIFrame:CreateRow(displayCard.content, Theme.rowHeight)
+    local useGlobalFontCheck = GUIFrame:CreateCheckbox(rowOverride, "Use Global Font", {
+        value = db.BarDisplay.UseGlobalFont ~= false,
+        callback = function(checked)
+            db.BarDisplay.UseGlobalFont = checked
+            UpdateBarFontWidgetStates()
+            ApplyAndUpdate()
+        end
+    })
+    rowOverride:AddWidget(useGlobalFontCheck, 0.5)
+
+    local useGlobalBarCheck = GUIFrame:CreateCheckbox(rowOverride, "Use Global Bar Texture", {
+        value = db.BarDisplay.UseGlobalBar ~= false,
+        callback = function(checked)
+            db.BarDisplay.UseGlobalBar = checked
+            ApplyAndUpdate()
+        end
+    })
+    rowOverride:AddWidget(useGlobalBarCheck, 0.5)
+    displayCard:AddRow(rowOverride, Theme.rowHeight)
+
+    local rowOverrideSep = GUIFrame:CreateRow(displayCard.content, Theme.rowHeightSeparator)
+    rowOverrideSep:AddWidget(GUIFrame:CreateSeparator(rowOverrideSep), 1)
+    displayCard:AddRow(rowOverrideSep, Theme.rowHeightSeparator)
+
     local row1 = GUIFrame:CreateRow(displayCard.content, Theme.rowHeight)
     local widthSlider = GUIFrame:CreateSlider(row1, "Bar Width", {
         min = 100,
@@ -150,6 +186,7 @@ GUIFrame:RegisterContent("DT_Bars", function(scrollChild, yOffset)
         isFontPreview = true
     })
     row2:AddWidget(fontDropdown, 0.5)
+    table_insert(barFontWidgets, fontDropdown)
 
     local fontSizeSlider = GUIFrame:CreateSlider(row2, "Font Size", {
         min = 8,
@@ -175,6 +212,7 @@ GUIFrame:RegisterContent("DT_Bars", function(scrollChild, yOffset)
         end
     })
     row3:AddWidget(outlineDropdown, 0.5)
+    table_insert(barFontWidgets, outlineDropdown)
 
     local textureDropdown = GUIFrame:CreateDropdown(row3, "Bar Texture", {
         options = TEXTURE_OPTIONS,
@@ -198,6 +236,8 @@ GUIFrame:RegisterContent("DT_Bars", function(scrollChild, yOffset)
     })
     row4:AddWidget(iconCheck, 1)
     displayCard:AddRow(row4, Theme.rowHeightLast, 0)
+
+    UpdateBarFontWidgetStates()
 
     yOffset = displayCard:GetNextOffset()
 

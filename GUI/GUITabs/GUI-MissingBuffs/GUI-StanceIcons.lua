@@ -271,6 +271,7 @@ GUIFrame:RegisterPanel("stanceIcons", function(container)
             fontSizeRange = { 8, 32 },
             includeSoftOutline = true,
             onChangeCallback = ApplySettings,
+            globalOverride = {},
         })
         miniSidebar.contentArea.RegisterCard(fontCard)
 

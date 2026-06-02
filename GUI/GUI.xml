@@ -34,6 +34,7 @@
 
     <!-- GUI Home Page -->
     <Script file="GUIMain\GUI-HomePage.lua" />
+    <Script file="GUIMain\GUI-GlobalPage.lua" />
     <Script file="GUIMain\GUI-SidebarConfig.lua" />
     <Script file="GUIMain\GUI-NUIScrollbar.lua" />
     <Script file="GUIMain\GUI-ContentAreas.lua" />

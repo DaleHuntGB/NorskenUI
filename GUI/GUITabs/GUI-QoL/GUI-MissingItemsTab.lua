@@ -302,6 +302,7 @@ GUIFrame:RegisterPanel("missingItems", function(container)
             fontSizeRange = { 8, 32 },
             includeSoftOutline = true,
             onChangeCallback = ApplySettings,
+            globalOverride = {},
         })
         miniSidebar.contentArea.RegisterCard(fontCard)
         manager:Register(fontCard, "all")

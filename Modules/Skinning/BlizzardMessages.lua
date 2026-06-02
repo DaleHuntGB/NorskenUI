@@ -35,21 +35,19 @@ end
 
 function BM:ApplyFont(fontObject, size)
     if not fontObject then return end
-
-    local fontPath = NRSKNUI:GetFontPath(self.db.Font)
-    local outline = NRSKNUI:GetFontOutline(self.db.FontOutline)
+    local fontName = NRSKNUI:GetEffectiveFont(self.db)
+    local fontPath = NRSKNUI:GetFontPath(fontName)
+    local outline = NRSKNUI:GetFontOutline(self.db.FontOutline) or ""
     fontObject:SetFont(fontPath, size, outline)
 
-    if fontObject.SetShadowColor and fontObject.SetShadowOffset then
-        local shadowDb = self.db.FontShadow
-        if shadowDb and shadowDb.Enabled then
-            local c = shadowDb.Color
-            fontObject:SetShadowColor(c[1], c[2], c[3], c[4])
-            fontObject:SetShadowOffset(shadowDb.OffsetX, shadowDb.OffsetY)
-        else
-            fontObject:SetShadowColor(0, 0, 0, 0)
-            fontObject:SetShadowOffset(0, 0)
-        end
+    local shadowDb = self.db.FontShadow
+    if shadowDb and shadowDb.Enabled then
+        local c = shadowDb.Color or { 0, 0, 0, 1 }
+        fontObject:SetShadowColor(c[1] or 0, c[2] or 0, c[3] or 0, c[4] or 1)
+        fontObject:SetShadowOffset(shadowDb.OffsetX or 1, shadowDb.OffsetY or -1)
+    else
+        fontObject:SetShadowColor(0, 0, 0, 0)
+        fontObject:SetShadowOffset(0, 0)
     end
 end
 
@@ -58,14 +56,15 @@ function BM:ZoneTextStyling()
     if zoneDB.Hide then
         _G.ZoneTextFrame:UnregisterAllEvents()
     else
-        self:ApplyFont(_G.ZoneTextString, zoneDB.MainZone.Size)
-        self:ApplyFont(_G.SubZoneTextString, zoneDB.SubZone.Size)
+        self:ApplyFont(_G.ZoneTextFont, zoneDB.MainZone.Size)
+        self:ApplyFont(_G.WorldMapTextFont, zoneDB.MainZone.Size)
+        self:ApplyFont(_G.SubZoneTextFont, zoneDB.SubZone.Size)
         self:ApplyFont(_G.PVPArenaTextString, zoneDB.SubZone.Size)
         self:ApplyFont(_G.PVPInfoTextString, zoneDB.SubZone.Size)
 
         _G.ZoneTextFrame:ClearAllPoints()
         _G.ZoneTextFrame:SetPoint(zoneDB.MainZone.Anchor, UIParent, zoneDB.MainZone.Anchor, zoneDB.MainZone.X,
-        zoneDB.MainZone.Y)
+            zoneDB.MainZone.Y)
         _G.ZoneTextFrame:RegisterEvent("ZONE_CHANGED")
         _G.ZoneTextFrame:RegisterEvent("ZONE_CHANGED_INDOORS")
         _G.ZoneTextFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -83,8 +82,7 @@ function BM:StyleUIErrorsFrame()
     else
         frame:Show()
         frame:SetAlpha(1)
-
-        self:ApplyFont(frame, errorsDB.Size)
+        self:ApplyFont(_G.ErrorFont, errorsDB.Size)
 
         if errorsDB.Position then
             frame:ClearAllPoints()
@@ -141,7 +139,9 @@ function BM:ResetUIErrorsFrame()
     if not frame then return end
     frame:Show()
     frame:SetAlpha(1)
-    frame:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+    if _G.ErrorFont and _G.ErrorFont.SetFont then
+        _G.ErrorFont:SetFont("Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+    end
     frame:ClearAllPoints()
     frame:SetPoint("TOP", UIParent, "TOP", 0, -100)
 end
@@ -166,6 +166,7 @@ end
 
 function BM:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
+    self:UpdateDB()
     if not self.db or not self.db.Enabled then
         self:Reset()
         return

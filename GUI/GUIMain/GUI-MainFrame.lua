@@ -410,8 +410,16 @@ function GUIFrame:CreateHeader(parent)
         btn.AnimateAlpha = AnimateAlpha
 
         if config.onClick then
-            btn:SetScript("OnEnter", function() AnimateAlpha(true) end)
-            btn:SetScript("OnLeave", function() AnimateAlpha(false) end)
+            btn:SetScript("OnEnter", function()
+                AnimateAlpha(true)
+                GameTooltip:SetOwner(btn, "ANCHOR_RIGHT", 0, 10)
+                GameTooltip:SetText(config.toolTip, Theme.accent[1], Theme.accent[2], Theme.accent[3], 1, false)
+                GameTooltip:Show()
+            end)
+            btn:SetScript("OnLeave", function()
+                AnimateAlpha(false)
+                GameTooltip:Hide()
+            end)
             btn:SetScript("OnClick", config.onClick)
         end
 
@@ -424,6 +432,7 @@ function GUIFrame:CreateHeader(parent)
         texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\NorskenCustomCrossv3.png",
         rotation = 45,
         onClick = function() GUIFrame:Hide() end,
+        toolTip = "Close Settings"
     })
 
     CreateHeaderButton({
@@ -431,6 +440,15 @@ function GUIFrame:CreateHeader(parent)
         xOffset = -81,
         texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\fill.png",
         onClick = function() GUIFrame:OpenPage("ThemePage") end,
+        toolTip = "Open Theme Settings"
+    })
+
+    CreateHeaderButton({
+        size = 22,
+        xOffset = -104,
+        texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\globe-earth.png",
+        onClick = function() GUIFrame:OpenPage("GlobalPage") end,
+        toolTip = "Open Global Settings Page"
     })
 
     CreateHeaderButton({
@@ -438,6 +456,7 @@ function GUIFrame:CreateHeader(parent)
         xOffset = -56,
         texture = "Interface\\AddOns\\NorskenUI\\Media\\GUITextures\\HomeButtonv2.png",
         onClick = function() GUIFrame:OpenPage("HomePage") end,
+        toolTip = "Open Home Page"
     })
 
     -- Shortcut Menu Button

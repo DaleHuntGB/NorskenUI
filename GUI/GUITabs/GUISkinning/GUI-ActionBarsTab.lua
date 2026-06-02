@@ -332,6 +332,34 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         table_insert(activeCards, card3)
         manager:Register(card3, "main")
 
+        -- Global font override toggle
+        local card3FontWidgets = {}
+        local function UpdateCard3FontWidgetStates()
+            local useGlobal = db.UseGlobalFont ~= false
+            for _, widget in ipairs(card3FontWidgets) do
+                if widget.SetEnabled then
+                    widget:SetEnabled(not useGlobal)
+                end
+            end
+        end
+
+        local row3override = GUIFrame:CreateRow(card3.content, Theme.rowHeight)
+        local useGlobalFontCheck = GUIFrame:CreateCheckbox(row3override, "Use Global Font", {
+            value = db.UseGlobalFont ~= false,
+            callback = function(checked)
+                db.UseGlobalFont = checked
+                UpdateCard3FontWidgetStates()
+                ApplyFonts()
+            end
+        })
+        row3override:AddWidget(useGlobalFontCheck, 1)
+        manager:Register(useGlobalFontCheck, "main")
+        card3:AddRow(row3override, Theme.rowHeight)
+
+        local row3sepOverride = GUIFrame:CreateRow(card3.content, Theme.rowHeightSeparator)
+        row3sepOverride:AddWidget(GUIFrame:CreateSeparator(row3sepOverride), 1)
+        card3:AddRow(row3sepOverride, Theme.rowHeightSeparator)
+
         local row3a = GUIFrame:CreateRow(card3.content, Theme.rowHeight)
         local fontDropdown = GUIFrame:CreateDropdown(row3a, "Font", {
             options = fontList,
@@ -345,6 +373,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         })
         row3a:AddWidget(fontDropdown, 0.5)
         manager:Register(fontDropdown, "main")
+        table_insert(card3FontWidgets, fontDropdown)
 
         local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick", ["SLUG"] = "Slug", ["SLUG,OUTLINE"] = "Slug Outline" }
         local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", {
@@ -357,6 +386,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         })
         row3a:AddWidget(outlineDropdown, 0.5)
         manager:Register(outlineDropdown, "main")
+        table_insert(card3FontWidgets, outlineDropdown)
         card3:AddRow(row3a, Theme.rowHeight)
 
         local row3sep = GUIFrame:CreateRow(card3.content, Theme.rowHeightSeparator)
@@ -418,6 +448,8 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         row3c:AddWidget(macroSize, 0.5)
         manager:Register(macroSize, "main")
         card3:AddRow(row3c, Theme.rowHeight)
+
+        UpdateCard3FontWidgetStates()
 
         yOffset = card3:GetNextOffset()
 

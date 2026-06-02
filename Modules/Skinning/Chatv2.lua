@@ -149,7 +149,8 @@ CHAT.originalStates = {}
 
 function CHAT:UpdateDB()
     self.db = NRSKNUI.db.profile.Skinning.Chatv2
-    cachedFontPath = LSM and LSM:Fetch("font", self.db.FontFace) or STANDARD_TEXT_FONT
+    local effectiveFont = NRSKNUI:GetEffectiveFont(self.db)
+    cachedFontPath = LSM and LSM:Fetch("font", effectiveFont) or STANDARD_TEXT_FONT
     local customColor = self.db.TabTextColor
     if customColor then
         cachedTabAccentColor.r = customColor.r or 1

@@ -176,7 +176,19 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
     row2c:AddWidget(growthDropdown, 0.5)
     manager:Register(growthDropdown, "all")
 
-    local statusbarDropdown = GUIFrame:CreateDropdown(row2c, "Bar Texture", {
+    local useGlobalBarCheck = GUIFrame:CreateCheckbox(row2c, "Use Global Bar", {
+        value = db.BarDisplay.UseGlobalBar ~= false,
+        callback = function(checked)
+            db.BarDisplay.UseGlobalBar = checked
+            ApplySettings()
+        end
+    })
+    row2c:AddWidget(useGlobalBarCheck, 0.5)
+    manager:Register(useGlobalBarCheck, "all")
+    card2:AddRow(row2c, Theme.rowHeight)
+
+    local row2d = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+    local statusbarDropdown = GUIFrame:CreateDropdown(row2d, "Bar Texture", {
         options = statusbarList,
         value = db.BarDisplay.StatusBarTexture,
         searchable = true,
@@ -184,9 +196,9 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
             db.BarDisplay.StatusBarTexture = selected; ApplySettings()
         end
     })
-    row2c:AddWidget(statusbarDropdown, 0.5)
+    row2d:AddWidget(statusbarDropdown, 1)
     manager:Register(statusbarDropdown, "all")
-    card2:AddRow(row2c, Theme.rowHeightLast, 0)
+    card2:AddRow(row2d, Theme.rowHeightLast, 0)
 
     yOffset = card2:GetNextOffset()
 
@@ -383,6 +395,7 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
         includeSoftOutline = true,
         fontSizeRange = { 8, 24 },
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

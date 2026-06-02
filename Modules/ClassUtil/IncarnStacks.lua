@@ -118,7 +118,7 @@ function INCARN:ApplySettings()
 
     -- Update stack text
     if self.stackText then
-        NRSKNUI:ApplyFontToText(self.stackText, self.db.StackFontFace, self.db.StackFontSize, self.db.StackFontOutline,
+        NRSKNUI:ApplyFontToText(self.stackText, NRSKNUI:GetEffectiveFont(self.db), self.db.StackFontSize, self.db.StackFontOutline,
             {})
         local stackColor = self.db.StackTextColor
         self.stackText:SetTextColor(stackColor[1], stackColor[2], stackColor[3], stackColor[4] or 1)
@@ -127,7 +127,7 @@ function INCARN:ApplySettings()
 
     -- Update timer text
     if self.timerText then
-        NRSKNUI:ApplyFontToText(self.timerText, self.db.TimerFontFace, self.db.TimerFontSize, self.db.TimerFontOutline,
+        NRSKNUI:ApplyFontToText(self.timerText, NRSKNUI:GetEffectiveFont(self.db), self.db.TimerFontSize, self.db.TimerFontOutline,
             {})
         local timerColor = self.db.TimerTextColor
         self.timerText:SetTextColor(timerColor[1], timerColor[2], timerColor[3], timerColor[4] or 1)

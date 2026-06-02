@@ -4,6 +4,7 @@ local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme or {}
 
 local pairs = pairs
+local table_insert = table.insert
 
 NRSKNUI.GUI = NRSKNUI.GUI or {}
 NRSKNUI.GUI.DungeonTimers = NRSKNUI.GUI.DungeonTimers or {}
@@ -106,6 +107,33 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
     local displayCard = GUIFrame:CreateCard(scrollChild, "Text Display Settings", yOffset)
     manager:Register(displayCard, "all")
 
+    -- Global font override toggle
+    local textFontWidgets = {}
+    local function UpdateTextFontWidgetStates()
+        local useGlobal = db.TextDisplay.UseGlobalFont ~= false
+        for _, widget in ipairs(textFontWidgets) do
+            if widget.SetEnabled then
+                widget:SetEnabled(not useGlobal)
+            end
+        end
+    end
+
+    local rowOverride = GUIFrame:CreateRow(displayCard.content, Theme.rowHeight)
+    local useGlobalFontCheck = GUIFrame:CreateCheckbox(rowOverride, "Use Global Font", {
+        value = db.TextDisplay.UseGlobalFont ~= false,
+        callback = function(checked)
+            db.TextDisplay.UseGlobalFont = checked
+            UpdateTextFontWidgetStates()
+            ApplyAndUpdate()
+        end
+    })
+    rowOverride:AddWidget(useGlobalFontCheck, 1)
+    displayCard:AddRow(rowOverride, Theme.rowHeight)
+
+    local rowOverrideSep = GUIFrame:CreateRow(displayCard.content, Theme.rowHeightSeparator)
+    rowOverrideSep:AddWidget(GUIFrame:CreateSeparator(rowOverrideSep), 1)
+    displayCard:AddRow(rowOverrideSep, Theme.rowHeightSeparator)
+
     local row1 = GUIFrame:CreateRow(displayCard.content, Theme.rowHeight)
     local fontDropdown = GUIFrame:CreateDropdown(row1, "Font", {
         options = fontList,
@@ -118,6 +146,7 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
         isFontPreview = true
     })
     row1:AddWidget(fontDropdown, 0.5)
+    table_insert(textFontWidgets, fontDropdown)
 
     local fontSizeSlider = GUIFrame:CreateSlider(row1, "Font Size", {
         min = 8,
@@ -143,6 +172,7 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
         end
     })
     row2:AddWidget(outlineDropdown, 0.5)
+    table_insert(textFontWidgets, outlineDropdown)
 
     local alignDropdown = GUIFrame:CreateDropdown(row2, "Text Align", {
         options = SETTINGS_TEXT_ALIGN_OPTIONS,
@@ -157,6 +187,8 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
     })
     row2:AddWidget(alignDropdown, 0.5)
     displayCard:AddRow(row2, Theme.rowHeightLast, 0)
+
+    UpdateTextFontWidgetStates()
 
     yOffset = displayCard:GetNextOffset()
 

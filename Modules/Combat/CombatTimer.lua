@@ -89,7 +89,7 @@ function CT:ApplySettings()
     if not self.frame or not self.text then return end
 
     self.refreshRate = (self.db.Format == "MM:SS:MS") and 0.1 or 0.25
-    NRSKNUI:ApplyFontToText(self.text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, {})
+    NRSKNUI:ApplyFontToText(self.text, NRSKNUI:GetEffectiveFont(self.db), self.db.FontSize, self.db.FontOutline, {})
 
     local point = NRSKNUI:GetTextJustifyFromAnchor(self.db.Position.AnchorFrom)
     local xOffset = point == "LEFT" and 4 or point == "RIGHT" and -4 or 0

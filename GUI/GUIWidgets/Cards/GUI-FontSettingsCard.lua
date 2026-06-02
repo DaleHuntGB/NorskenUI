@@ -4,7 +4,9 @@
 ---@field fontWidgets NUIWidget[]
 ---@field shadowSubWidgets NUIWidget[]
 ---@field shadowEnableCheck NUICheckbox?
+---@field globalOverrideCheck NUICheckbox?
 ---@field UpdateShadowState fun()
+---@field UpdateGlobalOverrideState fun()
 
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
@@ -33,6 +35,10 @@ local ipairs = ipairs
 ---    searchable = boolean,        -- Enable font search (default: true)
 ---    includeSoftOutline = boolean,-- Include SOFTOUTLINE option (default: false)
 ---    shadowOffsetRange = {min, max}, -- Shadow offset range (default: {-5, 5})
+---    globalOverride = {           -- Optional: adds "Use Global Font" toggle at top
+---        dbKey = string,          -- Key in db for override value (default: "UseGlobalFont")
+---        label = string,          -- Toggle label (default: "Use Global Font")
+---    },
 ---}
 ---```
 ---@param scrollChild Frame
@@ -53,6 +59,10 @@ function GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, config)
     local searchable = config.searchable ~= false
     local includeSoftOutline = config.includeSoftOutline == true
     local shadowOffsetRange = config.shadowOffsetRange or { -5, 5 }
+
+    local globalOverride = config.globalOverride
+    local globalOverrideKey = globalOverride and (globalOverride.dbKey or "UseGlobalFont")
+    local globalOverrideLabel = globalOverride and (globalOverride.label or "Use Global Font")
 
     local keys = {
         fontFace = dbKeys.fontFace or "FontFace",
@@ -126,6 +136,42 @@ function GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, config)
     end
 
     local card = GUIFrame:CreateCard(scrollChild, title, yOffset)
+
+    ---@type NUICheckbox?
+    local globalOverrideCheck
+
+    local function UpdateGlobalOverrideState()
+        if not globalOverride then return end
+        local useGlobal = db[globalOverrideKey] ~= false -- default true
+        for _, widget in ipairs(widgets) do
+            if widget ~= globalOverrideCheck and widget.SetEnabled then
+                widget:SetEnabled(not useGlobal)
+            end
+        end
+        if not useGlobal then
+            UpdateShadowState()
+        end
+    end
+
+    if globalOverride then
+        local overrideRow = GUIFrame:CreateRow(card.content, Theme.rowHeight)
+        globalOverrideCheck = GUIFrame:CreateCheckbox(overrideRow, globalOverrideLabel, {
+            value = db[globalOverrideKey] ~= false,
+            callback = function(checked)
+                db[globalOverrideKey] = checked
+                if onChange then onChange() end
+                UpdateGlobalOverrideState()
+            end
+        })
+        overrideRow:AddWidget(globalOverrideCheck, 1)
+        table_insert(widgets, globalOverrideCheck)
+        card:AddRow(overrideRow, Theme.rowHeight)
+
+        local sepRow = GUIFrame:CreateRow(card.content, Theme.rowHeightSeparator)
+        local sep = GUIFrame:CreateSeparator(sepRow)
+        sepRow:AddWidget(sep, 1)
+        card:AddRow(sepRow, Theme.rowHeightSeparator)
+    end
 
     local fontList = {}
     if LSM then
@@ -281,9 +327,14 @@ function GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, config)
     card.fontWidgets = widgets
     card.shadowSubWidgets = shadowSubWidgets
     card.shadowEnableCheck = shadowEnableCheck
+    card.globalOverrideCheck = globalOverrideCheck
     card.UpdateShadowState = UpdateShadowState
+    card.UpdateGlobalOverrideState = UpdateGlobalOverrideState
     card._hasInternalWidgetState = true
     UpdateShadowState()
+    if globalOverride then
+        UpdateGlobalOverrideState()
+    end
 
     ---@cast card NUIFontSettingsCard
 
@@ -299,14 +350,22 @@ function GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, config)
             if self.titleText then self.titleText:SetAlpha(0.5) end
         end
 
-        for _, widget in ipairs(self.fontWidgets) do
-            if widget.SetEnabled then
-                widget:SetEnabled(enabled)
-            end
+        -- Global override toggle always stays enabled
+        if globalOverrideCheck and globalOverrideCheck.SetEnabled then
+            globalOverrideCheck:SetEnabled(enabled)
         end
 
-        if enabled then
-            UpdateShadowState()
+        if enabled and globalOverride then
+            UpdateGlobalOverrideState()
+        else
+            for _, widget in ipairs(self.fontWidgets) do
+                if widget ~= globalOverrideCheck and widget.SetEnabled then
+                    widget:SetEnabled(enabled)
+                end
+            end
+            if enabled then
+                UpdateShadowState()
+            end
         end
     end
 

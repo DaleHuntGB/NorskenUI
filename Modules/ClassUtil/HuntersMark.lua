@@ -234,7 +234,7 @@ function HUNTMARK:ApplySettings()
     local text = self.frame.text
     if text then
         local color = self.db.Color
-        NRSKNUI:ApplyFontToText(text, self.db.FontFace, self.db.FontSize, self.db.FontOutline, self.db.FontShadow)
+        NRSKNUI:ApplyFontToText(text, NRSKNUI:GetEffectiveFont(self.db), self.db.FontSize, self.db.FontOutline, self.db.FontShadow)
         text:SetTextColor(color[1], color[2], color[3], color[4])
     end
 

@@ -849,6 +849,7 @@ GUIFrame:RegisterContent("CustomSkin_Debuffs", function(scrollChild, yOffset)
         },
         fontSizeRange = { 8, 32 },
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

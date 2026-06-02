@@ -134,9 +134,9 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
     local row2a = GUIFrame:CreateRow(card2.content, 36)
     local fontDropdown = GUIFrame:CreateDropdown(row2a, "Font", {
         options = fontList,
-        value = db.Font or "Expressway",
+        value = db.FontFace or "Expressway",
         callback = function(key)
-            db.Font = key
+            db.FontFace = key
             ApplySettings()
         end,
         searchable = true,

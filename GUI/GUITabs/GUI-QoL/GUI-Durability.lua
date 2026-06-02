@@ -243,6 +243,7 @@ GUIFrame:RegisterContent("Durability", function(scrollChild, yOffset)
         fontSizeRange = { 6, 80 },
         includeSoftOutline = true,
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

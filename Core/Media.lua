@@ -190,3 +190,34 @@ function NRSKNUI:ApplyFont(fontString, fontName, fontSize, fontOutline)
 
     return fontString:SetFont("Fonts\\FRIZQT__.TTF", size, outline) or false
 end
+
+-- Global Media Helpers
+-- These check global media settings and return the effective value for a module
+
+---@param moduleDB table? Module's database table (should contain FontFace/Font/fontFace and optionally UseGlobalFont)
+---@return string fontName The effective font name to use
+function NRSKNUI:GetEffectiveFont(moduleDB)
+    local global = self.db and self.db.profile and self.db.profile.globalMedia
+    if global and global.Enabled and global.profileFont.Enabled then
+        -- Per-module override: if module explicitly opts out, use its own font
+        if moduleDB and moduleDB.UseGlobalFont == false then
+            return moduleDB.FontFace or moduleDB.Font or moduleDB.fontFace or DEFAULT_FONT_NAME
+        end
+        return global.profileFont.FontFace or DEFAULT_FONT_NAME
+    end
+    return moduleDB and (moduleDB.FontFace or moduleDB.Font or moduleDB.fontFace) or DEFAULT_FONT_NAME
+end
+
+---@param moduleDB table? Module's database table (should contain StatusBarTexture/statusBar and optionally UseGlobalBar)
+---@return string barName The effective statusbar name to use
+function NRSKNUI:GetEffectiveStatusBar(moduleDB)
+    local global = self.db and self.db.profile and self.db.profile.globalMedia
+    if global and global.Enabled and global.profileBar.Enabled then
+        -- Per-module override: if module explicitly opts out, use its own bar
+        if moduleDB and moduleDB.UseGlobalBar == false then
+            return moduleDB.StatusBarTexture or moduleDB.statusBar or "NorskenUI"
+        end
+        return global.profileBar.statusBar or "NorskenUI"
+    end
+    return moduleDB and (moduleDB.StatusBarTexture or moduleDB.statusBar) or "NorskenUI"
+end

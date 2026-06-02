@@ -43,7 +43,7 @@ local function ApplyCooldownTextStyle(cooldown, db)
     local cooldownText = cooldown:GetRegions()
     if not cooldownText or not cooldownText.SetFont then return end
 
-    NRSKNUI:ApplyFont(cooldownText, db.FontFace, db.TimerFontSize, db.FontOutline)
+    NRSKNUI:ApplyFont(cooldownText, NRSKNUI:GetEffectiveFont(db), db.TimerFontSize, db.FontOutline)
     if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
 
     local pos = db.TimerPosition
@@ -93,7 +93,7 @@ local function CreateAuraButton(parent)
     button.Count = button:CreateFontString(nil, "OVERLAY")
     button.Count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -1, 1)
     button.Count:SetJustifyH("RIGHT")
-    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+    NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     button.Cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
@@ -252,7 +252,7 @@ local function ApplyButtonSettings(button, db)
     if button.bg then button.bg:SetColorTexture(unpack(db.BackgroundColor)) end
     if button.SetBorderColor then button:SetBorderColor(unpack(db.BorderColor)) end
     if button.Count then
-        NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+        NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
         button.Count:SetShadowOffset(0, 0)
     end
     if button.Cooldown then

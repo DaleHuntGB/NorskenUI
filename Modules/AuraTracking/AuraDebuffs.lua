@@ -146,7 +146,7 @@ local function ApplyCooldownTextStyle(cooldown, db)
     local cooldownText = cooldown:GetRegions()
     if not cooldownText or not cooldownText.SetFont then return end
 
-    NRSKNUI:ApplyFont(cooldownText, db.FontFace, db.TimerFontSize, db.FontOutline)
+    NRSKNUI:ApplyFont(cooldownText, NRSKNUI:GetEffectiveFont(db), db.TimerFontSize, db.FontOutline)
     if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
 
     local pos = db.TimerPosition
@@ -217,7 +217,7 @@ local function CreateAuraButton(parent)
         { AnchorFrom = "BOTTOMRIGHT", AnchorTo = "BOTTOMRIGHT", XOffset = -1, YOffset = 1 }
     button.Count:SetPoint(stackPos.AnchorFrom, button, stackPos.AnchorTo, stackPos.XOffset, stackPos.YOffset)
     button.Count:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(stackPos.AnchorFrom))
-    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+    NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     button:SetScript("OnEnter", auraOnEnter)
@@ -439,7 +439,7 @@ local function ApplyButtonSettings(button, db)
     button:SetSize(db.IconSize, db.IconSize)
     ApplyMouseSettings(button, db)
     if button.Count then
-        NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+        NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
         button.Count:SetShadowOffset(0, 0)
         local stackPos = db.StackPosition or
             { AnchorFrom = "BOTTOMRIGHT", AnchorTo = "BOTTOMRIGHT", XOffset = -1, YOffset = 1 }

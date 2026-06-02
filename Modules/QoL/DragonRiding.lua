@@ -100,7 +100,7 @@ local function UpdateVigor(self)
 
     local db = self.db
     local spacing = db.Spacing
-    local texture = NRSKNUI:GetStatusbarPath(db.StatusBarTexture)
+    local texture = NRSKNUI:GetStatusbarPath(NRSKNUI:GetEffectiveStatusBar(db))
     for i = 1, charges.maxCharges do
         local pill = self.vigorFrame[i]
         if not pill then
@@ -157,7 +157,7 @@ local function UpdateSpeed(self)
 
     local fontFile = speed:GetFont()
     if not fontFile then
-        NRSKNUI:ApplyFontToText(speed, st.FontFace, st.FontSize, st.FontOutline, st.FontShadow)
+        NRSKNUI:ApplyFontToText(speed, st.FontFace, NRSKNUI:GetEffectiveFont(st), st.FontOutline, st.FontShadow)
         if not speed:GetFont() then return end
     end
 
@@ -183,7 +183,7 @@ function DR:CreateFrames()
     local db = self.db
     local spacing = db.Spacing
     local barHeight = db.BarHeight
-    local texture = NRSKNUI:GetStatusbarPath(db.StatusBarTexture)
+    local texture = NRSKNUI:GetStatusbarPath(NRSKNUI:GetEffectiveStatusBar(db))
     local totalHeight = (barHeight * 3) + (spacing * 2) + 20
 
     self.parent = CreateFrame('Frame', nil, UIParent, 'SecureHandlerStateTemplate')
@@ -233,7 +233,7 @@ function DR:CreateFrames()
     self.speedText = self.speedOverlay:CreateFontString(nil, 'OVERLAY')
     self.speedText:SetWordWrap(false)
     self.speedText:SetPoint('BOTTOM', self.vigorFrame, 'TOP', st.XOffset or 0, (st.YOffset or 0) + 2)
-    NRSKNUI:ApplyFontToText(self.speedText, st.FontFace, st.FontSize, st.FontOutline, st.FontShadow)
+    NRSKNUI:ApplyFontToText(self.speedText, NRSKNUI:GetEffectiveFont(st), st.FontSize, st.FontOutline, st.FontShadow)
     self.speedText:SetText("")
 end
 
@@ -242,7 +242,7 @@ function DR:Refresh()
     local db = self.db
     local barHeight = db.BarHeight
     local spacing = db.Spacing
-    local texture = NRSKNUI:GetStatusbarPath(db.StatusBarTexture)
+    local texture = NRSKNUI:GetStatusbarPath(NRSKNUI:GetEffectiveStatusBar(db))
     local totalHeight = (barHeight * 3) + (spacing * 2) + 20
 
     self.container:SetSize(db.Width, totalHeight)
@@ -297,7 +297,7 @@ function DR:Refresh()
     UpdateVigorColor(self)
 
     local st = db.SpeedText or {}
-    NRSKNUI:ApplyFontToText(self.speedText, st.FontFace, st.FontSize, st.FontOutline, st.FontShadow)
+    NRSKNUI:ApplyFontToText(self.speedText, NRSKNUI:GetEffectiveFont(st), st.FontSize, st.FontOutline, st.FontShadow)
     self.speedText:ClearAllPoints()
     self.speedText:SetPoint('BOTTOM', self.vigorFrame, 'TOP', st.XOffset or 0, (st.YOffset or 0) + 2)
 
@@ -390,7 +390,7 @@ function DR:OnShowHandler()
 
     local st = self.db.SpeedText or {}
     if self.speedText and not self.speedText:GetFont() then
-        NRSKNUI:ApplyFontToText(self.speedText, st.FontFace, st.FontSize, st.FontOutline, st.FontShadow)
+        NRSKNUI:ApplyFontToText(self.speedText, NRSKNUI:GetEffectiveFont(st), st.FontSize, st.FontOutline, st.FontShadow)
     end
 
     self.vigorFrame:RegisterEvent('SPELL_UPDATE_CHARGES')

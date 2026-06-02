@@ -212,6 +212,7 @@ GUIFrame:RegisterContent("TotemTracker", function(scrollChild, yOffset)
         fontSizeRange = { 8, 32 },
         includeSoftOutline = false,
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

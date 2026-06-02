@@ -60,7 +60,7 @@ local function ApplyCooldownTextStyle(cooldown, db)
 
     for _, region in ipairs({ cooldown:GetRegions() }) do
         if region:GetObjectType() == "FontString" then
-            NRSKNUI:ApplyFont(region, db.FontFace, db.TimerFontSize, db.FontOutline)
+            NRSKNUI:ApplyFont(region, NRSKNUI:GetEffectiveFont(db), db.TimerFontSize, db.FontOutline)
             region:SetShadowOffset(0, 0)
             region:ClearAllPoints()
             region:SetPoint("CENTER", cooldown, "CENTER", 0, 0)

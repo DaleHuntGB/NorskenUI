@@ -30,23 +30,30 @@ local Defaults = {
         GUIState = {
             GUIFrameLayoutVersion = 67, -- Bump this to force a one-time frame size reset for all users
             frame = {
-                point = nil,         -- Anchor point
-                relativePoint = nil, -- Relative anchor point
-                xOffset = nil,       -- Frame X offset
-                yOffset = nil,       -- Frame Y offset
-                width = nil,         -- Frame width
-                height = nil,        -- Frame height
+                point = nil,            -- Anchor point
+                relativePoint = nil,    -- Relative anchor point
+                xOffset = nil,          -- Frame X offset
+                yOffset = nil,          -- Frame Y offset
+                width = nil,            -- Frame width
+                height = nil,           -- Frame height
             },
-            selectedGroupId = nil,   -- Currently selected sidebar item
-            selectedTab = nil,       -- Currently selected tab in content
-            minimized = false,       -- Is frame minimized
+            selectedGroupId = nil,      -- Currently selected sidebar item
+            selectedTab = nil,          -- Currently selected tab in content
+            minimized = false,          -- Is frame minimized
         },
     },
     profile = {
+        globalMedia = {
+            Enabled = true,
+            profileFont = { Enabled = true, FontFace = "Expressway", },
+            profileBar = { Enabled = true, statusBar = "NorskenUI", },
+        },
+
         CharacterPanel = {
             Enabled = true,
             DecimalItemLevel = true,
             ShowRaceText = true,
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontOutline = "OUTLINE",
             StatsFontSize = 11,
@@ -79,6 +86,7 @@ local Defaults = {
             ShowText = true,
             TextLabel = "FREE",
             TextColor = { 0, 1, 0, 1 },
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontSize = 14,
             FontOutline = "SOFTOUTLINE",
@@ -128,6 +136,7 @@ local Defaults = {
             ColorThree = { 1, 0.82, 0 },
             ColorFour = { 0, 1, 0 },
 
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontSize = 28,
             FontOutline = "SOFTOUTLINE",
@@ -177,6 +186,7 @@ local Defaults = {
             CombatOnly = false,                  -- Only show timer during combat
             Format = "MM:SS",                    -- Time format
             FontSize = 28,                       -- Font size
+            UseGlobalFont = true,
             FontFace = "Expressway",             -- Font face
             FontOutline = "SOFTOUTLINE",         -- Font outline
             FontShadow = {                       -- Font shadow settings
@@ -212,6 +222,7 @@ local Defaults = {
             Enabled = true,
             Text = "POT READY",
             Color = { 1, 1, 1, 1 },
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontSize = 14,
             FontOutline = "SOFTOUTLINE",
@@ -245,6 +256,7 @@ local Defaults = {
             Strata = "HIGH",              -- Frame strata
             anchorFrameType = "UIPARENT", -- Anchor frame type (SCREEN, UIPARENT, SELECTFRAME)
             ParentFrame = "UIParent",     -- Parent frame name (when SELECTFRAME)
+            UseGlobalFont = true,         -- Use global font settings
             FontFace = "Expressway",      -- Font face
             FontSize = 16,                -- Font size
             FontOutline = "SOFTOUTLINE",  -- Font outline: NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE, SLUG, SLUG,OUTLINE
@@ -336,6 +348,7 @@ local Defaults = {
                 XOffset = 814,
                 YOffset = -465,
             },
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontSize = 18,
             FontOutline = "SOFTOUTLINE",
@@ -406,6 +419,7 @@ local Defaults = {
         IncarnStacks = {
             Enabled = false,
             IconSize = 40,
+            UseGlobalFont = true,
 
             -- Stack Text (shows stack count)
             ShowStacks = true,
@@ -468,6 +482,7 @@ local Defaults = {
             Reverse = false,
 
             -- Font settings
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontOutline = "OUTLINE",
             TimerFontSize = 18,
@@ -495,6 +510,7 @@ local Defaults = {
             PassiveColor = { 0.3, 0.7, 1, 1 }, -- Light blue for passive
             DeadColor = { 1, 0.2, 0.2, 1 },    -- Red for dead
             -- Font settings
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontSize = 27,
             FontOutline = "SOFTOUTLINE",
@@ -531,6 +547,7 @@ local Defaults = {
             ManaFontSize = 24,
             ManaYOffset = 4,
             -- Font settings
+            UseGlobalFont = true,
             FontFace = "Expressway",
             FontOutline = "SOFTOUTLINE",
             FontShadow = {
@@ -565,6 +582,7 @@ local Defaults = {
             BloodlustTracker = {
                 Enabled = true,
                 Size = 40,
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 18,
                 FontOutline = "SOFTOUTLINE",
@@ -583,6 +601,7 @@ local Defaults = {
                 Enabled = false,
                 Text = "BENCH CUH",
                 Color = { 1, 0.3, 0.3, 1 },
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 36,
                 FontOutline = "SOFTOUTLINE",
@@ -651,6 +670,7 @@ local Defaults = {
             HuntersMark = {
                 Enabled = true,
                 Color = { 1, 0.290, 0.301, 1 },
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 22,
                 FontOutline = "SOFTOUTLINE",
@@ -684,6 +704,7 @@ local Defaults = {
                 Text = "GATE USABLE CUH",
                 Color = { 0, 1, 0 },
                 -- Font settings
+                UseGlobalFont = true,
                 FontFace = "Expressway",      -- Font face
                 FontSize = 36,                -- Font size
                 FontOutline = "SOFTOUTLINE",  -- Font outline (NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE, SLUG, SLUG,OUTLINE)
@@ -701,6 +722,7 @@ local Defaults = {
 
             Durability = {
                 Enabled = true,
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontOutline = "SOFTOUTLINE",
 
@@ -749,6 +771,7 @@ local Defaults = {
                 hideWhenMax = true,
                 width = 477,
                 height = 26,
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontOutline = "SOFTOUTLINE",
                 FontSize = 14,
@@ -770,6 +793,7 @@ local Defaults = {
                 -- Statusbar coloring
                 ColorMode = "theme",
                 StatusColor = { 1, 1, 1, 1 },
+                UseGlobalBar = true,
                 StatusBarTexture = "NorskenUI", -- LSM statusbar texture name
 
                 -- Rested Coloring
@@ -830,6 +854,7 @@ local Defaults = {
                 Width = 314,
                 BarHeight = 6,
                 Spacing = 3,
+                UseGlobalBar = true,
                 StatusBarTexture = "NorskenUI",
                 Position = {
                     AnchorFrom = "CENTER",
@@ -845,6 +870,7 @@ local Defaults = {
                 },
                 SpeedText = {
                     Enabled = true,
+                    UseGlobalFont = true,
                     FontFace = "Expressway",
                     FontSize = 16,
                     FontOutline = "SOFTOUTLINE",
@@ -876,6 +902,7 @@ local Defaults = {
                 Width = 367,
                 Height = 29,
 
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 14,
                 FontOutline = "SOFTOUTLINE",
@@ -907,6 +934,7 @@ local Defaults = {
                 BorderColor = { 0, 0, 0, 1 },
 
                 -- Statusbar
+                UseGlobalBar = true,
                 StatusBarTexture = "NorskenUI",
 
                 -- Hold Timer
@@ -985,6 +1013,7 @@ local Defaults = {
                 Enabled = true,
                 Width = 448,
                 Height = 245,
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontOutline = "OUTLINE",
                 FontSize = 14,
@@ -1059,6 +1088,7 @@ local Defaults = {
                     FadeOutDuration = 1,
                     Alpha = 0,
                 },
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontOutline = "OUTLINE",
 
@@ -1665,9 +1695,10 @@ local Defaults = {
 
             -- Blizzard Messages Skinning
             BlizzardMessages = {
-                Enabled = true,          -- Master toggle for Blizzard messages skinning
+                Enabled = true, -- Master toggle for Blizzard messages skinning
                 -- Global font settings
-                Font = "Expressway",     -- Font face
+                UseGlobalFont = true,
+                FontFace = "Expressway", -- Font face
                 FontOutline = "OUTLINE", -- Font outline
                 FontShadow = {
                     Enabled = false,
@@ -1725,7 +1756,7 @@ local Defaults = {
             -- UI Widgets Skinning (M+ timer, power bars, etc.)
             UIWidgets = {
                 Enabled = true,
-                Font = "Expressway",
+                FontFace = "Expressway",
                 FontOutline = "OUTLINE",
                 -- Status bar widgets (M+ timer, power bars)
                 StatusBar = {
@@ -1778,6 +1809,7 @@ local Defaults = {
                 EnchantBorderColor = { 0.6, 0, 1, 1 }, -- Purple for weapon enchants
 
                 -- Font settings
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 13,
                 FontOutline = "OUTLINE",
@@ -1846,6 +1878,7 @@ local Defaults = {
                 },
 
                 -- Font settings
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 14,
                 FontOutline = "OUTLINE",
@@ -1913,6 +1946,7 @@ local Defaults = {
 
                 BorderColor = { 0.8, 0, 0, 1 },
 
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 12,
                 FontOutline = "OUTLINE",
@@ -1965,6 +1999,7 @@ local Defaults = {
                 BackgroundColor = { 0, 0, 0, 0.3 },
 
                 -- Font settings
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 14,
                 FontOutline = "OUTLINE",
@@ -2123,10 +2158,13 @@ local Defaults = {
                 fontSize = 14,
                 fontOutline = "OUTLINE", -- NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE, SLUG, SLUG,OUTLINE
                 iconEnabled = true,
+                UseGlobalFont = true,
+                UseGlobalBar = true,
             },
 
             -- Global display settings for Texts
             TextDisplay = {
+                UseGlobalFont = true,
                 fontFace = "Expressway",
                 fontSize = 24,
                 fontOutline = "SOFTOUTLINE", -- NONE, OUTLINE, THICKOUTLINE, SOFTOUTLINE, SLUG, SLUG,OUTLINE
@@ -2244,6 +2282,8 @@ local Defaults = {
             -- Bar appearance
             BarDisplay = {
                 StatusBarTexture = "NorskenUI",
+                UseGlobalFont = true,
+                UseGlobalBar = true,
                 FontFace = "Expressway",
                 FontSize = 13,
                 FontOutline = "OUTLINE",
@@ -2368,6 +2408,7 @@ local Defaults = {
                 IconSize = 48,
                 IconSpacing = 1,
                 GrowDirection = "CENTER",    -- Growth direction: LEFT, CENTER, RIGHT
+                UseGlobalFont = true,
                 FontFace = "Expressway",     -- Font face
                 FontSize = 20,               -- Font size
                 FontOutline = "SOFTOUTLINE", -- Font outline
@@ -2467,6 +2508,7 @@ local Defaults = {
                 Enabled = true,
                 ShowMissingText = true,
                 IconSize = 36,
+                UseGlobalFont = true,
                 FontFace = "Expressway",     -- Font face
                 FontSize = 13,               -- Font size
                 FontOutline = "SOFTOUTLINE", -- Font outline
@@ -2484,6 +2526,7 @@ local Defaults = {
             -- Stance Text Display Settings
             StanceText = {
                 Enabled = true,
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 14,
                 FontOutline = "SOFTOUTLINE",
@@ -2524,6 +2567,7 @@ local Defaults = {
             Groups = { "Default" },
             Items = {},
             Display = {
+                UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontSize = 14,
                 FontOutline = "SOFTOUTLINE",

@@ -334,7 +334,8 @@ function DT:GetTriggerConfig(trigger)
 end
 
 function DT:GetStatusbarPath(textureKey)
-    textureKey = textureKey or self:GetBarDisplaySettings().barTexture or "NorskenUI"
+    local barDisplay = self:GetBarDisplaySettings()
+    textureKey = textureKey or NRSKNUI:GetEffectiveStatusBar(barDisplay) or "NorskenUI"
     return NRSKNUI:GetStatusbarPath(textureKey) or "Interface\\Buttons\\WHITE8x8"
 end
 
@@ -547,13 +548,13 @@ function DT:CreateBarFrame(dungeonKey, triggerId, trigger)
     frame.text1 = frame.bar:CreateFontString(nil, "OVERLAY")
     frame.text1:SetPoint(config.barText1Justify, frame.bar, config.barText1Justify,
         config.barText1XOffset, config.barText1YOffset)
-    NRSKNUI:ApplyFontToText(frame.text1, config.fontFace, fontSize, fontOutline)
+    NRSKNUI:ApplyFontToText(frame.text1, NRSKNUI:GetEffectiveFont(config), fontSize, fontOutline)
     frame.text1:SetTextColor(unpack(config.textColor))
 
     frame.text2 = frame.bar:CreateFontString(nil, "OVERLAY")
     frame.text2:SetPoint(config.barText2Justify, frame.bar, config.barText2Justify,
         config.barText2XOffset, config.barText2YOffset)
-    NRSKNUI:ApplyFontToText(frame.text2, config.fontFace, fontSize, fontOutline)
+    NRSKNUI:ApplyFontToText(frame.text2, NRSKNUI:GetEffectiveFont(config), fontSize, fontOutline)
     frame.text2:SetTextColor(unpack(config.textColor))
 
     frame.config = config
@@ -581,7 +582,7 @@ function DT:CreateTextFrame(dungeonKey, triggerId, trigger)
 
     frame.displayText = frame:CreateFontString(nil, "OVERLAY")
     frame.displayText:SetPoint(config.textJustify, frame, config.textJustify, 0, 0)
-    NRSKNUI:ApplyFontToText(frame.displayText, config.fontFace, fontSize, fontOutline)
+    NRSKNUI:ApplyFontToText(frame.displayText, NRSKNUI:GetEffectiveFont(config), fontSize, fontOutline)
     frame.displayText:SetTextColor(unpack(config.textColor))
 
     frame.config = config
@@ -1097,7 +1098,7 @@ function DT:UpdateFrameVisuals()
                 end
 
                 if frame.text1 then
-                    NRSKNUI:ApplyFontToText(frame.text1, barDisplay.fontFace, barDisplay.fontSize, barDisplay
+                    NRSKNUI:ApplyFontToText(frame.text1, NRSKNUI:GetEffectiveFont(barDisplay), barDisplay.fontSize, barDisplay
                         .fontOutline)
                     if frame.text1._nrsknSoftOutline then
                         frame.text1._nrsknSoftOutline:_ApplyOffsets()
@@ -1105,7 +1106,7 @@ function DT:UpdateFrameVisuals()
                 end
 
                 if frame.text2 then
-                    NRSKNUI:ApplyFontToText(frame.text2, barDisplay.fontFace, barDisplay.fontSize, barDisplay
+                    NRSKNUI:ApplyFontToText(frame.text2, NRSKNUI:GetEffectiveFont(barDisplay), barDisplay.fontSize, barDisplay
                         .fontOutline)
                     if frame.text2._nrsknSoftOutline then
                         frame.text2._nrsknSoftOutline:_ApplyOffsets()
@@ -1120,7 +1121,7 @@ function DT:UpdateFrameVisuals()
                     frame.displayText:SetJustifyH(textDisplay.textAlign or "LEFT")
                     frame.displayText:SetPoint(textDisplay.textAlign or "LEFT", frame, textDisplay.textAlign or "LEFT", 0,
                         0)
-                    NRSKNUI:ApplyFontToText(frame.displayText, textDisplay.fontFace, fontSize, textDisplay.fontOutline)
+                    NRSKNUI:ApplyFontToText(frame.displayText, NRSKNUI:GetEffectiveFont(textDisplay), fontSize, textDisplay.fontOutline)
                     if frame.displayText._nrsknSoftOutline then
                         frame.displayText._nrsknSoftOutline:_ApplyOffsets()
                     end

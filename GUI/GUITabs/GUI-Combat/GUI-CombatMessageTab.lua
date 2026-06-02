@@ -394,6 +394,7 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
         },
         includeSoftOutline = true,
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     table_insert(allCards, fontCard)
     manager:Register(fontCard, "all")

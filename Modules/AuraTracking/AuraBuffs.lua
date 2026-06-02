@@ -123,7 +123,7 @@ end
 local function applyTimerStyle(button, db)
     local cooldownText = button.Cooldown:GetRegions()
     if cooldownText and cooldownText.SetFont then
-        NRSKNUI:ApplyFont(cooldownText, db.FontFace, db.TimerFontSize, db.FontOutline)
+        NRSKNUI:ApplyFont(cooldownText, NRSKNUI:GetEffectiveFont(db), db.TimerFontSize, db.FontOutline)
         if cooldownText.SetShadowOffset then cooldownText:SetShadowOffset(0, 0) end
         if cooldownText.SetJustifyH then
             cooldownText:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(db.TimerPosition
@@ -164,7 +164,7 @@ local function auraButtonInit(button)
     button.Count:SetPoint(BUFFS.db.StackPosition.AnchorFrom, button, BUFFS.db.StackPosition.AnchorTo,
         BUFFS.db.StackPosition.XOffset, BUFFS.db.StackPosition.YOffset)
     button.Count:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(BUFFS.db.StackPosition.AnchorFrom))
-    NRSKNUI:ApplyFont(button.Count, BUFFS.db.FontFace, BUFFS.db.FontSize, BUFFS.db.FontOutline)
+    NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(BUFFS.db), BUFFS.db.FontSize, BUFFS.db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
 
     button:HookScript("OnAttributeChanged", auraOnAttributeChanged)
@@ -176,7 +176,7 @@ local function applyButtonSettings(button, db)
     if button.bg then button.bg:SetColorTexture(0, 0, 0, 0.3) end
     if button.SetBorderColor then button:SetBorderColor(unpack(db.BorderColor)) end
     if button.Count then
-        NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+        NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
         button.Count:SetShadowOffset(0, 0)
         button.Count:ClearAllPoints()
         button.Count:SetPoint(db.StackPosition.AnchorFrom, button, db.StackPosition.AnchorTo,
@@ -363,7 +363,7 @@ local function CreatePreviewButton(parent, index, db)
     button.Count:SetPoint(db.StackPosition.AnchorFrom, button, db.StackPosition.AnchorTo,
         db.StackPosition.XOffset, db.StackPosition.YOffset)
     button.Count:SetJustifyH(NRSKNUI:GetTextJustifyFromAnchor(db.StackPosition.AnchorFrom))
-    NRSKNUI:ApplyFont(button.Count, db.FontFace, db.FontSize, db.FontOutline)
+    NRSKNUI:ApplyFont(button.Count, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
     button.Count:SetShadowOffset(0, 0)
     if index % 4 == 1 then
         button.Count:SetText("2")

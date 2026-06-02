@@ -204,7 +204,7 @@ end
 function CM:UpdateFrameFont(frame, msgType)
     local key = GetDbKey(msgType)
     local fontSize = (key and self.db[key] and self.db[key].FontSize) or self.db.FontSize
-    NRSKNUI:ApplyFontToText(frame.text, self.db.FontFace, fontSize, self.db.FontOutline, self.db.FontShadow)
+    NRSKNUI:ApplyFontToText(frame.text, NRSKNUI:GetEffectiveFont(self.db), fontSize, self.db.FontOutline, self.db.FontShadow)
 end
 
 function CM:SetMessageContent(frame, msgText, color, msgType)

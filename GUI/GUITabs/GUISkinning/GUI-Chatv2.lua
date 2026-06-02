@@ -358,6 +358,7 @@ local function RenderTextTab(scrollChild, db, manager)
         fontSizeRange = { 8, 24 },
         onChangeCallback = ApplySettings,
         includeSoftOutline = true,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
 

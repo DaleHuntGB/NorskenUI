@@ -114,7 +114,7 @@ function TSP:ApplySettings()
 
     self.frame.text:SetText(self.db.TextLabel)
     local fontSize = math_floor(self.db.FontSize + 0.5)
-    NRSKNUI:ApplyFontToText(self.frame.text, self.db.FontFace, fontSize, self.db.FontOutline,
+    NRSKNUI:ApplyFontToText(self.frame.text, NRSKNUI:GetEffectiveFont(self.db), fontSize, self.db.FontOutline,
         self.db.FontShadow or {})
 
     local textColor = self.db.TextColor
@@ -125,7 +125,7 @@ function TSP:ApplySettings()
     end
 
     local timerFontSize = math_floor(self.db.TimerFontSize + 0.5)
-    NRSKNUI:ApplyFontToText(self.timerText, self.db.FontFace, timerFontSize, self.db.FontOutline,
+    NRSKNUI:ApplyFontToText(self.timerText, NRSKNUI:GetEffectiveFont(self.db), timerFontSize, self.db.FontOutline,
         self.db.FontShadow or {})
 
     local timerColor = self.db.TimerTextColor

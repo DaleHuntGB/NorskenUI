@@ -80,6 +80,7 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
         db = db,
         includeSoftOutline = true,
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

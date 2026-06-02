@@ -153,12 +153,13 @@ GUIFrame:RegisterPanel("messages", function(container)
             title = "Font Settings",
             db = db,
             dbKeys = {
-                fontFace = "Font",
+                fontFace = "FontFace",
                 fontOutline = "FontOutline",
             },
             hideFontSize = true,
             includeSoftOutline = false,
             onChangeCallback = ApplySettings,
+            globalOverride = {},
         })
         miniSidebar.contentArea.RegisterCard(fontCard)
         manager:Register(fontCard, "all")

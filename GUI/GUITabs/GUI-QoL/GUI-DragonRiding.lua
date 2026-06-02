@@ -114,7 +114,19 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     row2b:AddWidget(spacingSlider, 0.5)
     manager:Register(spacingSlider, "all")
 
-    local textureDropdown = GUIFrame:CreateDropdown(row2b, "Bar Texture", {
+    local useGlobalBarCheck = GUIFrame:CreateCheckbox(row2b, "Use Global Bar", {
+        value = db.UseGlobalBar ~= false,
+        callback = function(checked)
+            db.UseGlobalBar = checked
+            ApplySettings()
+        end
+    })
+    row2b:AddWidget(useGlobalBarCheck, 0.5)
+    manager:Register(useGlobalBarCheck, "all")
+    card2:AddRow(row2b, Theme.rowHeight)
+
+    local row2c = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+    local textureDropdown = GUIFrame:CreateDropdown(row2c, "Bar Texture", {
         options = statusbarList,
         value = db.StatusBarTexture,
         searchable = true,
@@ -122,9 +134,9 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
             db.StatusBarTexture = key; ApplySettings()
         end
     })
-    row2b:AddWidget(textureDropdown, 0.5)
+    row2c:AddWidget(textureDropdown, 1)
     manager:Register(textureDropdown, "all")
-    card2:AddRow(row2b, Theme.rowHeightLast, 0)
+    card2:AddRow(row2c, Theme.rowHeightLast, 0)
 
     yOffset = card2:GetNextOffset()
 
@@ -236,6 +248,7 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
         onChangeCallback = ApplySettings,
         fontSizeRange = { 8, 32 },
         includeSoftOutline = true,
+        globalOverride = {},
     })
     table_insert(allCards, fontCard)
     manager:Register(fontCard, "all")

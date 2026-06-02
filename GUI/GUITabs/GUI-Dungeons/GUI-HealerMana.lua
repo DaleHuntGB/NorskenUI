@@ -177,6 +177,7 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
         },
         fontSizeRange = { 8, 44 },
         onChangeCallback = ApplySettings,
+        globalOverride = {},
     })
     manager:Register(fontCard, "all")
     manager:RegisterGroup(fontWidgets, "all")

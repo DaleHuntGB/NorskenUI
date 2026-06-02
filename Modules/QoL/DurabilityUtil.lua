@@ -124,7 +124,7 @@ function DUR:ApplySettings()
 
     if self.text then
         NRSKNUI:ApplyFramePosition(self.frame, self.db.Text.Position, self.db.Text)
-        NRSKNUI:ApplyFontToText(self.text, self.db.FontFace, self.db.Text.FontSize, self.db.FontOutline,
+        NRSKNUI:ApplyFontToText(self.text, NRSKNUI:GetEffectiveFont(self.db), self.db.Text.FontSize, self.db.FontOutline,
             self.db.FontShadow)
 
         if self.db.Text.Enabled or self.isPreview then
@@ -145,7 +145,7 @@ function DUR:ApplySettings()
     end
 
     if self.warningText then
-        NRSKNUI:ApplyFontToText(self.warningText, self.db.FontFace, self.db.WarningText.FontSize, self.db.FontOutline,
+        NRSKNUI:ApplyFontToText(self.warningText, NRSKNUI:GetEffectiveFont(self.db), self.db.WarningText.FontSize, self.db.FontOutline,
             self.db.FontShadow)
         NRSKNUI:ApplyFramePosition(self.warningFrame, self.db.WarningText.Position, { anchorFrameType = "UIPARENT" })
 
