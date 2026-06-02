@@ -49,9 +49,23 @@ function issecretvalue(value) end
 ---@class Frame
 ---@field SetAlphaFromBoolean fun(self: Frame, bool: boolean, alphaIfTrue: number?, alphaIfFalse: number?)
 ---@field SetShown fun(self: Frame, bool: boolean)
+---@field Size fun(self: Frame, width: number, height: number?) Pixel-scaled SetSize
+---@field Width fun(self: Frame, width: number) Pixel-scaled SetWidth
+---@field Height fun(self: Frame, height: number) Pixel-scaled SetHeight
+---@field Point fun(self: Frame, point: FramePoint, relativeTo?: Region|number, relativePoint?: FramePoint|number, offsetX?: number, offsetY?: number) Pixel-scaled SetPoint with auto-parent
+---@field SetInside fun(self: Frame, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor inside another frame with pixel-scaled inset
+---@field SetOutside fun(self: Frame, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor outside another frame with pixel-scaled outset
+---@field DisablePixelSnap fun(self: Frame) Disable pixel grid snapping for crisp rendering
 
 ---@class FontString
 ---@field SetAlphaFromBoolean fun(self: FontString, bool: boolean, alphaIfTrue: number?, alphaIfFalse: number?)
+---@field Size fun(self: FontString, width: number, height: number?) Pixel-scaled SetSize
+---@field Width fun(self: FontString, width: number) Pixel-scaled SetWidth
+---@field Height fun(self: FontString, height: number) Pixel-scaled SetHeight
+---@field Point fun(self: FontString, point: FramePoint, relativeTo?: Region|number, relativePoint?: FramePoint|number, offsetX?: number, offsetY?: number) Pixel-scaled SetPoint with auto-parent
+---@field SetInside fun(self: FontString, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor inside another frame with pixel-scaled inset
+---@field SetOutside fun(self: FontString, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor outside another frame with pixel-scaled outset
+---@field DisablePixelSnap fun(self: FontString) Disable pixel grid snapping for crisp rendering
 
 ---@class StatusBar
 ---@field SetTimerDuration fun(self: StatusBar, duration: LuaDurationObject, interpolation: Enum.StatusBarInterpolation?, direction: Enum.StatusBarTimerDirection?)
@@ -70,3 +84,10 @@ end
 
 ---@class Texture
 ---@field SetVertexColorFromBoolean fun(self: Texture, bool: boolean, colorIfTrue: colorRGBA, colorIfFalse: colorRGBA)
+---@field Size fun(self: Texture, width: number, height: number?) Pixel-scaled SetSize
+---@field Width fun(self: Texture, width: number) Pixel-scaled SetWidth
+---@field Height fun(self: Texture, height: number) Pixel-scaled SetHeight
+---@field Point fun(self: Texture, point: FramePoint, relativeTo?: Region|number, relativePoint?: FramePoint|number, offsetX?: number, offsetY?: number) Pixel-scaled SetPoint with auto-parent
+---@field SetInside fun(self: Texture, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor inside another frame with pixel-scaled inset
+---@field SetOutside fun(self: Texture, anchor?: Region, xOffset?: number, yOffset?: number, anchor2?: Region) Anchor outside another frame with pixel-scaled outset
+---@field DisablePixelSnap fun(self: Texture) Disable pixel grid snapping for crisp rendering

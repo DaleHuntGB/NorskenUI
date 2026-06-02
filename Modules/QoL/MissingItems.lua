@@ -38,9 +38,18 @@ local TRACK_MODES = {
 
 local qualityAtlasPattern = "|A:(Professions%-ChatIcon%-Quality%-[^:]+):%d+:%d+"
 
-local function GetQualityAtlasFromLink(link)
-    if not link then return nil end
-    return link:match(qualityAtlasPattern)
+local function GetQualityAtlasFromLink(link, itemID)
+    if link then
+        local atlas = link:match(qualityAtlasPattern)
+        if atlas then return atlas end
+    end
+    if itemID then
+        local _, itemLink = GetItemInfo(itemID)
+        if itemLink then
+            return itemLink:match(qualityAtlasPattern)
+        end
+    end
+    return nil
 end
 
 local function GetTierFromLink(link)
@@ -68,8 +77,13 @@ local function ScanBags()
                 local itemID = itemInfo.itemID
                 local count = itemInfo.stackCount or 1
                 itemCountCache[itemID] = (itemCountCache[itemID] or 0) + count
-                if not itemLinkCache[itemID] and itemInfo.hyperlink then
-                    itemLinkCache[itemID] = itemInfo.hyperlink
+                if not itemLinkCache[itemID] then
+                    local itemLink = C_Container.GetContainerItemLink(bagIndex, slotIndex)
+                    if itemLink then
+                        itemLinkCache[itemID] = itemLink
+                    elseif itemInfo.hyperlink then
+                        itemLinkCache[itemID] = itemInfo.hyperlink
+                    end
                 end
             end
         end
@@ -93,7 +107,7 @@ local function GetVariantCounts(itemID, itemSettings)
     if trackMode == TRACK_MODES.EXACT then
         local count = GetItemCount(itemID)
         local link = itemLinkCache[itemID]
-        local qualityAtlas = GetQualityAtlasFromLink(link)
+        local qualityAtlas = GetQualityAtlasFromLink(link, itemID)
         totalCount = count
 
         if count > 0 then
@@ -121,7 +135,7 @@ local function GetVariantCounts(itemID, itemSettings)
             for rank, id in ipairs(matchingIDs) do
                 local count = GetItemCount(id)
                 local link = itemLinkCache[id]
-                local qualityAtlas = GetQualityAtlasFromLink(link)
+                local qualityAtlas = GetQualityAtlasFromLink(link, id)
 
                 totalCount = totalCount + count
 
@@ -147,7 +161,7 @@ local function GetVariantCounts(itemID, itemSettings)
         for rank, id in ipairs(allIDs) do
             local count = GetItemCount(id)
             local link = itemLinkCache[id]
-            local qualityAtlas = GetQualityAtlasFromLink(link)
+            local qualityAtlas = GetQualityAtlasFromLink(link, id)
 
             totalCount = totalCount + count
 
@@ -167,13 +181,40 @@ end
 
 local MAX_QUALITY_ICONS = 3
 
+local function CreateQualityIcon(parent, size)
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(size, size)
+
+    local iconTexture = container:CreateTexture(nil, "ARTWORK")
+    iconTexture:SetAllPoints()
+    NRSKNUI:ApplyZoom(iconTexture, NRSKNUI.GlobalZoom)
+    container.icon = iconTexture
+
+    local qualitySize = math.max(size * 0.7, 10)
+    local qualityFrame = CreateFrame("Frame", nil, container)
+    qualityFrame:SetFrameLevel(container:GetFrameLevel() + 10)
+    qualityFrame:SetSize(qualitySize, qualitySize)
+    qualityFrame:SetPoint("TOPLEFT", container, "TOPLEFT", -3, 3)
+
+    local qualityTexture = qualityFrame:CreateTexture(nil, "OVERLAY")
+    qualityTexture:SetAllPoints()
+    qualityTexture:Hide()
+
+    container.qualityFrame = qualityFrame
+    container.qualityTexture = qualityTexture
+
+    container:Hide()
+    return container
+end
+
 local function CreateTextLine()
     local db = MITEMS.db.Display
     local textFrame = CreateFrame("Frame", nil, containerFrame)
-    textFrame:SetSize(300, db.FontSize + 4)
+    textFrame:Size(300, db.FontSize + 4)
 
     local text = textFrame:CreateFontString(nil, "OVERLAY")
-    text:SetPoint("CENTER", textFrame, "CENTER", 0, 0)
+    text:Point("CENTER", textFrame, "CENTER", 0, 0)
+    text:DisablePixelSnap()
     local fontPath = NRSKNUI:GetFontPath(db.FontFace)
     text:SetFont(fontPath, db.FontSize, db.FontOutline or "OUTLINE")
     text:SetJustifyH("CENTER")
@@ -182,10 +223,8 @@ local function CreateTextLine()
 
     textFrame.qualityIcons = {}
     for i = 1, MAX_QUALITY_ICONS do
-        local icon = textFrame:CreateTexture(nil, "OVERLAY")
-        icon:SetSize(db.FontSize, db.FontSize)
-        icon:Hide()
-        textFrame.qualityIcons[i] = icon
+        local iconContainer = CreateQualityIcon(textFrame, db.FontSize)
+        textFrame.qualityIcons[i] = iconContainer
     end
 
     textFrame:Hide()
@@ -193,9 +232,12 @@ local function CreateTextLine()
 end
 
 local function SetupQualityIcons(textFrame, breakdown, db)
-    for _, icon in ipairs(textFrame.qualityIcons) do
-        icon:Hide()
-        icon:ClearAllPoints()
+    for _, iconContainer in ipairs(textFrame.qualityIcons) do
+        iconContainer:Hide()
+        iconContainer:ClearAllPoints()
+        if iconContainer.qualityTexture then
+            iconContainer.qualityTexture:Hide()
+        end
     end
 
     if not breakdown or #breakdown == 0 then return end
@@ -206,14 +248,25 @@ local function SetupQualityIcons(textFrame, breakdown, db)
 
     for i, data in ipairs(breakdown) do
         if i > MAX_QUALITY_ICONS then break end
-        local icon = textFrame.qualityIcons[i]
-        if data.qualityAtlas then
-            icon:SetAtlas(data.qualityAtlas)
-            icon:SetSize(iconSize, iconSize)
-            icon:SetPoint("LEFT", textFrame.text, "RIGHT", xOffset, 0)
-            icon:Show()
-            xOffset = xOffset + iconSize + spacing
+        local iconContainer = textFrame.qualityIcons[i]
+
+        local itemIcon = C_Item.GetItemIconByID(data.itemID)
+        if itemIcon then
+            iconContainer.icon:SetTexture(itemIcon)
+        else
+            iconContainer.icon:SetTexture(134400)
         end
+
+        iconContainer:SetSize(iconSize, iconSize)
+        iconContainer:Point("LEFT", textFrame.text, "RIGHT", xOffset, 0)
+
+        if data.qualityAtlas and iconContainer.qualityTexture then
+            iconContainer.qualityTexture:SetAtlas(data.qualityAtlas, false)
+            iconContainer.qualityTexture:Show()
+        end
+
+        iconContainer:Show()
+        xOffset = xOffset + iconSize + spacing
     end
 end
 
@@ -236,8 +289,11 @@ local function ReleaseText(textFrame)
     textFrame:Hide()
     textFrame:ClearAllPoints()
     if textFrame.qualityIcons then
-        for _, icon in ipairs(textFrame.qualityIcons) do
-            icon:Hide()
+        for _, iconContainer in ipairs(textFrame.qualityIcons) do
+            iconContainer:Hide()
+            if iconContainer.qualityTexture then
+                iconContainer.qualityTexture:Hide()
+            end
         end
     end
 end
@@ -251,7 +307,7 @@ local function CreateContainerFrame()
     if containerFrame then return end
     local db = MITEMS.db.Display
     containerFrame = CreateFrame("Frame", "NRSKNUI_MissingItemsContainer", UIParent)
-    containerFrame:SetSize(300, 200)
+    containerFrame:Size(300, 200)
     NRSKNUI:ApplyFramePosition(containerFrame, db.Position, db)
     containerFrame:Hide()
 end
@@ -263,11 +319,11 @@ local function ArrangeTexts()
     for i, textFrame in ipairs(activeTexts) do
         textFrame:ClearAllPoints()
         local yOffset = -(i - 1) * lineHeight
-        textFrame:SetPoint("TOP", containerFrame, "TOP", 0, yOffset)
+        textFrame:Point("TOP", containerFrame, "TOP", 0, yOffset)
     end
 
     local totalHeight = #activeTexts * lineHeight
-    if containerFrame then containerFrame:SetHeight(math.max(totalHeight, 20)) end
+    if containerFrame then containerFrame:Height(math.max(totalHeight, 20)) end
 end
 
 local function UpdateDisplay()
@@ -327,7 +383,7 @@ local function UpdateDisplay()
                     else
                         count = GetItemCount(itemID)
                         local link = itemLinkCache[itemID]
-                        local qualityAtlas = GetQualityAtlasFromLink(link)
+                        local qualityAtlas = GetQualityAtlasFromLink(link, itemID)
                         if qualityAtlas then
                             breakdown = { { itemID = itemID, rank = 1, qualityAtlas = qualityAtlas, count = count } }
                         end
@@ -409,6 +465,9 @@ end
 function MITEMS:OnEnable()
     self:UpdateDB()
     CreateContainerFrame()
+
+    C_Timer.After(0.5, function() self:ApplySettings() end)
+
     self:RegisterEvent("BAG_UPDATE_DELAYED", UpdateDisplay)
     self:RegisterEvent("PLAYER_ENTERING_WORLD", UpdateDisplay)
     self:RegisterEvent("PLAYER_REGEN_ENABLED", UpdateDisplay)
@@ -417,9 +476,7 @@ function MITEMS:OnEnable()
     self:SetupAuctionatorHook()
 
     local LS = LibStub("LibSpecialization", true)
-    if LS then
-        LS.RegisterPlayerSpecChange(self, UpdateDisplay)
-    end
+    if LS then LS.RegisterPlayerSpecChange(self, UpdateDisplay) end
 
     PreCacheItems()
     C_Timer.After(0.5, UpdateDisplay)
@@ -448,7 +505,7 @@ function MITEMS:RegisterEditModeElements()
             if containerFrame then
                 local anchorFrame = NRSKNUI:ResolveAnchorFrame(displayDb.anchorFrameType, displayDb.ParentFrame)
                 containerFrame:ClearAllPoints()
-                containerFrame:SetPoint(pos.AnchorFrom, anchorFrame, pos.AnchorTo, pos.XOffset, pos.YOffset)
+                containerFrame:Point(pos.AnchorFrom, anchorFrame, pos.AnchorTo, pos.XOffset, pos.YOffset)
             end
         end,
         guiPath = "missingItems",
@@ -463,9 +520,7 @@ function MITEMS:OnDisable()
     self:HideAuctionatorButton()
 
     local LS = LibStub("LibSpecialization", true)
-    if LS then
-        LS.UnregisterPlayerSpecChange(self)
-    end
+    if LS then LS.UnregisterPlayerSpecChange(self) end
 end
 
 local auctionatorButton = nil
@@ -504,19 +559,30 @@ local function GetItemsBelowThreshold()
 
                 if passesSpecFilter then
                     local threshold = itemSettings.threshold or 0
-                    local count = GetItemCount(itemID)
+                    local trackMode = itemSettings.trackMode or TRACK_MODES.EXACT
+                    local hasVariants = itemSettings.variants and #itemSettings.variants > 0
+                    local count
+
+                    if hasVariants or trackMode == TRACK_MODES.AUTO then
+                        count = GetVariantCounts(itemID, itemSettings)
+                    else
+                        count = GetItemCount(itemID)
+                    end
+
                     local buyQty = itemSettings.buyQuantity or 0
 
                     if count <= threshold and buyQty > 0 then
                         local itemName = C_Item.GetItemNameByID(itemID)
                         if itemName then
+                            local tier = nil
+                            if trackMode == TRACK_MODES.EXACT then tier = GetTierFromLink(itemLinkCache[itemID]) end
                             table_insert(result, {
                                 itemID = itemID,
                                 name = itemName,
                                 count = count,
                                 threshold = threshold,
                                 buyQuantity = buyQty,
-                                tier = GetTierFromLink(itemLinkCache[itemID]),
+                                tier = tier,
                             })
                         elseif itemID > 0 and not pendingItemLoads[itemID] then
                             pendingItemLoads[itemID] = true
@@ -542,7 +608,7 @@ local function CreateAuctionatorButton()
     local bgColor = Theme.bgMedium
 
     local btn = CreateFrame("Button", "NRSKNUI_AuctionatorShopButton", UIParent, "BackdropTemplate")
-    btn:SetSize(140, 24)
+    btn:Size(140, 24)
     btn._bgColor = bgColor
 
     btn:SetBackdrop({
@@ -554,8 +620,7 @@ local function CreateAuctionatorButton()
     btn:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
     btn.bg = btn:CreateTexture("NRSKNUI_AuctionatorShopButtonBG", "BACKGROUND")
-    btn.bg:SetSize(140, 24)
-    btn.bg:SetAllPoints(btn)
+    btn.bg:SetInside(btn)
     btn.bg:SetColorTexture(Theme.bgLight[1], Theme.bgLight[2], Theme.bgLight[3], 1)
 
     local hoverAnimGroup = btn:CreateAnimationGroup()
@@ -593,29 +658,25 @@ local function CreateAuctionatorButton()
     NRSKNUI:ApplyThemeFont(textWidget, "normal")
     textWidget:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     textWidget:SetText("Import Low Stock")
-    textWidget:SetPoint("CENTER")
+    textWidget:Point("CENTER")
+    textWidget:DisablePixelSnap()
     btn.text = textWidget
 
-    btn:SetScript("OnEnter", function()
-        AnimateBorderColor(true)
-    end)
+    btn:SetScript("OnEnter", function() AnimateBorderColor(true) end)
 
     btn:SetScript("OnLeave", function(self)
         AnimateBorderColor(false)
         self:SetBackdropColor(self._bgColor[1], self._bgColor[2], self._bgColor[3], 1)
     end)
 
-    btn:SetScript("OnMouseDown", function(self)
-        self:SetBackdropColor(Theme.selectedBg[1], Theme.selectedBg[2], Theme.selectedBg[3], Theme.selectedBg[4])
-    end)
-
-    btn:SetScript("OnMouseUp", function(self)
-        self:SetBackdropColor(self._bgColor[1], self._bgColor[2], self._bgColor[3], 1)
-    end)
-
-    btn:SetScript("OnClick", function()
-        MITEMS:GenerateAuctionatorList()
-    end)
+    btn:SetScript("OnMouseDown",
+        function(self)
+            self:SetBackdropColor(Theme.selectedBg[1], Theme.selectedBg[2], Theme.selectedBg[3],
+                Theme.selectedBg[4])
+        end)
+    btn:SetScript("OnMouseUp",
+        function(self) self:SetBackdropColor(self._bgColor[1], self._bgColor[2], self._bgColor[3], 1) end)
+    btn:SetScript("OnClick", function() MITEMS:GenerateAuctionatorList() end)
 
     btn:Hide()
 
@@ -655,7 +716,7 @@ function MITEMS:ShowAuctionatorButton()
 
     local btn = CreateAuctionatorButton()
     btn:ClearAllPoints()
-    btn:SetPoint("TOPRIGHT", AuctionatorShoppingFrame, "BOTTOMRIGHT", 4, -28)
+    btn:Point("TOPRIGHT", AuctionatorShoppingFrame, "BOTTOMRIGHT", 4, -28)
     btn:SetParent(AuctionatorShoppingFrame)
     btn:SetFrameStrata("HIGH")
     btn:Show()
@@ -723,7 +784,7 @@ function MITEMS:ApplySettings()
     for _, textFrame in ipairs(textPool) do
         local db = self.db.Display
         NRSKNUI:ApplyFontToText(textFrame.text, db.FontFace, db.FontSize, db.FontOutline)
-        textFrame:SetHeight(db.FontSize + 4)
+        textFrame:Height(db.FontSize + 4)
     end
 
     if containerFrame and self.db then

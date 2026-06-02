@@ -519,6 +519,7 @@ GUIFrame:RegisterPanel("missingItems", function(container)
                 settings.enabled = checked
                 Refresh()
                 UpdateAllWidgetStates()
+                miniSidebar.RefreshList()
             end
         })
         row1:AddWidget(enableCheck, 0.7)
