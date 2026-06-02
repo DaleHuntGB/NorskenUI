@@ -303,6 +303,28 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         manager:Register(hideMacroCheck, "main")
         card2:AddRow(row2, Theme.rowHeight)
 
+        local row2b = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
+        local hideKeybindCheck = GUIFrame:CreateCheckbox(row2b, "Hide Keybind Text", {
+            value = db.HideKeybindText == true,
+            callback = function(checked)
+                db.HideKeybindText = checked
+                ApplyFonts()
+            end
+        })
+        row2b:AddWidget(hideKeybindCheck, 0.5)
+        manager:Register(hideKeybindCheck, "main")
+
+        local hideChargeCheck = GUIFrame:CreateCheckbox(row2b, "Hide Charge Text", {
+            value = db.HideChargeText == true,
+            callback = function(checked)
+                db.HideChargeText = checked
+                ApplyFonts()
+            end
+        })
+        row2b:AddWidget(hideChargeCheck, 0.5)
+        manager:Register(hideChargeCheck, "main")
+        card2:AddRow(row2b, Theme.rowHeight)
+
         yOffset = card2:GetNextOffset()
 
         -- Card 3
@@ -1085,6 +1107,96 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
 
         yOffset = card3:GetNextOffset()
 
+        -- Card 4: Text Visibility
+        local card4 = GUIFrame:CreateCard(scrollChild, "Text Visibility", yOffset)
+        table_insert(activeCards, card4)
+        manager:Register(card4, "main", "bar")
+
+        barDB.TextVisibility = barDB.TextVisibility or {}
+
+        manager:SetCondition("barVisGlobal", function() return not barDB.TextVisibility.GlobalOverride ~= false end)
+
+        local row4a = GUIFrame:CreateRow(card4.content, Theme.rowHeight)
+        local useGlobalVisCheck = GUIFrame:CreateCheckbox(row4a, "Use Global Text Visibility", {
+            value = barDB.TextVisibility.GlobalOverride == true,
+            callback = function(checked)
+                local bdb = GetCurrentBarDB()
+                if bdb then
+                    bdb.TextVisibility = bdb.TextVisibility or {}
+                    bdb.TextVisibility.GlobalOverride = checked
+                end
+                ApplyBarSettings()
+                RenderContent()
+            end
+        })
+        row4a:AddWidget(useGlobalVisCheck, 1)
+        manager:Register(useGlobalVisCheck, "main", "bar")
+        card4:AddRow(row4a, Theme.rowHeight)
+
+        local sepRow4 = GUIFrame:CreateSeparator(card4.content)
+        card4:AddRow(sepRow4, Theme.rowHeightSeparator)
+
+        local row4b = GUIFrame:CreateRow(card4.content, Theme.rowHeight)
+        local hideKeybindCheck = GUIFrame:CreateCheckbox(row4b, "Hide Keybind Text", {
+            value = barDB.TextVisibility.HideKeybindText == true,
+            callback = function(checked)
+                local bdb = GetCurrentBarDB()
+                if bdb then
+                    bdb.TextVisibility = bdb.TextVisibility or {}
+                    bdb.TextVisibility.HideKeybindText = checked
+                end
+                ApplyBarSettings()
+            end
+        })
+        row4b:AddWidget(hideKeybindCheck, 0.5)
+        manager:Register(hideKeybindCheck, "main", "bar", "barVisGlobal")
+
+        local hideMacroCheck = GUIFrame:CreateCheckbox(row4b, "Hide Macro Text", {
+            value = barDB.TextVisibility.HideMacroText == true,
+            callback = function(checked)
+                local bdb = GetCurrentBarDB()
+                if bdb then
+                    bdb.TextVisibility = bdb.TextVisibility or {}
+                    bdb.TextVisibility.HideMacroText = checked
+                end
+                ApplyBarSettings()
+            end
+        })
+        row4b:AddWidget(hideMacroCheck, 0.5)
+        manager:Register(hideMacroCheck, "main", "bar", "barVisGlobal")
+        card4:AddRow(row4b, Theme.rowHeight)
+
+        local row4c = GUIFrame:CreateRow(card4.content, Theme.rowHeight)
+        local hideChargeCheck = GUIFrame:CreateCheckbox(row4c, "Hide Charge Text", {
+            value = barDB.TextVisibility.HideChargeText == true,
+            callback = function(checked)
+                local bdb = GetCurrentBarDB()
+                if bdb then
+                    bdb.TextVisibility = bdb.TextVisibility or {}
+                    bdb.TextVisibility.HideChargeText = checked
+                end
+                ApplyBarSettings()
+            end
+        })
+        row4c:AddWidget(hideChargeCheck, 0.5)
+        manager:Register(hideChargeCheck, "main", "bar", "barVisGlobal")
+
+        local hideProfCheck = GUIFrame:CreateCheckbox(row4c, "Hide Profession Texture", {
+            value = barDB.TextVisibility.HideProfTexture == true,
+            callback = function(checked)
+                local bdb = GetCurrentBarDB()
+                if bdb then
+                    bdb.TextVisibility = bdb.TextVisibility or {}
+                    bdb.TextVisibility.HideProfTexture = checked
+                end
+                ApplyProfTextures()
+            end
+        })
+        row4c:AddWidget(hideProfCheck, 0.5)
+        manager:Register(hideProfCheck, "main", "bar", "barVisGlobal")
+        card4:AddRow(row4c, Theme.rowHeight)
+
+        yOffset = card4:GetNextOffset()
 
         return yOffset
     end

@@ -2,11 +2,6 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
---TODO: Flyout buttons are not properly part of the mouseover system, so if you mouseover the flyout bar, it will fade out
---TODO: Flyout buttonbar growth direction
---TODO: Fix bug with pet bar on classes that temporarily spawn their pet, in this case if u spawn the pet and pet times out/dies in combat, the pet bar is shown until you leave combat
---TODO: Add hide keybind, macro and charge/stack text support as a global and also per par gobal override
-
 -- Check for addon object
 if not NorskenUI then
     error("ActionBars: Addon object not initialized. Check file load order!")
@@ -143,6 +138,14 @@ function ACB:BuildConfigTable()
     end
 end
 
+-- Check if keybind text is valid
+-- RANGE_INDICATOR is a placeholder square character Blizzard uses for empty keybinds
+local function HasValidKeybindText(text)
+    if not text or text == "" then return false end
+    if text == RANGE_INDICATOR then return false end
+    return true
+end
+
 -- Remap keybind text to shorter versions, use only uppercase letters and remove spaces
 -- For example "Middle Mouse" becomes "M3"
 local function RemapKeyText(button)
@@ -228,6 +231,28 @@ function ACB:GetBarConfig(barKey)
     return self.db.Bars and self.db.Bars[barKey]
 end
 
+-- Get text visibility settings for a bar, respects GlobalOverride
+function ACB:GetTextVisibility(barKey)
+    local barDB = self.db.Bars and self.db.Bars[barKey]
+    local barTextVis = barDB and barDB.TextVisibility or {}
+    local useGlobal = barTextVis.GlobalOverride ~= false -- Default to true
+    if useGlobal then
+        return {
+            hideMacroText = self.db.HideMacroText == true,
+            hideKeybindText = self.db.HideKeybindText == true,
+            hideChargeText = self.db.HideChargeText == true,
+            hideProfTexture = self.db.HideProfTexture == true,
+        }
+    else
+        return {
+            hideMacroText = barTextVis.HideMacroText == true,
+            hideKeybindText = barTextVis.HideKeybindText == true,
+            hideChargeText = barTextVis.HideChargeText == true,
+            hideProfTexture = barTextVis.HideProfTexture == true,
+        }
+    end
+end
+
 -- Style button texts
 function ACB:StyleButtonText(button, barKey)
     if not button then return end
@@ -237,9 +262,10 @@ function ACB:StyleButtonText(button, barKey)
     local cooldown = button.cooldown
     local fontpath = NRSKNUI:GetFontPath(self.db.FontFace)
 
-    -- Get font sizes and text positions for this bar
+    -- Get font sizes, text positions, and visibility for this bar
     local fontSizes = self:GetFontSizes(barKey)
     local textPos = self:GetTextPositions(barKey)
+    local textVis = self:GetTextVisibility(barKey)
 
     -- Style cooldown text
     if cooldown then
@@ -263,7 +289,10 @@ function ACB:StyleButtonText(button, barKey)
         end
     end
 
-    -- Style keybind text
+    -- Store barKey on button for hooks to access
+    button._nrsknBarKey = barKey
+
+    -- Style keybind text or hide if HideKeybindText is enabled
     if hotkey then
         local fontSize = math.max(6, fontSizes.keybind)
         hotkey:ClearAllPoints()
@@ -275,52 +304,112 @@ function ACB:StyleButtonText(button, barKey)
         hotkey:SetJustifyH("RIGHT")
         hotkey:SetWordWrap(false)
 
-        -- Store original info for later use in hooks, so we can reapply styling and positioning when hotkeys are updated
+        -- Store original info for later use in hooks
         hotkey._nrsknAnchor = textPos.keybindAnchor
         hotkey._nrsknXOffset = textPos.keybindXOffset
         hotkey._nrsknYOffset = textPos.keybindYOffset
         hotkey._nrsknFontPath = fontpath
         hotkey._nrsknFontSize = fontSize
         hotkey._nrsknFontOutline = self.db.FontOutline
+        hotkey._nrsknBarKey = barKey
+
+        -- Helper to check if keybind should be hidden for this button's bar
+        local function ShouldHideKeybind(btn)
+            local bk = btn._nrsknBarKey or btn:GetParent() and btn:GetParent()._nrsknBarKey
+            if bk then
+                local vis = ACB:GetTextVisibility(bk)
+                return vis.hideKeybindText
+            end
+            return ACB.db and ACB.db.HideKeybindText
+        end
 
         -- Hook SetVertexColor to apply white color unless range check red coloring is applied
-        -- Uses metatable method instead of normal hooksecurefunc, infinite loop otherwise
+        -- Hook Show/SetShown/SetAlpha to enforce hide setting
         if not hotkey._nrsknColorHooked then
             hotkey._nrsknColorHooked = true
             hotkey._nrsknStyled = true
-            local metaSetVertexColor = getmetatable(hotkey).__index.SetVertexColor
+            local meta = getmetatable(hotkey).__index
+            local metaSetVertexColor = meta.SetVertexColor
+            local metaSetAlpha = meta.SetAlpha
+            local metaHide = meta.Hide
+
             hooksecurefunc(hotkey, "SetVertexColor", function(self, r, g, b, a)
                 if not (r and r > 0.9 and g < 0.2 and b < 0.2) then
                     metaSetVertexColor(self, 1, 1, 1, 1)
                 end
             end)
+
+            hooksecurefunc(hotkey, "SetAlpha", function(self, alpha)
+                if ShouldHideKeybind(button) and alpha > 0 then
+                    metaSetAlpha(self, 0)
+                end
+            end)
+
+            hooksecurefunc(hotkey, "Show", function(self)
+                if ShouldHideKeybind(button) then
+                    metaHide(self)
+                elseif not HasValidKeybindText(self:GetText()) then
+                    metaHide(self)
+                end
+            end)
+
+            hooksecurefunc(hotkey, "SetShown", function(self, shown)
+                if shown then
+                    if ShouldHideKeybind(button) then
+                        metaHide(self)
+                    elseif not HasValidKeybindText(self:GetText()) then
+                        metaHide(self)
+                    end
+                end
+            end)
         end
-        -- Set white color initially
         getmetatable(hotkey).__index.SetVertexColor(hotkey, 1, 1, 1, 1)
 
-        -- Hook UpdateHotkeys to reapply styling and remap text whenever hotkeys are updated
-        -- such as when changing bindings or action paging
+        -- Hook UpdateHotkeys to reapply styling and enforce hide setting
         if button.UpdateHotkeys and not button._nrsknHotkeyHooked then
             button._nrsknHotkeyHooked = true
             hooksecurefunc(button, 'UpdateHotkeys', function(self)
                 local hk = self.HotKey
                 if hk and hk._nrsknStyled then
-                    hk:ClearAllPoints()
-                    hk:SetPoint(hk._nrsknAnchor, self, hk._nrsknAnchor,
-                        hk._nrsknXOffset, hk._nrsknYOffset)
-                    hk:SetWidth((self:GetWidth() - 2) or 0)
-                    hk:SetFont(hk._nrsknFontPath, hk._nrsknFontSize, hk._nrsknFontOutline)
-                    hk:SetWordWrap(false)
+                    local meta = getmetatable(hk).__index
+                    local hideKeybind = ShouldHideKeybind(self)
+                    local hasValidText = HasValidKeybindText(hk:GetText())
+
+                    if hideKeybind or not hasValidText then
+                        meta.SetAlpha(hk, 0)
+                        meta.Hide(hk)
+                    else
+                        meta.Show(hk)
+                        meta.SetAlpha(hk, 1)
+                        hk:ClearAllPoints()
+                        hk:SetPoint(hk._nrsknAnchor, self, hk._nrsknAnchor,
+                            hk._nrsknXOffset, hk._nrsknYOffset)
+                        hk:SetWidth((self:GetWidth() - 2) or 0)
+                        hk:SetFont(hk._nrsknFontPath, hk._nrsknFontSize, hk._nrsknFontOutline)
+                        hk:SetWordWrap(false)
+                        RemapKeyText(self)
+                    end
                 end
-                RemapKeyText(self)
             end)
         end
-        RemapKeyText(button)
+
+        -- Apply hide setting using metatable methods to bypass our own hooks
+        local meta = getmetatable(hotkey).__index
+        local hasValidText = HasValidKeybindText(hotkey:GetText())
+
+        if textVis.hideKeybindText or not hasValidText then
+            meta.SetAlpha(hotkey, 0)
+            meta.Hide(hotkey)
+        else
+            meta.Show(hotkey)
+            meta.SetAlpha(hotkey, 1)
+            RemapKeyText(button)
+        end
     end
 
     -- Style macro name text or hide if HideMacroText is enabled
     if name then
-        if self.db.HideMacroText then
+        if textVis.hideMacroText then
             name:SetAlpha(0)
         else
             name:SetAlpha(1)
@@ -335,16 +424,21 @@ function ACB:StyleButtonText(button, barKey)
         end
     end
 
-    -- Style count text
+    -- Style count text or hide if HideChargeText is enabled
     if count then
-        local fontSize = math.max(6, fontSizes.charge)
-        count:ClearAllPoints()
-        count:SetPoint(textPos.chargeAnchor, button, textPos.chargeAnchor,
-            textPos.chargeXOffset, textPos.chargeYOffset)
-        count:SetFont(fontpath, fontSize, self.db.FontOutline)
-        count:SetTextColor(1, 1, 1, 1)
-        count:SetShadowColor(0, 0, 0, 0)
-        count:SetJustifyH("RIGHT")
+        if textVis.hideChargeText then
+            count:SetAlpha(0)
+        else
+            count:SetAlpha(1)
+            local fontSize = math.max(6, fontSizes.charge)
+            count:ClearAllPoints()
+            count:SetPoint(textPos.chargeAnchor, button, textPos.chargeAnchor,
+                textPos.chargeXOffset, textPos.chargeYOffset)
+            count:SetFont(fontpath, fontSize, self.db.FontOutline)
+            count:SetTextColor(1, 1, 1, 1)
+            count:SetShadowColor(0, 0, 0, 0)
+            count:SetJustifyH("RIGHT")
+        end
     end
 end
 
@@ -501,8 +595,9 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
     UpdateBackdropVisibility()
     backdrop._updateVisibility = UpdateBackdropVisibility
 
-    -- Hide profession texture if enabled in GUI
-    if self.db.HideProfTexture then
+    -- Hide profession texture if enabled (uses per-bar setting)
+    local textVis = self:GetTextVisibility(barName)
+    if textVis.hideProfTexture then
         C_Timer.After(0.5, function()
             if button["ProfessionQualityOverlayFrame"] then button["ProfessionQualityOverlayFrame"]:SetAlpha(0) end
         end)
@@ -765,6 +860,21 @@ local function CombatSafeFade(frame, targetAlpha, duration)
     frame._fadeTimer = fadeFrame
 end
 
+-- Check if mouse is over the SpellFlyout frame (flyout buttons from action bars)
+local function IsMouseOverFlyout()
+    local flyout = SpellFlyout
+    if not flyout or not flyout:IsShown() then return false end
+
+    local left, bottom, width, height = flyout:GetRect()
+    if not left then return false end
+
+    local scale = flyout:GetEffectiveScale()
+    local x, y = GetCursorPosition()
+    x, y = x / scale, y / scale
+
+    return x >= left and x <= (left + width) and y >= bottom and y <= (bottom + height)
+end
+
 -- Mouseover function
 -- Uses position-based polling to detect mouse over container without blocking clicks/drags
 -- Always sets up the OnUpdate script so mouseover can be toggled dynamically
@@ -773,8 +883,11 @@ local function SetupMouseoverScript(container)
     if container._mouseoverScriptSetup then return end -- Skip if script already set up
     container._mouseoverScriptSetup = true
 
-    -- Check if mouse is within container bounds
+    -- Check if mouse is within container bounds or over an open flyout
     local function IsMouseOverContainer()
+        -- Check flyout first - if mouse is over flyout, keep the bar visible
+        if IsMouseOverFlyout() then return true end
+
         local left, bottom, width, height = container:GetRect()
         if not left then return false end
 
@@ -790,6 +903,10 @@ local function SetupMouseoverScript(container)
         if container._isMouseOver then return end
         if not container._mouseoverEnabled then return end
         container._isMouseOver = true
+
+        -- For pet/stance bars: only fade in if pet/stance is active (nil means not a pet/stance bar)
+        if container._hasPetOrStance ~= nil and not container._hasPetOrStance then return end
+
         local dur = container._fadeInDur or 0.3
         if InCombatLockdown() then
             dur = 0.1 -- Force a faster fade in combat, make more sense to me since you want info faster
@@ -808,6 +925,12 @@ local function SetupMouseoverScript(container)
         -- Check if mouseover is currently enabled
         if not container._mouseoverEnabled then
             container:SetAlpha(1)
+            return
+        end
+
+        -- For pet/stance bars: if no pet/stance, stay at 0 (nil means not a pet/stance bar)
+        if container._hasPetOrStance ~= nil and not container._hasPetOrStance then
+            CombatSafeFade(container, 0, 0.3)
             return
         end
 
@@ -933,6 +1056,7 @@ function ACB:UpdateBonusBarOverride()
 end
 
 -- Generic visibility handler for Pet and Stance bars
+-- Uses alpha-based visibility so mouseover system continues to work
 local function SetupSpecialBarVisibility(container, blizzFrame, events, visibilityCheckFn, barKey)
     if not container then return end
 
@@ -944,46 +1068,46 @@ local function SetupSpecialBarVisibility(container, blizzFrame, events, visibili
         blizzFrame:EnableMouse(false)
     end
 
-    local pendingUpdate = false
+    -- Store whether pet/stance is active (separate from mouseover state)
+    container._hasPetOrStance = false
+
     local function UpdateVisibility()
-        if InCombatLockdown() then
-            pendingUpdate = true
-            return
-        end
-
-        pendingUpdate = false
-
         -- Check if bar is enabled in settings
         local barDB = ACB.db and ACB.db.Bars and ACB.db.Bars[barKey]
         local isEnabled = barDB and barDB.Enabled ~= false
+        local hasPetOrStance = isEnabled and visibilityCheckFn()
 
-        if isEnabled and visibilityCheckFn() then
-            container:Show()
+        container._hasPetOrStance = hasPetOrStance
+
+        -- Determine target alpha based on pet state and mouseover settings
+        local targetAlpha
+        if not hasPetOrStance then
+            -- No pet/stance: always hidden
+            targetAlpha = 0
+        elseif container._mouseoverEnabled and not container._isMouseOver then
+            -- Has pet/stance, mouseover enabled, not hovering: use fade alpha
+            targetAlpha = container._fadeAlpha or 0
         else
-            container:Hide()
+            -- Has pet/stance, either no mouseover or currently hovering: full visibility
+            targetAlpha = 1
         end
+
+        CombatSafeFade(container, targetAlpha, 0.3)
     end
+
+    -- Store the update function so mouseover can call it
+    container._updatePetVisibility = UpdateVisibility
 
     local eventFrame = CreateFrame("Frame")
     for _, event in ipairs(events) do
         eventFrame:RegisterEvent(event)
     end
-    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_REGEN_ENABLED" then
-            if pendingUpdate then
-                UpdateVisibility()
-            end
-        else
-            UpdateVisibility()
-        end
+    eventFrame:SetScript("OnEvent", function()
+        UpdateVisibility()
     end)
 
-    if not InCombatLockdown() then
-        UpdateVisibility()
-    else
-        pendingUpdate = true
-    end
+    -- Initial update
+    UpdateVisibility()
 
     container._visibilityFrame = eventFrame
 end
@@ -1271,9 +1395,10 @@ end
 
 -- Update profession texture visibility
 function ACB:UpdateProfessionTextures()
-    local hideProf = self.db.HideProfTexture
     for _, cfg in ipairs(configTable) do
         if cfg.enabled then
+            local textVis = self:GetTextVisibility(cfg.name)
+            local hideProf = textVis.hideProfTexture
             for i = 1, cfg.totalButtons do
                 local button = _G[cfg.buttonPrefix .. i]
                 if button and button.ProfessionQualityOverlayFrame then
@@ -1342,7 +1467,10 @@ function ACB:UpdateBarMouseover(barKey)
 
     -- If not currently moused over, apply the appropriate alpha
     if not container._isMouseOver and not container._bonusBarActive then
-        if mouseoverEnabled then
+        -- For pet/stance bars: respect the pet/stance state
+        if container._hasPetOrStance ~= nil and not container._hasPetOrStance then
+            container:SetAlpha(0)
+        elseif mouseoverEnabled then
             container:SetAlpha(mouseoverAlpha)
         else
             container:SetAlpha(1)
@@ -1475,11 +1603,21 @@ function ACB:UpdateBarEnabled(barKey)
     if not barDB or not container then return end
 
     if barDB.Enabled then
-        container:Show()
+        -- For pet/stance bars, trigger their visibility update instead of Show()
+        if container._updatePetVisibility then
+            container._updatePetVisibility()
+        else
+            container:Show()
+        end
         -- Register with edit mode when enabled
         RegisterBarWithEditMode(barKey, barDB, container)
     else
-        container:Hide()
+        -- For pet/stance bars, trigger visibility update (will set alpha to 0)
+        if container._updatePetVisibility then
+            container._updatePetVisibility()
+        else
+            container:Hide()
+        end
         -- Unregister from edit mode when disabled
         NRSKNUI.EditMode:UnregisterElement("ActionBars_" .. barKey)
     end
@@ -1582,14 +1720,12 @@ function ACB:ApplySettings()
             local container = _G["NRSKNUI_" .. barKey .. "_Container"]
 
             if container then
-                -- Container exists, update its enabled state
-                if barDB and barDB.Enabled then
+                -- For pet/stance bars (which use alpha-based visibility), trigger their visibility update
+                if container._updatePetVisibility then
+                    container._updatePetVisibility()
+                elseif barDB and barDB.Enabled then
+                    -- Regular bars: show/hide based on enabled state
                     container:Show()
-                    -- Trigger visibility update for special bars
-                    if container._visibilityFrame then
-                        container._visibilityFrame:GetScript("OnEvent")(container._visibilityFrame,
-                            "PLAYER_ENTERING_WORLD")
-                    end
                 else
                     container:Hide()
                 end

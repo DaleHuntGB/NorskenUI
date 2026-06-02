@@ -1050,6 +1050,8 @@ local Defaults = {
                 Enabled = true,            -- Master toggle for action bar skinning
                 HideProfTexture = true,    -- Hide profession quality textures
                 HideMacroText = false,     -- Hide macro name text
+                HideKeybindText = false,   -- Hide keybind text
+                HideChargeText = false,    -- Hide charge/stack text
                 MouseoverOverride = false, -- Mouseover override when dragonriding for example
                 Mouseover = {              -- Global mouseover settings (used when bar's globalOverride is true)
                     Enabled = true,
@@ -1127,6 +1129,13 @@ local Defaults = {
                             MacroXOffset = 0,
                             MacroYOffset = -2,
                         },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
+                        },
                     },
                     Bar2 = {
                         Enabled = true,
@@ -1168,6 +1177,13 @@ local Defaults = {
                             MacroAnchor = "BOTTOM",
                             MacroXOffset = 0,
                             MacroYOffset = -2,
+                        },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
                         },
                     },
                     Bar3 = {
@@ -1211,6 +1227,13 @@ local Defaults = {
                             MacroXOffset = 0,
                             MacroYOffset = -2,
                         },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
+                        },
                     },
                     Bar4 = {
                         Enabled = true,
@@ -1252,6 +1275,13 @@ local Defaults = {
                             MacroAnchor = "BOTTOM",
                             MacroXOffset = 0,
                             MacroYOffset = -2,
+                        },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
                         },
                     },
                     Bar5 = {
@@ -1295,6 +1325,13 @@ local Defaults = {
                             MacroXOffset = 0,
                             MacroYOffset = -2,
                         },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
+                        },
                     },
                     Bar6 = {
                         Enabled = true,
@@ -1336,6 +1373,13 @@ local Defaults = {
                             MacroAnchor = "BOTTOM",
                             MacroXOffset = 0,
                             MacroYOffset = -2,
+                        },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
                         },
                     },
                     Bar7 = {
@@ -1379,6 +1423,13 @@ local Defaults = {
                             MacroXOffset = 0,
                             MacroYOffset = -2,
                         },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
+                        },
                     },
                     Bar8 = {
                         Enabled = true,
@@ -1420,6 +1471,13 @@ local Defaults = {
                             MacroAnchor = "BOTTOM",
                             MacroXOffset = 0,
                             MacroYOffset = -2,
+                        },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
                         },
                     },
                     PetBar = {
@@ -1463,6 +1521,13 @@ local Defaults = {
                             MacroXOffset = 0,
                             MacroYOffset = -2,
                         },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
+                        },
                     },
                     StanceBar = {
                         Enabled = true,
@@ -1504,6 +1569,13 @@ local Defaults = {
                             MacroAnchor = "BOTTOM",
                             MacroXOffset = 0,
                             MacroYOffset = -2,
+                        },
+                        TextVisibility = {
+                            GlobalOverride = true,
+                            HideMacroText = false,
+                            HideKeybindText = false,
+                            HideChargeText = false,
+                            HideProfTexture = false,
                         },
                     },
                 },
@@ -2454,7 +2526,7 @@ local Defaults = {
             Display = {
                 FontFace = "Expressway",
                 FontSize = 14,
-                FontOutline = "OUTLINE",
+                FontOutline = "SOFTOUTLINE",
                 LineSpacing = 4,
                 DefaultColor = { 1, 0.2, 0.2, 1 },
                 Strata = "HIGH",
