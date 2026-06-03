@@ -23,6 +23,22 @@ local GROUP_TYPES = {
     { key = "raid",  label = "Raid" },
 }
 
+local combatOptions = {
+    { key = "InCombat",    label = "In Combat" },
+    { key = "OutOfCombat", label = "Out of Combat" },
+}
+
+local ROLE_TYPES = {
+    { key = "TANK",    label = "Tank" },
+    { key = "HEALER",  label = "Healer" },
+    { key = "DAMAGER", label = "DPS" },
+}
+
+local POSITION_TYPES = {
+    { key = "MELEE",  label = "Melee" },
+    { key = "RANGED", label = "Ranged" },
+}
+
 local function HasAnyEnabled(tbl)
     if not tbl then return false end
     for _, enabled in pairs(tbl) do
@@ -38,6 +54,10 @@ local function IsCategoryActive(db, category)
         return HasAnyEnabled(db.Group and db.Group.Types)
     elseif category == "Combat" then
         return (db.Combat and db.Combat.InCombat) or (db.Combat and db.Combat.OutOfCombat)
+    elseif category == "Role" then
+        return HasAnyEnabled(db.Role and db.Role.Types)
+    elseif category == "Position" then
+        return HasAnyEnabled(db.Position and db.Position.Types)
     end
     return false
 end
@@ -47,6 +67,8 @@ local function GetActiveCount(db)
     if IsCategoryActive(db, "Instance") then count = count + 1 end
     if IsCategoryActive(db, "Group") then count = count + 1 end
     if IsCategoryActive(db, "Combat") then count = count + 1 end
+    if IsCategoryActive(db, "Role") then count = count + 1 end
+    if IsCategoryActive(db, "Position") then count = count + 1 end
     return count
 end
 
@@ -57,11 +79,15 @@ local function BuildCategoryOptions(db)
     local instanceActive = IsCategoryActive(db, "Instance")
     local groupActive = IsCategoryActive(db, "Group")
     local combatActive = IsCategoryActive(db, "Combat")
+    local roleActive = IsCategoryActive(db, "Role")
+    local positionActive = IsCategoryActive(db, "Position")
 
     return {
         { key = "Instance", text = "Instance", indicator = instanceActive and GREEN or RED },
         { key = "Group",    text = "Group",    indicator = groupActive and GREEN or RED },
         { key = "Combat",   text = "Combat",   indicator = combatActive and GREEN or RED },
+        { key = "Role",     text = "Role",     indicator = roleActive and GREEN or RED },
+        { key = "Position", text = "Position", indicator = positionActive and GREEN or RED },
     }
 end
 
@@ -83,6 +109,8 @@ function GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, config)
     db.Instance = db.Instance or { Types = {} }
     db.Group = db.Group or { Types = {} }
     db.Combat = db.Combat or {}
+    db.Role = db.Role or { Types = {} }
+    db.Position = db.Position or { Types = {} }
 
     local widgets = {}
     local card = GUIFrame:CreateCard(scrollChild, title, yOffset)
@@ -174,9 +202,12 @@ function GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, config)
         local groupDb = db.Group
         groupDb.Types = groupDb.Types or {}
 
-        local typeRow = GUIFrame:CreateRow(card.content, Theme.rowHeightLast)
-        for _, groupType in ipairs(GROUP_TYPES) do
-            local check = GUIFrame:CreateCheckbox(typeRow, groupType.label, {
+        for i, groupType in ipairs(GROUP_TYPES) do
+            local isLastRow = i == #GROUP_TYPES
+            local rowHeight = isLastRow and Theme.rowHeightLast or Theme.rowHeight
+            local row = GUIFrame:CreateRow(card.content, rowHeight)
+
+            local check = GUIFrame:CreateCheckbox(row, groupType.label, {
                 value = groupDb.Types[groupType.key] == true,
                 callback = function(checked)
                     groupDb.Types[groupType.key] = checked or nil
@@ -184,37 +215,76 @@ function GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, config)
                     if onRefresh then onRefresh() end
                 end
             })
-            typeRow:AddWidget(check, 0.33)
+            row:AddWidget(check, 1)
             table_insert(widgets, check)
+
+            card:AddRow(row, rowHeight, isLastRow and 0 or nil)
         end
-        card:AddRow(typeRow, Theme.rowHeightLast, 0)
     elseif selectedCategory == "Combat" then
         local combatDb = db.Combat
 
-        local combatRow = GUIFrame:CreateRow(card.content, Theme.rowHeightLast)
-        local inCombatCheck = GUIFrame:CreateCheckbox(combatRow, "In Combat", {
-            value = combatDb.InCombat == true,
-            callback = function(checked)
-                combatDb.InCombat = checked or nil
-                if onChange then onChange() end
-                if onRefresh then onRefresh() end
-            end
-        })
-        combatRow:AddWidget(inCombatCheck, 0.5)
-        table_insert(widgets, inCombatCheck)
+        for i, option in ipairs(combatOptions) do
+            local isLastRow = i == #combatOptions
+            local rowHeight = isLastRow and Theme.rowHeightLast or Theme.rowHeight
+            local row = GUIFrame:CreateRow(card.content, rowHeight)
 
-        local outCombatCheck = GUIFrame:CreateCheckbox(combatRow, "Out of Combat", {
-            value = combatDb.OutOfCombat == true,
-            callback = function(checked)
-                combatDb.OutOfCombat = checked or nil
-                if onChange then onChange() end
-                if onRefresh then onRefresh() end
-            end
-        })
-        combatRow:AddWidget(outCombatCheck, 0.5)
-        table_insert(widgets, outCombatCheck)
+            local check = GUIFrame:CreateCheckbox(row, option.label, {
+                value = combatDb[option.key] == true,
+                callback = function(checked)
+                    combatDb[option.key] = checked or nil
+                    if onChange then onChange() end
+                    if onRefresh then onRefresh() end
+                end
+            })
+            row:AddWidget(check, 1)
+            table_insert(widgets, check)
 
-        card:AddRow(combatRow, Theme.rowHeightLast, 0)
+            card:AddRow(row, rowHeight, isLastRow and 0 or nil)
+        end
+    elseif selectedCategory == "Role" then
+        local roleDb = db.Role
+        roleDb.Types = roleDb.Types or {}
+
+        for i, roleType in ipairs(ROLE_TYPES) do
+            local isLastRow = i == #ROLE_TYPES
+            local rowHeight = isLastRow and Theme.rowHeightLast or Theme.rowHeight
+            local row = GUIFrame:CreateRow(card.content, rowHeight)
+
+            local check = GUIFrame:CreateCheckbox(row, roleType.label, {
+                value = roleDb.Types[roleType.key] == true,
+                callback = function(checked)
+                    roleDb.Types[roleType.key] = checked or nil
+                    if onChange then onChange() end
+                    if onRefresh then onRefresh() end
+                end
+            })
+            row:AddWidget(check, 1)
+            table_insert(widgets, check)
+
+            card:AddRow(row, rowHeight, isLastRow and 0 or nil)
+        end
+    elseif selectedCategory == "Position" then
+        local positionDb = db.Position
+        positionDb.Types = positionDb.Types or {}
+
+        for i, positionType in ipairs(POSITION_TYPES) do
+            local isLastRow = i == #POSITION_TYPES
+            local rowHeight = isLastRow and Theme.rowHeightLast or Theme.rowHeight
+            local row = GUIFrame:CreateRow(card.content, rowHeight)
+
+            local check = GUIFrame:CreateCheckbox(row, positionType.label, {
+                value = positionDb.Types[positionType.key] == true,
+                callback = function(checked)
+                    positionDb.Types[positionType.key] = checked or nil
+                    if onChange then onChange() end
+                    if onRefresh then onRefresh() end
+                end
+            })
+            row:AddWidget(check, 1)
+            table_insert(widgets, check)
+
+            card:AddRow(row, rowHeight, isLastRow and 0 or nil)
+        end
     end
 
     card.conditionWidgets = widgets

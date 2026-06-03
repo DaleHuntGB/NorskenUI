@@ -67,6 +67,25 @@ GUIFrame:RegisterContent("PotionReady", function(scrollChild, yOffset)
 
     yOffset = card2:GetNextOffset()
 
+    -- Load Conditions Card
+    db.LoadConditions = db.LoadConditions or NRSKNUI.LoadConditions:GetDefaults()
+
+    local loadCard, loadOffset = GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, {
+        db = db.LoadConditions,
+        onChangeCallback = function()
+            if POT then POT:UpdateCooldownState() end
+        end,
+        onRefreshCallback = function()
+            C_Timer.After(0.2, function()
+                GUIFrame:RefreshContent()
+            end)
+        end,
+    })
+    manager:Register(loadCard, "all")
+    if loadCard.conditionWidgets then manager:RegisterGroup(loadCard.conditionWidgets, "all") end
+
+    yOffset = loadOffset
+
     -- Card 3: Font Settings
     local fontCard, fontOffset, fontWidgets = GUIFrame:CreateFontSettingsCard(scrollChild, yOffset, {
         db = db,
@@ -90,23 +109,6 @@ GUIFrame:RegisterContent("PotionReady", function(scrollChild, yOffset)
     if posCard.positionWidgets then manager:RegisterGroup(posCard.positionWidgets, "all") end
 
     yOffset = posOffset
-
-    -- Load Conditions Card
-    db.LoadConditions = db.LoadConditions or NRSKNUI.LoadConditions:GetDefaults()
-
-    local loadCard, loadOffset = GUIFrame:CreateLoadConditionsCard(scrollChild, yOffset, {
-        db = db.LoadConditions,
-        onChangeCallback = function()
-            if POT then POT:UpdateCooldownState() end
-        end,
-        onRefreshCallback = function()
-            GUIFrame:RefreshContent()
-        end,
-    })
-    manager:Register(loadCard, "all")
-    if loadCard.conditionWidgets then manager:RegisterGroup(loadCard.conditionWidgets, "all") end
-
-    yOffset = loadOffset
 
     UpdateAllWidgetStates()
 

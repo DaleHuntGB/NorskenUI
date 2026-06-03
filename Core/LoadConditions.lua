@@ -80,10 +80,34 @@ local function CheckCombat(config)
     return true
 end
 
+-- Check Role condition
+local function CheckRole(config)
+    if not config or not config.Types then return true end
+    if not HasAnyEnabled(config.Types) then return true end
+    if not NRSKNUI.MySpec.role then return true end
+
+    if not config.Types[NRSKNUI.MySpec.role] then return false end
+
+    return true
+end
+
+-- Check Position condition
+local function CheckPosition(config)
+    if not config or not config.Types then return true end
+    if not HasAnyEnabled(config.Types) then return true end
+    if not NRSKNUI.MySpec.position then return true end
+
+    if not config.Types[NRSKNUI.MySpec.position] then return false end
+
+    return true
+end
+
 local checkers = {
     Instance = CheckInstance,
     Group = CheckGroup,
     Combat = CheckCombat,
+    Role = CheckRole,
+    Position = CheckPosition,
 }
 
 local function FireCallbacks()
@@ -98,6 +122,7 @@ local function SetupEventFrame()
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
     eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+    eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 
     eventFrame:SetScript("OnEvent", FireCallbacks)
 end
@@ -124,6 +149,8 @@ function LoadConditions:GetDefaults()
         Instance = { Types = {} },
         Group = { Types = {} },
         Combat = {},
+        Role = { Types = {} },
+        Position = { Types = {} },
     }
 end
 
