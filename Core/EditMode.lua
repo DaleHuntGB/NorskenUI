@@ -84,6 +84,7 @@ function EditMode:RegisterElement(config)
         getAnchorFrom = config.getAnchorFrom,
         guiPath = config.guiPath,
         guiContext = config.guiContext, -- Specific item to select in the GUI, using this for actionbars and details backdrops
+        usesEdgeRelativePositioning = config.usesEdgeRelativePositioning, -- Flag for edge-relative positioning (actionbars)
     }
 
     -- If edit mode is already active, create overlay for this element
@@ -861,14 +862,56 @@ function EditMode:CreateNudgeFrame()
             return
         end
 
-        local newPos = {
-            AnchorFrom = currentPos.AnchorFrom,
-            AnchorTo = currentPos.AnchorTo,
-            XOffset = math_floor(newX + 0.5),
-            YOffset = math_floor(newY + 0.5),
-        }
+        -- Check if element uses edge-relative positioning (actionbars)
+        if element.usesEdgeRelativePositioning then
+            local targetFrame = EditMode:GetElementFrame(element)
+            if not targetFrame then return end
 
-        element.setPosition(newPos)
+            -- For edge-relative, we need to calculate where the frame would be
+            -- with the new offsets and then move it there
+            local screenWidth = math_floor(UIParent:GetWidth() + 0.5)
+            local screenHeight = math_floor(UIParent:GetHeight() + 0.5)
+            local frameWidth, frameHeight = targetFrame:GetSize()
+            frameWidth = math_floor(frameWidth + 0.5)
+            frameHeight = math_floor(frameHeight + 0.5)
+
+            local anchorPoint = currentPos.AnchorFrom or "BOTTOM"
+            local left, bottom
+
+            -- Calculate horizontal position from edge-relative offset
+            if anchorPoint:find("LEFT") then
+                left = newX
+            elseif anchorPoint:find("RIGHT") then
+                left = screenWidth + newX - frameWidth
+            else
+                left = math_floor(screenWidth / 2) + newX - math_floor(frameWidth / 2)
+            end
+
+            -- Calculate vertical position from edge-relative offset
+            if anchorPoint:find("BOTTOM") then
+                bottom = newY
+            elseif anchorPoint:find("TOP") then
+                bottom = screenHeight + newY - frameHeight
+            else
+                bottom = math_floor(screenHeight / 2) + newY - math_floor(frameHeight / 2)
+            end
+
+            -- Move frame to calculated position
+            targetFrame:ClearAllPoints()
+            targetFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", left, bottom)
+
+            -- setPosition will recalculate and save the edge-relative position
+            element.setPosition({})
+        else
+            -- Standard positioning: set offsets directly
+            local newPos = {
+                AnchorFrom = currentPos.AnchorFrom,
+                AnchorTo = currentPos.AnchorTo,
+                XOffset = math_floor(newX + 0.5),
+                YOffset = math_floor(newY + 0.5),
+            }
+            element.setPosition(newPos)
+        end
 
         if EditMode.overlayFrames[EditMode.selectedElementKey] then
             C_Timer.After(0, function()
@@ -1151,18 +1194,36 @@ function EditMode:NudgeSelectedElement(deltaX, deltaY)
 
     local element = self.registeredElements[self.selectedElementKey]
     if not element then return end
+
+    local targetFrame = self:GetElementFrame(element)
+    if not targetFrame then return end
+
     local currentPos = element.getPosition()
     if not currentPos then return end
 
-    local newPos = {
-        AnchorFrom = currentPos.AnchorFrom,
-        AnchorTo = currentPos.AnchorTo,
-        XOffset = math_floor((currentPos.XOffset or 0) + deltaX + 0.5),
-        YOffset = math_floor((currentPos.YOffset or 0) + deltaY + 0.5),
-    }
+    -- Check if element uses edge-relative positioning (actionbars)
+    -- Edge-relative elements need to move the frame first, then recalculate position
+    if element.usesEdgeRelativePositioning then
+        -- Get current frame center
+        local centerX, centerY = targetFrame:GetCenter()
+        if not centerX or not centerY then return end
 
-    -- Save and apply
-    element.setPosition(newPos)
+        -- Move frame to new position temporarily
+        targetFrame:ClearAllPoints()
+        targetFrame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", centerX + deltaX, centerY + deltaY)
+
+        -- setPosition will recalculate the edge-relative position
+        element.setPosition({})
+    else
+        -- Standard positioning: adjust offsets directly
+        local newPos = {
+            AnchorFrom = currentPos.AnchorFrom,
+            AnchorTo = currentPos.AnchorTo,
+            XOffset = math_floor((currentPos.XOffset or 0) + deltaX + 0.5),
+            YOffset = math_floor((currentPos.YOffset or 0) + deltaY + 0.5),
+        }
+        element.setPosition(newPos)
+    end
 
     -- Update overlay position
     if self.overlayFrames[self.selectedElementKey] then

@@ -1170,6 +1170,9 @@ local function RegisterBarWithEditMode(barName, barDB, barContainer)
 
         getParentFrame = function() return UIParent end,
 
+        -- Flag for edit mode to use edge-relative positioning logic
+        usesEdgeRelativePositioning = true,
+
         guiPath = "ActionBars",
         guiContext = barName, -- Pass the bar key
     }
