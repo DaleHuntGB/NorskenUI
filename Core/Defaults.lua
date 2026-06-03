@@ -18,7 +18,7 @@ local Defaults = {
             customColors   = {},       -- Custom color overrides (used in custom mode)
 
             -- Font settings (shared across all modes)
-            fontFace       = "Fonts\\FRIZQT__.TTF",
+            fontFace       = "Interface\\AddOns\\NorskenUI\\Media\\Fonts\\Expressway.TTF",
             fontSizeNormal = 12,
             fontSizeSmall  = 12,
             fontSizeLarge  = 16,
