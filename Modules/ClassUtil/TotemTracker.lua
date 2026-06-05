@@ -15,6 +15,7 @@ local GetTotemInfo = GetTotemInfo
 local GetTime = GetTime
 local UIParent = UIParent
 local GetTotemDuration = GetTotemDuration
+local InCombatLockdown = InCombatLockdown
 
 local MAX_TOTEMS = MAX_TOTEMS
 local TOTEM_PRIORITIES = STANDARD_TOTEM_PRIORITIES
@@ -37,6 +38,11 @@ end
 
 function TT:CreateDestroyButtons()
     if destroyButtons[1] then return end
+
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() TT:CreateDestroyButtons() end)
+        return
+    end
 
     for slot = 1, MAX_TOTEMS do
         local btn = CreateFrame("Button", "NRSKNUI_DestroyTotem" .. slot, UIParent, "SecureActionButtonTemplate")

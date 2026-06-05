@@ -13,6 +13,7 @@ local EnumerateFrames = EnumerateFrames
 local string_format = string.format
 local math_floor = math.floor
 local UIParent = UIParent
+local InCombatLockdown = InCombatLockdown
 
 function NRSKNUI:UIMult()
     local uiScale = self.uiScale or (UIParent and UIParent:GetEffectiveScale()) or 1
@@ -148,6 +149,8 @@ NRSKNUI:UIMult()
 
 -- GUI Widget Pixel Perfection System
 do
+    local widgetAPIInitialized = false
+
     local function ScaleValue(x)
         local m = NRSKNUI.mult
         if m == 1 or x == 0 then
@@ -254,23 +257,36 @@ do
         end
     end
 
-    local handled = { Frame = true }
-    local baseFrame = CreateFrame("Frame")
-    AddWidgetAPI(baseFrame)
-    AddWidgetAPI(baseFrame:CreateTexture())
-    AddWidgetAPI(baseFrame:CreateFontString())
-    AddWidgetAPI(baseFrame:CreateMaskTexture())
+    local function InitializeWidgetAPI()
+        if widgetAPIInitialized then return end
+        widgetAPIInitialized = true
 
-    local frame = EnumerateFrames()
-    while frame do
-        local objType = frame:GetObjectType()
-        if not frame:IsForbidden() and not handled[objType] then
-            AddWidgetAPI(frame)
-            handled[objType] = true
+        local handled = { Frame = true }
+        local baseFrame = CreateFrame("Frame")
+        AddWidgetAPI(baseFrame)
+        AddWidgetAPI(baseFrame:CreateTexture())
+        AddWidgetAPI(baseFrame:CreateFontString())
+        AddWidgetAPI(baseFrame:CreateMaskTexture())
+
+        local frame = EnumerateFrames()
+        while frame do
+            local objType = frame:GetObjectType()
+            if not frame:IsForbidden() and not handled[objType] then
+                AddWidgetAPI(frame)
+                handled[objType] = true
+            end
+            frame = EnumerateFrames(frame)
         end
-        frame = EnumerateFrames(frame)
+        AddWidgetAPI(CreateFrame("ScrollFrame"))
     end
-    AddWidgetAPI(CreateFrame("ScrollFrame"))
+
+    -- Defer metatable hooking if in combat to prevent taint
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, InitializeWidgetAPI)
+    else
+        InitializeWidgetAPI()
+    end
+
     NRSKNUI.ScaleValue = ScaleValue
     NRSKNUI.DisablePixelSnap = DisablePixelSnap
 end

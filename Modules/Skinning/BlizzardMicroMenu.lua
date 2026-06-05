@@ -52,33 +52,46 @@ function MM:OnEnable()
     if not self.db.Enabled then return end
 
     C_Timer.After(0.5, function()
-        MM:CreateMicroBar()
-        MM:ReparentButtons()
-        MM:SetupMouseover()
-        MM:UpdateMicroBar()
-
-        NRSKNUI.EditMode:RegisterElement({
-            key = "MicroBarModule",
-            displayName = "Microbar",
-            frame = self.microBar,
-            getPosition = function()
-                return self.db.Position
-            end,
-            setPosition = function(pos)
-                self.db.Position.AnchorFrom = pos.AnchorFrom
-                self.db.Position.AnchorTo = pos.AnchorTo
-                self.db.Position.XOffset = pos.XOffset
-                self.db.Position.YOffset = pos.YOffset
-
-                self.microBar:ClearAllPoints()
-                self.microBar:SetPoint(pos.AnchorFrom, MM:GetParentFrame(), pos.AnchorTo, pos.XOffset, pos.YOffset)
-            end,
-            getParentFrame = function()
-                return MM:GetParentFrame()
-            end,
-            guiPath = "MicroMenu",
-        })
+        if InCombatLockdown() then
+            NRSKNUI:DeferUntilUnrestricted(0, function() MM:InitializeMicroBar() end)
+            return
+        end
+        MM:InitializeMicroBar()
     end)
+end
+
+function MM:InitializeMicroBar()
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() MM:InitializeMicroBar() end)
+        return
+    end
+
+    self:CreateMicroBar()
+    self:ReparentButtons()
+    self:SetupMouseover()
+    self:UpdateMicroBar()
+
+    NRSKNUI.EditMode:RegisterElement({
+        key = "MicroBarModule",
+        displayName = "Microbar",
+        frame = self.microBar,
+        getPosition = function()
+            return self.db.Position
+        end,
+        setPosition = function(pos)
+            self.db.Position.AnchorFrom = pos.AnchorFrom
+            self.db.Position.AnchorTo = pos.AnchorTo
+            self.db.Position.XOffset = pos.XOffset
+            self.db.Position.YOffset = pos.YOffset
+
+            self.microBar:ClearAllPoints()
+            self.microBar:SetPoint(pos.AnchorFrom, MM:GetParentFrame(), pos.AnchorTo, pos.XOffset, pos.YOffset)
+        end,
+        getParentFrame = function()
+            return MM:GetParentFrame()
+        end,
+        guiPath = "MicroMenu",
+    })
 end
 
 function MM:GetParentFrame()
@@ -117,7 +130,7 @@ end
 
 function MM:ReparentButtons()
     if InCombatLockdown() then
-        self:RegisterEvent("PLAYER_REGEN_ENABLED")
+        NRSKNUI:DeferUntilUnrestricted(0, function() MM:ReparentButtons() end)
         return
     end
 
@@ -132,7 +145,7 @@ end
 function MM:UpdateMicroBar()
     if not microBar then return end
     if InCombatLockdown() then
-        self:RegisterEvent("PLAYER_REGEN_ENABLED")
+        NRSKNUI:DeferUntilUnrestricted(0, function() MM:UpdateMicroBar() end)
         return
     end
 
@@ -242,12 +255,6 @@ function MM:ApplySettings()
     end
 
     self:SetupMouseover()
-    self:UpdateMicroBar()
-end
-
-function MM:PLAYER_REGEN_ENABLED()
-    self:UnregisterEvent("PLAYER_REGEN_ENABLED")
-    self:ReparentButtons()
     self:UpdateMicroBar()
 end
 

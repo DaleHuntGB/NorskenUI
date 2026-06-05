@@ -1,8 +1,7 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
--- Module used to hide frames
+-- Module used to hide frames safely
 
 local CreateFrame = CreateFrame
 local type = type

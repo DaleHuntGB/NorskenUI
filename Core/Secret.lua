@@ -108,9 +108,9 @@ end
 
 -- Restriction State Management
 
--- State tracking
-local currentRestrictionState = 0
-local restrictionTypes = {}
+-- State tracking - initialize based on current combat state
+local currentRestrictionState = InCombatLockdown() and 2 or 0
+local restrictionTypes = { Combat = InCombatLockdown() }
 local deferredCallbacks = {}
 
 -- Get current restriction state (0 = none, 1 = partial, 2 = full)

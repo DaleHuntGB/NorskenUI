@@ -206,14 +206,27 @@ function CopyAnything:ApplySettings() CopyAnything:UpdateDB() end
 
 function CopyAnything:OnEnable()
     if not self.db.Enabled then return end
+
+    self:RegisterEvent("PLAYER_REGEN_DISABLED", function() if self.frame then self.frame:EnableKeyboard(false) end end)
+    self:RegisterEvent("PLAYER_REGEN_ENABLED", function() if self.db.Enabled then self:CreateKeyboardFrame() end end)
+
+    if InCombatLockdown() then return end -- Dont create frame in combat, it will block the keyboard input until combat ends
+    self:CreateKeyboardFrame()
+end
+
+function CopyAnything:CreateKeyboardFrame()
     if not self.frame then
         self.frame = CreateFrame("Frame", "NRSKNUI_CopyFrame")
         self.frame:SetScript("OnKeyDown", function(frame, key)
-            local handled = self:TryCopy(key)
-            if not InCombatLockdown() then frame:SetPropagateKeyboardInput(not handled) end
+            if InCombatLockdown() then return end
+            frame:SetPropagateKeyboardInput(not self:TryCopy(key))
         end)
     end
     self.frame:EnableKeyboard(true)
 end
 
-function CopyAnything:OnDisable() if self.frame then self.frame:EnableKeyboard(false) end end
+function CopyAnything:OnDisable()
+    self:UnregisterAllEvents()
+    if not self.frame then return end
+    if not InCombatLockdown() then self.frame:EnableKeyboard(false) end
+end

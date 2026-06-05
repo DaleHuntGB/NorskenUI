@@ -360,6 +360,7 @@ function DEBUFFS:ShowPreview()
 end
 
 function DEBUFFS:HidePreview()
+    if not self.buttonPool then return end
     self.previewActive = false
     if self.frame and self.db.Enabled then
         self:RefreshAllAuras()

@@ -15,6 +15,7 @@ local CreateFrame = CreateFrame
 local RegisterStateDriver = RegisterStateDriver
 local UnregisterStateDriver = UnregisterStateDriver
 local C_Spell = C_Spell
+local InCombatLockdown = InCombatLockdown
 
 local RECUPERATE_SPELL_ID = 1231411
 local spellInfo = C_Spell.GetSpellInfo(RECUPERATE_SPELL_ID)
@@ -62,6 +63,11 @@ function REC:UpdateStateDriver()
     if not self.button then return end
     if self.isPreview then return end
 
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:UpdateStateDriver() end)
+        return
+    end
+
     UnregisterStateDriver(self.button, "visibility")
     RegisterStateDriver(self.button, "visibility", self:GetVisibilityString())
     self:UpdateAlpha()
@@ -69,6 +75,11 @@ end
 
 function REC:CreateButton()
     if self.button then return end
+
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:CreateButton() end)
+        return
+    end
 
     local button = CreateFrame("Button", "NRSKNUI_RecuperateButton", UIParent,
         "SecureActionButtonTemplate, SecureHandlerStateTemplate")
@@ -101,12 +112,22 @@ end
 
 function REC:ApplySettings()
     if not self.button then return end
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:ApplySettings() end)
+        return
+    end
     self.button:SetSize(self.db.Size, self.db.Size)
     NRSKNUI:ApplyFramePosition(self.button, self.db.Position, self.db)
 end
 
 function REC:OnEnable()
     if not self.db.Enabled then return end
+
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:OnEnable() end)
+        return
+    end
+
     self:CreateButton()
     C_Timer.After(0.5, function() self:ApplySettings() end)
 
@@ -137,13 +158,27 @@ end
 function REC:OnDisable()
     self:UnregisterAllEvents()
     if self.button then
-        UnregisterStateDriver(self.button, "visibility")
-        self.button:Hide()
+        if InCombatLockdown() then
+            NRSKNUI:DeferUntilUnrestricted(0, function()
+                if REC.button then
+                    UnregisterStateDriver(REC.button, "visibility")
+                    REC.button:Hide()
+                end
+            end)
+        else
+            UnregisterStateDriver(self.button, "visibility")
+            self.button:Hide()
+        end
     end
     self.isPreview = false
 end
 
 function REC:ShowPreview()
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:ShowPreview() end)
+        return
+    end
+
     if not self.button then self:CreateButton() end
     self.isPreview = true
     UnregisterStateDriver(self.button, "visibility")
@@ -155,6 +190,12 @@ end
 function REC:HidePreview()
     self.isPreview = false
     if not self.button then return end
+
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() REC:HidePreview() end)
+        return
+    end
+
     if self.db.Enabled then
         RegisterStateDriver(self.button, "visibility", self:GetVisibilityString())
         self:UpdateAlpha()

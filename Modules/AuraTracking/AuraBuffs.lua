@@ -197,7 +197,11 @@ local function applyButtonSettings(button, db)
 end
 
 function BUFFS:UpdateHeader()
-    if not self.buffs or InCombatLockdown() then return end
+    if not self.buffs then return end
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() BUFFS:UpdateHeader() end)
+        return
+    end
 
     local db = self.db
     local spacing = db.IconSize + db.IconSpacing
@@ -239,7 +243,11 @@ function BUFFS:UpdateHeader()
 end
 
 function BUFFS:UpdateChildren()
-    if not self.buffs or InCombatLockdown() then return end
+    if not self.buffs then return end
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() BUFFS:UpdateChildren() end)
+        return
+    end
 
     local db = self.db
     local index = 1
@@ -287,6 +295,11 @@ end
 function BUFFS:CreateBuffFrame()
     if self.buffs then return end
 
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() BUFFS:CreateBuffFrame() end)
+        return
+    end
+
     if not self.mover then
         self.mover = CreateFrame("Frame", "NorskenUIBuffFrameMover", UIParent)
         self.mover:SetSize(10, 10)
@@ -322,7 +335,10 @@ function BUFFS:CreateBuffFrame()
 end
 
 function BUFFS:ApplyPosition()
-    if InCombatLockdown() then return end
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() BUFFS:ApplyPosition() end)
+        return
+    end
 
     local anchorPoint = DIRECTION_TO_POINT[self.db.GrowthDirection]
     local anchorFrame = NRSKNUI:ResolveAnchorFrame(self.db.anchorFrameType, self.db.ParentFrame)

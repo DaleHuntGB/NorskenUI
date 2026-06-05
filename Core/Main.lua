@@ -1,20 +1,17 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+local Theme = NRSKNUI.Theme
 
--- Localization Setup
 local IsInInstance = IsInInstance
 local LibStub = LibStub
 local string_gsub = string.gsub
 local ReloadUI = ReloadUI
-local Theme = NRSKNUI.Theme
 
 local aceAddon = LibStub("AceAddon-3.0")
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
 local LDS = LibStub("LibDualSpec-1.0")
 
--- Constants
 local DEFAULT_PROFILE = "Default"
 
 -- Create the main addon object

@@ -120,14 +120,17 @@ end
 
 -- Build configTable from DB, called on enable so DB is ready
 -- This way i only need to create defaults once in the Core/Defaults.lua
-function ACB:BuildConfigTable()
+-- skipBlizzToggle: if true, don't disable Blizzard bar mouse (used during combat)
+function ACB:BuildConfigTable(skipBlizzToggle)
     configTable = {}
     if not self.db or not self.db.Bars then return end
     local globalMouseover = self.db.Mouseover or {}
 
     -- Build config for each bar defined in BAR_FRAME_MAP
     for barKey, _ in pairs(BAR_FRAME_MAP) do
-        BlizzBarMouseToggle(barKey)
+        if not skipBlizzToggle then
+            BlizzBarMouseToggle(barKey)
+        end
         local barDB = self.db.Bars[barKey]
         if barDB then
             local cfg = BuildBarConfig(barKey, barDB, globalMouseover)
@@ -1230,63 +1233,71 @@ function ACB:OnEnable()
     if not self.db.Enabled then return end
     RunEdgeRelativeMigration(self.db)
 
+    -- If in combat, defer entire initialization to keep Blizzard bars functional
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function()
+            ACB:OnEnable()
+        end)
+        return
+    end
+
     self:BuildConfigTable()
 
     -- Delay skinning until after Blizzard's initial setup to avoid taint issues and ensure all elements exist
     C_Timer.After(0.5, function()
-        -- Always hide Blizzard special bars when module is active
-        self:HideBlizzardBars()
-
-        -- Create all bars initally, then hide them based on config
-        -- this way a reload is not needed when swapping between profiles for example
-        for _, cfg in ipairs(configTable) do
-            SkinBar(cfg)
-            SetupMouseoverScript(cfg.nrsknui_container)
-
-            -- Only register with edit mode if bar is enabled
-            if cfg.enabled then
-                RegisterBarWithEditMode(
-                    cfg.name,
-                    cfg.dbReference,
-                    cfg.nrsknui_container
-                )
-            end
-
-            -- Setup bonusbar override for Bar1
-            if cfg.name == "Bar1" and cfg.nrsknui_container then
-                SetupBonusBarOverride(cfg.nrsknui_container, self.db)
-                self:UpdateBonusBarOverride()
-            end
-
-            -- Setup visibility handling for Pet and Stance bars
-            if cfg.name == "PetBar" and cfg.nrsknui_container then
-                SetupPetBarVisibility(cfg.nrsknui_container)
-            elseif cfg.name == "StanceBar" and cfg.nrsknui_container then
-                SetupStanceBarVisibility(cfg.nrsknui_container)
-            end
-
-            -- Hide container if bar is disabled
-            if not cfg.enabled and cfg.nrsknui_container then
-                cfg.nrsknui_container:Hide()
-            end
-        end
-
-        -- Disable native actionbars
-        for i = 2, 8 do
-            Settings.SetValue("PROXY_SHOW_ACTIONBAR_" .. i, false)
-        end
-        C_CVar.SetCVar("countdownForCooldowns", 1)
-        SettingsPanel:CommitSettings(true)
-
-        -- Re-apply styling after delays to catch Blizzard's late initialization
-        C_Timer.After(1, function() ACB:UpdateButtonTexts() end)
-        C_Timer.After(2, function() ACB:UpdateButtonTexts() end)
-
-        -- Setup drag detection and rangeindicator hook
-        self:SetupDragDetection()
-        self:SetupRangeIndicatorHook()
-        self:SetupProcGlowHook()
+        self:InitializeBars()
     end)
+end
+
+-- Separated initialization for deferred execution
+function ACB:InitializeBars()
+    if InCombatLockdown() then
+        NRSKNUI:DeferUntilUnrestricted(0, function() ACB:InitializeBars() end)
+        return
+    end
+
+    self:HideBlizzardBars()
+
+    for _, cfg in ipairs(configTable) do
+        SkinBar(cfg)
+        SetupMouseoverScript(cfg.nrsknui_container)
+
+        if cfg.enabled then
+            RegisterBarWithEditMode(
+                cfg.name,
+                cfg.dbReference,
+                cfg.nrsknui_container
+            )
+        end
+
+        if cfg.name == "Bar1" and cfg.nrsknui_container then
+            SetupBonusBarOverride(cfg.nrsknui_container, self.db)
+            self:UpdateBonusBarOverride()
+        end
+
+        if cfg.name == "PetBar" and cfg.nrsknui_container then
+            SetupPetBarVisibility(cfg.nrsknui_container)
+        elseif cfg.name == "StanceBar" and cfg.nrsknui_container then
+            SetupStanceBarVisibility(cfg.nrsknui_container)
+        end
+
+        if not cfg.enabled and cfg.nrsknui_container then
+            cfg.nrsknui_container:Hide()
+        end
+    end
+
+    for i = 2, 8 do
+        Settings.SetValue("PROXY_SHOW_ACTIONBAR_" .. i, false)
+    end
+    C_CVar.SetCVar("countdownForCooldowns", 1)
+    SettingsPanel:CommitSettings(true)
+
+    C_Timer.After(1, function() ACB:UpdateButtonTexts() end)
+    C_Timer.After(2, function() ACB:UpdateButtonTexts() end)
+
+    self:SetupDragDetection()
+    self:SetupRangeIndicatorHook()
+    self:SetupProcGlowHook()
 end
 
 -- Setup hook for proc glow to resize SpellActivationAlert to match button size
@@ -1715,7 +1726,12 @@ end
 function ACB:ApplySettings()
     if NRSKNUI:ShouldNotLoadModule() then return end
     C_Timer.After(0.1, function()
-        if InCombatLockdown() then return end
+        if InCombatLockdown() then
+            NRSKNUI:DeferUntilUnrestricted(0, function()
+                ACB:ApplySettings()
+            end)
+            return
+        end
         self:HideBlizzardBars()
 
         -- Re-apply Blizzard actionbar settings

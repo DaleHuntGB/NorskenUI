@@ -1,11 +1,9 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
 -- Module with a bunch of color utilities
 
--- Localization
 local UnitClass = UnitClass
 local math_floor = math.floor
 local string_format = string.format

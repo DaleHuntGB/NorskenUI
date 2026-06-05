@@ -412,6 +412,7 @@ function EXTERNALS:ShowPreview()
 end
 
 function EXTERNALS:HidePreview()
+    if not self.buttonPool then return end
     for _, button in ipairs(self.buttonPool) do StopGlow(button) end
     self.previewActive = false
     if self.frame and self.db.Enabled then

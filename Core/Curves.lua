@@ -1,7 +1,9 @@
--- NorskenUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 NRSKNUI.curves = {}
+
+local next = next
+local CreateColor = CreateColor
 
 -- if the duration is < 3 seconds then we want 1 decimal point, otherwise 0
 -- offset this by 0.2 because of weird calculation timings making it flash 1.x

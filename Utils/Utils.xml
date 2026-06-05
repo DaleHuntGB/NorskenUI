@@ -1,4 +1,0 @@
-<Ui>
-	<Script file='Utils/FrameHider.lua'/>
-	<Script file='Utils/TableLib.lua'/>
-</Ui>

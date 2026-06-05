@@ -10,6 +10,7 @@ local setmetatable = setmetatable
 local UIFrameFade, UIFrameFadeIn, UIFrameFadeOut = UIFrameFade, UIFrameFadeIn, UIFrameFadeOut
 local issecretvalue = issecretvalue
 local type = type
+local InCombatLockdown = InCombatLockdown
 
 local SOFT_OUTLINE_FADEOUT_SPEED = 0.85
 local fadeHookRunning = false
@@ -47,45 +48,54 @@ local function HandleFadeHook(frame, outline, startAlpha)
     fadeHookRunning = false
 end
 
-hooksecurefunc("UIFrameFade", function(frame, fadeInfo)
-    if not frame or not fadeInfo or fadeHookRunning then return end
-    local outline = frame._nrsknSoftOutline
-    if not outline or not outline.shadows then return end
-
-    fadeHookRunning = true
-    local isFadeOut = fadeInfo.mode == "OUT" or
-        (fadeInfo.startAlpha and fadeInfo.endAlpha and fadeInfo.endAlpha < fadeInfo.startAlpha)
-
-    for _, shadow in ipairs(outline.shadows) do
-        local shadowFade = {
-            mode = fadeInfo.mode,
-            startAlpha = fadeInfo.startAlpha,
-            endAlpha = fadeInfo.endAlpha,
-            diffAlpha = fadeInfo.diffAlpha,
-            timeToFade = isFadeOut and (fadeInfo.timeToFade * SOFT_OUTLINE_FADEOUT_SPEED) or fadeInfo.timeToFade,
-        }
-        if fadeInfo.endAlpha == 0 then
-            shadowFade.finishedFunc = function() shadow:Hide() end
-        end
-        UIFrameFade(shadow, shadowFade)
-    end
-    fadeHookRunning = false
-end)
-
-if UIFrameFadeIn then
-    hooksecurefunc("UIFrameFadeIn", function(frame, _, startAlpha)
-        if not frame or fadeHookRunning then return end
+local function SetupFadeHooks()
+    hooksecurefunc("UIFrameFade", function(frame, fadeInfo)
+        if not frame or not fadeInfo or fadeHookRunning then return end
         local outline = frame._nrsknSoftOutline
-        if outline then HandleFadeHook(frame, outline, startAlpha or 0) end
+        if not outline or not outline.shadows then return end
+
+        fadeHookRunning = true
+        local isFadeOut = fadeInfo.mode == "OUT" or
+            (fadeInfo.startAlpha and fadeInfo.endAlpha and fadeInfo.endAlpha < fadeInfo.startAlpha)
+
+        for _, shadow in ipairs(outline.shadows) do
+            local shadowFade = {
+                mode = fadeInfo.mode,
+                startAlpha = fadeInfo.startAlpha,
+                endAlpha = fadeInfo.endAlpha,
+                diffAlpha = fadeInfo.diffAlpha,
+                timeToFade = isFadeOut and (fadeInfo.timeToFade * SOFT_OUTLINE_FADEOUT_SPEED) or fadeInfo.timeToFade,
+            }
+            if fadeInfo.endAlpha == 0 then
+                shadowFade.finishedFunc = function() shadow:Hide() end
+            end
+            UIFrameFade(shadow, shadowFade)
+        end
+        fadeHookRunning = false
     end)
+
+    if UIFrameFadeIn then
+        hooksecurefunc("UIFrameFadeIn", function(frame, _, startAlpha)
+            if not frame or fadeHookRunning then return end
+            local outline = frame._nrsknSoftOutline
+            if outline then HandleFadeHook(frame, outline, startAlpha or 0) end
+        end)
+    end
+
+    if UIFrameFadeOut then
+        hooksecurefunc("UIFrameFadeOut", function(frame, _, startAlpha)
+            if not frame or fadeHookRunning then return end
+            local outline = frame._nrsknSoftOutline
+            if outline then HandleFadeHook(frame, outline, startAlpha or 1) end
+        end)
+    end
 end
 
-if UIFrameFadeOut then
-    hooksecurefunc("UIFrameFadeOut", function(frame, _, startAlpha)
-        if not frame or fadeHookRunning then return end
-        local outline = frame._nrsknSoftOutline
-        if outline then HandleFadeHook(frame, outline, startAlpha or 1) end
-    end)
+-- Defer hooks if in combat to prevent taint
+if InCombatLockdown() then
+    NRSKNUI:DeferUntilUnrestricted(0, SetupFadeHooks)
+else
+    SetupFadeHooks()
 end
 
 function SoftOutline:_ForEach(fn)
