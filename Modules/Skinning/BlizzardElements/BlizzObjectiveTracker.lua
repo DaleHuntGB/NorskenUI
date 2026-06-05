@@ -80,17 +80,28 @@ local function ReskinHeader(header, color)
 
     if header.styled then
         if header.Text then header.Text:SetTextColor(r, g, b) end
-        if header.bg then header.bg:SetVertexColor(r, g, b, 0.8) end
+        if header.bg then header.bg:SetVertexColor(r, g, b, 1) end
         return
     end
 
     header.Text:SetTextColor(r, g, b)
     header.Background:SetTexture(nil)
 
+    -- Creates a shadow background
+    local shadow = header:CreateTexture(nil, "BORDER")
+    shadow:SetAtlas("UI-Journeys-Paragon-Level-divider")
+    shadow:SetDesaturated(true)
+    shadow:SetVertexColor(0, 0, 0, 1)
+    shadow:SetPoint("CENTER", -11, -12)
+    shadow:SetSize(37, 320)
+    shadow:SetRotation(math.pi / 2)
+    header.shadow = shadow
+
     local bg = header:CreateTexture(nil, "ARTWORK")
     bg:SetAtlas("UI-Journeys-Paragon-Level-divider")
-    bg:SetVertexColor(r, g, b, 0.8)
-    bg:SetPoint("CENTER", 0, -12)
+    bg:SetDesaturated(true)
+    bg:SetVertexColor(r, g, b, 1)
+    bg:SetPoint("CENTER", -11, -12)
     bg:SetSize(31, 320)
     bg:SetRotation(math.pi / 2)
     header.bg = bg
@@ -420,7 +431,7 @@ function BOT:UpdateColors()
 
     for header in pairs(self.coloredHeaders) do
         if header.Text then header.Text:SetTextColor(color[1], color[2], color[3]) end
-        if header.bg then header.bg:SetVertexColor(color[1], color[2], color[3], 0.8) end
+        if header.bg then header.bg:SetVertexColor(color[1], color[2], color[3], 1) end
     end
 
     for bar in pairs(self.coloredProgressBars) do
