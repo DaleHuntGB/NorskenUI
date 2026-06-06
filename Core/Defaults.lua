@@ -1154,6 +1154,8 @@ local Defaults = {
                 FontFace = "Expressway",
                 FontOutline = "OUTLINE",
 
+                RangeOverlayColor = { 1, 0, 0, 0.2 },
+
                 -- Global Font Sizes (used when bar's FontSizes.GlobalOverride is true)
                 FontSizes = {
                     KeybindSize = 12,

@@ -325,6 +325,22 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         manager:Register(hideChargeCheck, "main")
         card2:AddRow(row2b, Theme.rowHeight)
 
+        local sepRowColor = GUIFrame:CreateSeparator(card2.content)
+        card2:AddRow(sepRowColor, Theme.rowHeightSeparator)
+
+        local rowColor = GUIFrame:CreateRow(card2.content, Theme.rowHeightLast)
+        local RangeOverlayColor = GUIFrame:CreateColorPicker(rowColor, "Range Overlay", {
+            color = db.RangeOverlayColor,
+            callback = function(r, g, b, a)
+                db.RangeOverlayColor = { r, g, b, a }
+                local ACB = NorskenUI:GetModule("ActionBars", true)
+                if ACB then ACB:UpdateSettings("rangeOverlay") end
+            end
+        })
+        rowColor:AddWidget(RangeOverlayColor, 1)
+        manager:Register(RangeOverlayColor, "main")
+        card2:AddRow(rowColor, Theme.rowHeightLast, 0)
+
         yOffset = card2:GetNextOffset()
 
         -- Card 3
@@ -332,23 +348,14 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         table_insert(activeCards, card3)
         manager:Register(card3, "main")
 
-        -- Global font override toggle
-        local card3FontWidgets = {}
-        local function UpdateCard3FontWidgetStates()
-            local useGlobal = db.UseGlobalFont ~= false
-            for _, widget in ipairs(card3FontWidgets) do
-                if widget.SetEnabled then
-                    widget:SetEnabled(not useGlobal)
-                end
-            end
-        end
+        manager:SetCondition("globalFontOverride", function() return db.UseGlobalFont == false end)
 
         local row3override = GUIFrame:CreateRow(card3.content, Theme.rowHeight)
         local useGlobalFontCheck = GUIFrame:CreateCheckbox(row3override, "Use Global Font", {
             value = db.UseGlobalFont ~= false,
             callback = function(checked)
                 db.UseGlobalFont = checked
-                UpdateCard3FontWidgetStates()
+                manager:UpdateAll(db.Enabled ~= false)
                 ApplyFonts()
             end
         })
@@ -372,10 +379,15 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
             isFontPreview = true
         })
         row3a:AddWidget(fontDropdown, 0.5)
-        manager:Register(fontDropdown, "main")
-        table_insert(card3FontWidgets, fontDropdown)
+        manager:Register(fontDropdown, "main", "globalFontOverride")
 
-        local outlineList = { ["NONE"] = "None", ["OUTLINE"] = "Outline", ["THICKOUTLINE"] = "Thick", ["SLUG"] = "Slug", ["SLUG,OUTLINE"] = "Slug Outline" }
+        local outlineList = {
+            ["NONE"] = "None",
+            ["OUTLINE"] = "Outline",
+            ["THICKOUTLINE"] = "Thick",
+            ["SLUG"] = "Slug",
+            ["SLUG,OUTLINE"] = "Slug Outline"
+        }
         local outlineDropdown = GUIFrame:CreateDropdown(row3a, "Outline", {
             options = outlineList,
             value = db.FontOutline,
@@ -386,7 +398,6 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         })
         row3a:AddWidget(outlineDropdown, 0.5)
         manager:Register(outlineDropdown, "main")
-        table_insert(card3FontWidgets, outlineDropdown)
         card3:AddRow(row3a, Theme.rowHeight)
 
         local row3sep = GUIFrame:CreateRow(card3.content, Theme.rowHeightSeparator)
@@ -448,8 +459,6 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         row3c:AddWidget(macroSize, 0.5)
         manager:Register(macroSize, "main")
         card3:AddRow(row3c, Theme.rowHeight)
-
-        UpdateCard3FontWidgetStates()
 
         yOffset = card3:GetNextOffset()
 

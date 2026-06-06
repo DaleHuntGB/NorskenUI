@@ -653,7 +653,8 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
     local rangeOverlay = button:CreateTexture(nil, "OVERLAY", nil, 1)
     NRSKNUI.DisablePixelSnap(rangeOverlay)
     rangeOverlay:SetAllPoints(button)
-    rangeOverlay:SetColorTexture(1, 0, 0, 0.2)
+    local rangeColor = self.db.RangeOverlayColor
+    rangeOverlay:SetColorTexture(rangeColor[1], rangeColor[2], rangeColor[3], rangeColor[4])
     rangeOverlay:Hide()
     button._nrsknRangeOverlay = rangeOverlay
 
@@ -1689,6 +1690,24 @@ function ACB:UpdateSettings(updateType, barKey)
             self:UpdateBarBackdropColors(barKey)
         else
             self:UpdateAllBackdropColors()
+        end
+    elseif updateType == "rangeOverlay" then
+        self:UpdateRangeOverlayColor()
+    end
+end
+
+function ACB:UpdateRangeOverlayColor()
+    local color = self.db.RangeOverlayColor or { 1, 0, 0, 0.2 }
+    for _, barInfo in pairs(BAR_FRAME_MAP) do
+        local prefix = barInfo.prefix
+        local i = 1
+        while true do
+            local button = _G[prefix .. i]
+            if not button then break end
+            if button._nrsknRangeOverlay then
+                button._nrsknRangeOverlay:SetColorTexture(color[1], color[2], color[3], color[4])
+            end
+            i = i + 1
         end
     end
 end
