@@ -109,6 +109,7 @@
     <Script file="GUITabs\GUI-Dungeons\GUI-DungeonTimersTexts.lua" />
     <Script file="GUITabs\GUI-Dungeons\GUI-DungeonTimers.lua" />
     <Script file="GUITabs\GUI-Dungeons\GUI-DungeonCasts.lua" />
+    <Script file="GUITabs\GUI-Dungeons\GUI-RerollKeystone.lua" />
 
     <!-- GUI Miscellaneous Tabs -->
     <Script file="GUITabs\GUI-Miscellaneous\GUI-BurningRush.lua" />

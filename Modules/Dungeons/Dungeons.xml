@@ -8,4 +8,5 @@
     <Script file="DungeonTimersBWData.lua" />
     <Script file="DungeonTimersExport.lua" />
     <Script file="DungeonCasts.lua" />
+    <Script file="RerollKeystone.lua" />
 </Ui>

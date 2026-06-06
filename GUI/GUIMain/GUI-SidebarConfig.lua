@@ -123,6 +123,7 @@ GUIFrame.SidebarConfig = {
                 { id = "InstanceReset", text = "Instance Reset" },
                 { id = "HealerMana",    text = "Healer Mana" },
                 { id = "DungeonCasts",  text = "Dungeon Casts" },
+                { id = "RerollKeystone", text = "Reroll Keystone" },
             }
         },
         {

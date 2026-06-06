@@ -49,6 +49,42 @@ local Defaults = {
             profileBar = { Enabled = true, statusBar = "NorskenUI", },
         },
 
+        RerollKeystone = {
+            Enabled = true,
+            Size = 60,
+            UseGlobalFont = true,
+            FontFace = "Expressway",
+
+            FontSize = 18,
+            FontColor = { 1, 1, 1, 1 },
+
+            FontColorKey = { 1, 1, 1, 1 },
+            FontSizeKey = 20,
+
+            FontOutline = "SOFTOUTLINE",
+            Strata = "HIGH",
+            anchorFrameType = "UIPARENT",
+            ParentFrame = "UIParent",
+            Position = {
+                AnchorFrom = "CENTER",
+                AnchorTo = "CENTER",
+                XOffset = 0,
+                YOffset = -200,
+            },
+
+            GlowEnabled = true,
+            GlowType = "pixel",
+            GlowColor = { 0, 1, 0, 1 },
+            GlowLines = 5,
+            GlowFrequency = 0.25,
+            GlowLength = 10,
+            GlowThickness = 2,
+            GlowBorder = true,
+            GlowScale = 1,
+            GlowStartAnim = false,
+            GlowDuration = 1,
+        },
+
         CharacterPanel = {
             Enabled = true,
             DecimalItemLevel = true,
