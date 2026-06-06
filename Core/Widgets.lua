@@ -5,6 +5,7 @@ local Theme = NRSKNUI.Theme
 local CreateFrame = CreateFrame
 local unpack = unpack
 local pairs = pairs
+local LCG = LibStub("LibCustomGlow-1.0", true)
 
 -- Default backdrop colors
 NRSKNUI.Media = {
@@ -147,6 +148,57 @@ function NRSKNUI:CreateIconFrame(parent, size, options)
     function frame:SetIconSize(newSize)
         self:SetSize(newSize, newSize)
         self.icon:SetAllPoints(self)
+    end
+
+    -- Glow methods using LibCustomGlow
+    frame.glowActive = false
+
+    function frame:StartGlow(db)
+        if not LCG then return end
+        if not db.GlowEnabled then return end
+
+        local glowType = db.GlowType or "pixel"
+
+        if glowType == "pixel" then
+            LCG.PixelGlow_Start(self, db.GlowColor,
+                db.GlowLines or 8,
+                db.GlowFrequency or 0.25,
+                db.GlowLength or 10,
+                db.GlowThickness or 2,
+                0, 0,
+                db.GlowBorder)
+        elseif glowType == "autocast" then
+            LCG.AutoCastGlow_Start(self, db.GlowColor,
+                db.GlowLines or 8,
+                db.GlowFrequency or 0.25,
+                db.GlowScale or 1)
+        elseif glowType == "button" then
+            LCG.ButtonGlow_Start(self, db.GlowColor, db.GlowFrequency or 0.25)
+        elseif glowType == "proc" then
+            LCG.ProcGlow_Start(self, {
+                color = db.GlowColor,
+                startAnim = db.GlowStartAnim,
+                duration = db.GlowDuration or 1,
+            })
+        end
+        self.glowActive = true
+    end
+
+    function frame:StopGlow()
+        if not LCG then return end
+
+        LCG.PixelGlow_Stop(self)
+        LCG.AutoCastGlow_Stop(self)
+        LCG.ButtonGlow_Stop(self)
+        LCG.ProcGlow_Stop(self)
+        self.glowActive = false
+    end
+
+    function frame:RefreshGlow(db)
+        if self.glowActive then
+            self:StopGlow()
+            self:StartGlow(db)
+        end
     end
 
     return frame
