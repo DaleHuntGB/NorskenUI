@@ -192,10 +192,12 @@ end
 
 function DEBUFFS:UNIT_AURA(_, unit)
     if unit ~= "player" then return end
+    if self.previewActive then return end
     self:RefreshAllAuras()
 end
 
 function DEBUFFS:PLAYER_ENTERING_WORLD()
+    if self.previewActive then return end
     self:RefreshAllAuras()
 end
 

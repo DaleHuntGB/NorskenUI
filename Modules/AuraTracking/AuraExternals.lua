@@ -326,9 +326,11 @@ end
 
 function EXTERNALS:UNIT_AURA(_, unit)
     if unit ~= UNIT or pendingAuraUpdate then return end
+    if self.previewActive then return end
     pendingAuraUpdate = true
     C_Timer.After(0, function()
         pendingAuraUpdate = false
+        if EXTERNALS.previewActive then return end
         EXTERNALS:UpdateAuras()
     end)
 end
