@@ -1676,8 +1676,8 @@ local Defaults = {
             -- Minimap Skinning
             Minimap = {
                 Enabled = true,              -- Master toggle for minimap skinning
-                HideAddOnComp = true,        -- Hide the addon compartment button
                 Size = 232,                  -- Minimap size (square)
+                Scale = 1,                   -- Minimap scale
                 Position = {                 -- Position
                     AnchorFrom = "TOPRIGHT", -- Anchor point
                     AnchorTo = "TOPRIGHT",
@@ -1691,10 +1691,10 @@ local Defaults = {
 
                 -- MiniMap Elements
                 Mail = {                   -- Mail icon
-                    Scale = 1.0,           -- Scale of mail icon
+                    Scale = 1,             -- Scale of mail icon
                     Anchor = "TOPRIGHT",   -- Anchor point
-                    X = -7,                -- X offset
-                    Y = -39,               -- Y offset
+                    X = -4,                -- X offset
+                    Y = -4,               -- Y offset
                 },
                 InstanceDifficulty = {     -- Instance difficulty
                     Scale = 0.8,           -- Scale of difficulty icon
@@ -1703,18 +1703,28 @@ local Defaults = {
                     Y = -2,                -- Y offset
                 },
                 QueueStatus = {            -- Queue status button
-                    Scale = 0.5,           -- Scale of queue status button
+                    Scale = 0.7,           -- Scale of queue status button
                     Anchor = "BOTTOMLEFT", -- Anchor point
                     X = 2,                 -- X offset
-                    Y = 80,                -- Y offset
+                    Y = 50,                -- Y offset
                 },
                 BugSack = {                -- BugSack error counter button
                     Enabled = true,        -- Enable BugSack button skinning
-                    Size = 15,             -- Size of button
+                    Size = 16,             -- Size of button
                     Anchor = "BOTTOMLEFT", -- Anchor point
                     X = 2,                 -- X offset
                     Y = 2,                 -- Y offset
                 },
+
+                HideAddOnComp = true, -- Hide the addon compartment button
+                AddOnComp = {         -- BugSack error counter button
+                    Size = 26,        -- Size of button
+                    Anchor = "RIGHT", -- Anchor point
+                    X = -1,           -- X offset
+                    Y = 0,            -- Y offset
+                },
+                UseGlobalFont = true,
+                FontFace = "Expressway",
             },
 
             -- MicroMenu Skinning

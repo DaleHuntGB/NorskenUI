@@ -129,11 +129,9 @@ function MAP:StripBlizzMap()
 
     MinimapCluster.Tracking:ClearAllPoints()
     MinimapCluster.Tracking.Button:SetMenuAnchor(AnchorUtil.CreateAnchor("TOPRIGHT", Minimap, "BOTTOMLEFT"))
-
-    self:SkinAddonCompartment()
 end
 
-function MAP:SkinAddonCompartment()
+function MAP:UpdateAddonCompartment()
     if not AddonCompartmentFrame then return end
 
     if self.db.HideAddOnComp then
@@ -152,14 +150,9 @@ function MAP:SkinAddonCompartment()
         end
     end
 
-    local bg = NRSKNUI:CreateStandardBackdrop(
-        AddonCompartmentFrame,
-        "AddonCompartmentFrame_BG",
-        AddonCompartmentFrame:GetFrameLevel() - 1,
-        NRSKNUI.Media.Background,
-        NRSKNUI.Media.Border
-    )
-    bg:SetAllPoints(AddonCompartmentFrame)
+    local compDB = self.db.AddOnComp
+    local bg = NRSKNUI:CreateStandardBackdrop(AddonCompartmentFrame, "NRSKNUI_AddonCompBG", Minimap:GetFrameLevel() + 1)
+    bg:SetAllPoints()
 
     if not hooked.addonCompEnter then
         AddonCompartmentFrame:HookScript("OnEnter", function()
@@ -173,11 +166,20 @@ function MAP:SkinAddonCompartment()
 
     ---@class AddonCompartmentFrame
     ---@field Text FontString
+    AddonCompartmentFrame:SetParent(Minimap)
+    AddonCompartmentFrame:SetScale(1 / self.db.Scale)
     AddonCompartmentFrame:ClearAllPoints()
-    AddonCompartmentFrame:SetSize(20, 20)
-    AddonCompartmentFrame:SetPoint("BOTTOMRIGHT", Minimap, "BOTTOMRIGHT", -2, 2)
-    AddonCompartmentFrame:SetFrameLevel(Minimap:GetFrameLevel() + 1)
-    AddonCompartmentFrame.Text:SetFont("Fonts\\FRIZQT__.TTF", 15, "OUTLINE")
+    AddonCompartmentFrame:SetSize(compDB.Size, compDB.Size)
+    AddonCompartmentFrame:SetPoint(compDB.Anchor, Minimap, compDB.Anchor, compDB.X, compDB.Y)
+    AddonCompartmentFrame:SetFrameLevel(Minimap:GetFrameLevel() + 2)
+
+    local textSize = math.floor(compDB.Size * 0.6)
+    local fontFace = NRSKNUI:GetFontPath(NRSKNUI:GetEffectiveFont(self.db))
+
+    AddonCompartmentFrame.Text:SetPoint("CENTER", AddonCompartmentFrame, "CENTER", 1, 0)
+    AddonCompartmentFrame.Text:SetJustifyH("CENTER")
+    AddonCompartmentFrame.Text:SetJustifyV("MIDDLE")
+    AddonCompartmentFrame.Text:SetFont(fontFace, textSize, "OUTLINE")
     AddonCompartmentFrame.Text:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     AddonCompartmentFrame.Text:SetShadowColor(0, 0, 0, 0)
     AddonCompartmentFrame.Text:SetShadowOffset(0, 0)
@@ -218,6 +220,7 @@ function MAP:UpdateMinimapBorder()
         hooked.border = true
     end
 
+    Minimap.Border:SetScale(1 / self.db.Scale)
     Minimap.Border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = self.db.Border.Thickness, })
     Minimap.Border:SetBackdropBorderColor(unpack(self.db.Border.Color))
 end
@@ -255,8 +258,25 @@ function MAP:UpdateQueueBtn()
     qBtn:SetFrameLevel(10)
 end
 
----@param skipZoom? boolean Set true during live slider dragging to prevent mouse capture loss
-function MAP:ApplyPosSize(skipZoom)
+---@class MinimapLayoutOpts
+---@field scaleChanged? boolean GUI scale slider changed - recalculate position to compensate
+---@field deferZoom? boolean GUI size slider - defer zoom refresh until mouse released
+
+---@param opts? MinimapLayoutOpts
+function MAP:ApplyLayout(opts)
+    opts = opts or {}
+
+    if opts.scaleChanged then
+        local oldScale = Minimap:GetScale()
+        local newScale = self.db.Scale
+        if oldScale ~= newScale then
+            local ratio = oldScale / newScale
+            self.db.Position.X = self.db.Position.X * ratio
+            self.db.Position.Y = self.db.Position.Y * ratio
+        end
+    end
+
+    Minimap:SetScale(self.db.Scale)
     Minimap:ClearAllPoints()
     Minimap:SetPoint(
         self.db.Position.AnchorFrom, UIParent, self.db.Position.AnchorTo,
@@ -266,32 +286,29 @@ function MAP:ApplyPosSize(skipZoom)
     local newSize = self.db.Size
     Minimap:SetSize(newSize, newSize)
 
-    if not skipZoom and lastAppliedSize ~= newSize then
-        lastAppliedSize = newSize
-        Minimap:SetZoom(1)
-        Minimap:SetZoom(0)
-    end
-end
-
-function MAP:UpdateSize()
-    local newSize = self.db.Size
-    Minimap:SetSize(newSize, newSize)
-
-    if not pendingSizeRefresh then
-        pendingSizeRefresh = true
-        local function CheckAndRefresh()
-            if IsMouseButtonDown("LeftButton") then
+    if lastAppliedSize ~= newSize then
+        if opts.deferZoom then
+            if not pendingSizeRefresh then
+                pendingSizeRefresh = true
+                local function CheckAndRefresh()
+                    if IsMouseButtonDown("LeftButton") then
+                        C_Timer.After(0.1, CheckAndRefresh)
+                        return
+                    end
+                    pendingSizeRefresh = false
+                    if lastAppliedSize ~= self.db.Size then
+                        lastAppliedSize = self.db.Size
+                        Minimap:SetZoom(1)
+                        Minimap:SetZoom(0)
+                    end
+                end
                 C_Timer.After(0.1, CheckAndRefresh)
-                return
             end
-            pendingSizeRefresh = false
-            if lastAppliedSize ~= self.db.Size then
-                lastAppliedSize = self.db.Size
-                Minimap:SetZoom(1)
-                Minimap:SetZoom(0)
-            end
+        else
+            lastAppliedSize = newSize
+            Minimap:SetZoom(1)
+            Minimap:SetZoom(0)
         end
-        C_Timer.After(0.1, CheckAndRefresh)
     end
 end
 
@@ -370,6 +387,7 @@ function MAP:UpdateBugSackButton()
     local btn = hooked.bugSackButton
     local db = self.db.BugSack
     if btn and db then
+        btn:SetScale(1 / self.db.Scale)
         btn:SetSize(db.Size, db.Size)
         btn:ClearAllPoints()
         btn:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
@@ -378,7 +396,8 @@ function MAP:UpdateBugSackButton()
     end
 end
 
-function MAP:ApplySettings()
+---@param opts? MinimapLayoutOpts
+function MAP:ApplySettings(opts)
     if NRSKNUI:ShouldNotLoadModule() then return end
     if not self.db.Enabled then return end
 
@@ -390,10 +409,11 @@ function MAP:ApplySettings()
         return
     end
 
-    self:ApplyPosSize()
+    self:ApplyLayout(opts)
     self:UpdateMinimapBorder()
     self:UpdateMailBtn()
     self:UpdateInstanceBtn()
     self:UpdateQueueBtn()
     self:UpdateBugSackButton()
+    self:UpdateAddonCompartment()
 end

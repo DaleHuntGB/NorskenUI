@@ -248,20 +248,23 @@ backdrop:SetBorderColor(r, g, b, a)
 ---@param parent Frame
 ---@param name string
 ---@param frameLevel number
----@param bgColor table
----@param borderColor table
+---@param bgColor table?
+---@param borderColor table?
 -- Helper function to create a standard backdrop frame with optional border and background color support
 function NRSKNUI:CreateStandardBackdrop(parent, name, frameLevel, bgColor, borderColor)
+    local backdropC = bgColor or { 0, 0, 0, 0.8 }
+    local borderC = borderColor or { 0, 0, 0, 1 }
+
     local backdrop = CreateFrame("Frame", name, parent, "BackdropTemplate")
     backdrop:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    backdrop:SetBackdropColor(unpack(bgColor))
+    backdrop:SetBackdropColor(unpack(backdropC))
 
     if frameLevel then
         backdrop:SetFrameLevel(frameLevel)
     end
 
     -- Add borders using shared helper
-    self:AddBorders(backdrop, borderColor)
+    self:AddBorders(backdrop, borderC)
 
     -- Alias for consistency
     function backdrop:SetBackgroundColor(r, g, b, a)
