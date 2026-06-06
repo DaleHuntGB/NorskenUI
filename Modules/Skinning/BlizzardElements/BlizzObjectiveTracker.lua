@@ -12,11 +12,11 @@ local BOT = NorskenUI:NewModule("BlizzObjectiveTracker", "AceEvent-3.0")
 
 local hooksecurefunc = hooksecurefunc
 local pairs = pairs
-local select = select
-local type = type
 local CreateFrame = CreateFrame
 local C_ChallengeMode = C_ChallengeMode
 local CHALLENGE_MODE_EXTRA_AFFIX_INFO = CHALLENGE_MODE_EXTRA_AFFIX_INFO
+
+local BSKIN = NRSKNUI.BlizzSkin
 
 BOT.coloredHeaders = {}
 BOT.coloredProgressBars = {}
@@ -118,27 +118,11 @@ local function ReskinProgressBar(bar, color)
         return
     end
 
-    for i = 1, bar:GetNumRegions() do
-        local region = select(i, bar:GetRegions())
-        if region and region:IsObjectType("Texture") then
-            local texture = region:GetTexture()
-            if texture and type(texture) == "string" and not texture:find("UI-QuestHUD-Bar-Fill") then
-                region:SetTexture(nil)
-            end
-        end
-    end
+    BSKIN:StripTextures(bar)
+    BSKIN:CreateStatusBarBackdrop(bar)
 
-    bar:SetStatusBarTexture(NRSKNUI.Media.statusbar or "Interface\\Buttons\\WHITE8x8")
+    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
     bar:SetStatusBarColor(color[1], color[2], color[3])
-
-    local bg = CreateFrame("Frame", nil, bar, "BackdropTemplate")
-    bg:SetPoint("TOPLEFT", bar, -1, 1)
-    bg:SetPoint("BOTTOMRIGHT", bar, 1, -1)
-    bg:SetFrameLevel(bar:GetFrameLevel() - 1)
-    bg:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
-    bg:SetBackdropColor(0, 0, 0, 0.5)
-    NRSKNUI:AddBorders(bg, { 0, 0, 0, 1 })
-    bar.bg = bg
 
     BOT.coloredProgressBars[bar] = true
     bar.styled = true
@@ -152,23 +136,25 @@ local function ProgressBarHook(tracker, key)
         ReskinProgressBar(bar, color)
 
         local icon = bar.Icon
-        if icon and not icon.styled then
+        if icon and icon:IsShown() and not icon.styled then
             icon:SetMask("")
-            icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-            icon:ClearAllPoints()
-            icon:SetPoint("TOPLEFT", bar, "TOPRIGHT", 5, 0)
-            icon:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 25, 0)
+            BSKIN:HandleIcon(icon, true)
 
-            local iconBorder = CreateFrame("Frame", nil, bar)
-            iconBorder:SetPoint("TOPLEFT", icon, -1, 1)
-            iconBorder:SetPoint("BOTTOMRIGHT", icon, 1, -1)
-            NRSKNUI:AddBorders(iconBorder, { 0, 0, 0, 1 })
-            icon.border = iconBorder
+            icon:SetSize(24, 24)
+            icon:ClearAllPoints()
+            icon:SetPoint("LEFT", bar, "RIGHT", 4, 0)
+
             icon.styled = true
         end
 
-        if icon and icon.border then
-            icon.border:SetShown(icon:IsShown() and icon:GetTexture() ~= nil)
+        if icon and icon.backdrop then
+            icon.backdrop:SetShown(icon:IsShown() and icon:GetTexture() ~= nil)
+        end
+
+        local label = bar.Label
+        if label then
+            label:ClearAllPoints()
+            label:SetPoint("CENTER", bar, "CENTER", 0, 1)
         end
     end
 end
@@ -181,8 +167,6 @@ local function TimerBarHook(tracker, key)
         ReskinProgressBar(bar, color)
     end
 end
-
-local BSKIN = NRSKNUI.BlizzSkin
 
 function BOT:SkinObjectiveTracker()
     if self.skinned then return end
@@ -230,6 +214,7 @@ function BOT:SkinObjectiveTracker()
         ProfessionsRecipeTracker,
         BonusObjectiveTracker,
         WorldQuestObjectiveTracker,
+        InitiativeTasksObjectiveTracker,
     }
 
     for _, tracker in pairs(trackers) do

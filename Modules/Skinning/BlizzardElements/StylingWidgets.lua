@@ -5,9 +5,68 @@ local hooksecurefunc = hooksecurefunc
 local strfind = string.find
 local Mixin = Mixin
 local CreateFrame = CreateFrame
+local pairs = pairs
 
 NRSKNUI.BlizzSkin = NRSKNUI.BlizzSkin or {}
 local BSKIN = NRSKNUI.BlizzSkin
+
+---@param frame Frame
+---@param kill boolean? Kill the texture instead of just clearing
+function BSKIN:StripTextures(frame, kill)
+    if not frame or not frame.GetRegions then return end
+
+    for _, region in pairs({ frame:GetRegions() }) do
+        if region and region:IsObjectType("Texture") then
+            if kill then
+                region:Hide()
+                region.Show = region.Hide
+            else
+                region:SetTexture(nil)
+                region:SetAtlas("")
+            end
+        end
+    end
+end
+
+---@param bar StatusBar
+---@param template string? Backdrop template type
+function BSKIN:CreateStatusBarBackdrop(bar, template)
+    if not bar or bar.backdrop then return end
+
+    local backdrop = CreateFrame("Frame", nil, bar, "BackdropTemplate")
+    backdrop:SetPoint("TOPLEFT", bar, -1, 1)
+    backdrop:SetPoint("BOTTOMRIGHT", bar, 1, -1)
+    backdrop:SetFrameLevel(math.max(0, bar:GetFrameLevel() - 1))
+    backdrop:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+
+    if template == "Transparent" then
+        backdrop:SetBackdropColor(0, 0, 0, 0.5)
+    else
+        backdrop:SetBackdropColor(0, 0, 0, 0.8)
+    end
+
+    NRSKNUI:AddBorders(backdrop, { 0, 0, 0, 1 })
+    bar.backdrop = backdrop
+
+    return backdrop
+end
+
+---@param icon Texture
+---@param createBackdrop boolean? Create a backdrop frame behind the icon
+function BSKIN:HandleIcon(icon, createBackdrop)
+    if not icon then return end
+
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    if createBackdrop and not icon.backdrop then
+        local parent = icon:GetParent()
+        local backdrop = CreateFrame("Frame", nil, parent)
+        backdrop:SetPoint("TOPLEFT", icon, -1, 1)
+        backdrop:SetPoint("BOTTOMRIGHT", icon, 1, -1)
+        NRSKNUI:AddBorders(backdrop, { 0, 0, 0, 1 })
+        icon.backdrop = backdrop
+    end
+end
 
 -- Collapse button mixins and styling
 
@@ -19,11 +78,15 @@ local BSKIN = NRSKNUI.BlizzSkin
 ---@field styled boolean?
 local CollapseButtonMixin = {}
 
+local EXPAND_ATLAS = "UI-QuestTrackerButton-Secondary-Expand"
+local COLLAPSE_ATLAS = "UI-QuestTrackerButton-Secondary-Collapse"
+local HIGHTLIGHT_ATLAS = "UI-QuestTrackerButton-Yellow-Highlight"
+
 function CollapseButtonMixin:DoCollapse(collapsed)
     if collapsed then
-        self.__texture:SetAtlas("UI-QuestTrackerButton-Secondary-Expand", true)
+        self.__texture:SetAtlas(EXPAND_ATLAS, true)
     else
-        self.__texture:SetAtlas("UI-QuestTrackerButton-Secondary-Collapse", true)
+        self.__texture:SetAtlas(COLLAPSE_ATLAS, true)
     end
 end
 
@@ -57,17 +120,9 @@ function CollapseButtonMixin:ResetAtlas(atlas)
     self.settingTexture = nil
 end
 
-function CollapseButtonMixin:OnEnter()
-    if self:IsEnabled() and self.__highlight then
-        self.__highlight:Show()
-    end
-end
+function CollapseButtonMixin:OnEnter() if self:IsEnabled() and self.__highlight then self.__highlight:Show() end end
 
-function CollapseButtonMixin:OnLeave()
-    if self.__highlight then
-        self.__highlight:Hide()
-    end
-end
+function CollapseButtonMixin:OnLeave() if self.__highlight then self.__highlight:Hide() end end
 
 ---@param button Button
 ---@param isAtlas boolean?
@@ -93,12 +148,12 @@ function BSKIN:ReskinCollapse(button, isAtlas)
 
     local texture = container:CreateTexture(nil, "OVERLAY", nil, 6)
     texture:SetPoint("CENTER")
-    texture:SetAtlas("UI-QuestTrackerButton-Secondary-Collapse", true)
+    texture:SetAtlas(COLLAPSE_ATLAS, true)
     button.__texture = texture
 
     local highlight = container:CreateTexture(nil, "OVERLAY", nil, 7)
     highlight:SetPoint("CENTER")
-    highlight:SetAtlas("UI-QuestTrackerButton-Yellow-Highlight", true)
+    highlight:SetAtlas(HIGHTLIGHT_ATLAS, true)
     highlight:Hide()
     button.__highlight = highlight
 
