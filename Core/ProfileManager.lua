@@ -214,6 +214,58 @@ function ProfileManager:ResetProfile()
     return true
 end
 
+--- Deep copy a table
+---@param src table
+---@return table
+local function DeepCopy(src)
+    if type(src) ~= "table" then return src end
+    local copy = {}
+    for k, v in pairs(src) do copy[k] = DeepCopy(v) end
+    return copy
+end
+
+--- Reset a specific module's settings to defaults
+---@param dbPath string Dot-separated path to the module settings (e.g., "Skinning.BuffTracking")
+---@param moduleName? string Optional module name to refresh after reset
+---@return boolean success
+---@return string|nil error
+function ProfileManager:ResetModuleSettings(dbPath, moduleName)
+    if not NRSKNUI.db or not NRSKNUI.db.profile then return false, "Database not initialized" end
+
+    local defaults = NRSKNUI:GetDefaultDB()
+    if not defaults or not defaults.profile then return false, "Defaults not found" end
+
+    local pathParts = {}
+    for part in dbPath:gmatch("[^.]+") do pathParts[#pathParts + 1] = part end
+
+    if #pathParts == 0 then return false, "Invalid path" end
+
+    local defaultSection = defaults.profile
+    local profileSection = NRSKNUI.db.profile
+
+    for i = 1, #pathParts - 1 do
+        local key = pathParts[i]
+        defaultSection = defaultSection[key]
+        profileSection = profileSection[key]
+        if not defaultSection or not profileSection then return false, "Path not found: " .. dbPath end
+    end
+
+    local finalKey = pathParts[#pathParts]
+    if not defaultSection[finalKey] then return false, "Default settings not found for: " .. dbPath end
+
+    profileSection[finalKey] = DeepCopy(defaultSection[finalKey])
+
+    if moduleName then
+        local module = NorskenUI:GetModule(moduleName, true)
+        if module then
+            if module.UpdateDB then module:UpdateDB() end
+            if module:IsEnabled() and module.ApplySettings then module:ApplySettings() end
+        end
+    end
+
+    return true
+end
+
 --- Enable or disable global profile mode
 ---@param enabled boolean Whether to use global profile
 ---@return boolean success
@@ -412,7 +464,8 @@ function NorskenUIAPI:ExportProfile(profileKey)
     if not profileData then return "" end
 
     local serialized = C_EncodingUtil.SerializeCBOR(profileData)
-    local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
+    local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate,
+        Enum.CompressionLevel.OptimizeForSize)
     local encoded = C_EncodingUtil.EncodeBase64(compressed)
     return encoded or ""
 end
