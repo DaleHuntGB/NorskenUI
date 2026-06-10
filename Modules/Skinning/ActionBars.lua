@@ -234,6 +234,24 @@ function ACB:GetBarConfig(barKey)
     return self.db.Bars and self.db.Bars[barKey]
 end
 
+-- Track all backdrops for config refresh
+local allBackdrops = {}
+
+function ACB:RegisterBackdrop(backdrop)
+    allBackdrops[#allBackdrops + 1] = backdrop
+end
+
+-- Refresh cached bar configs when settings change
+function ACB:RefreshBackdropConfigs()
+    for _, backdrop in ipairs(allBackdrops) do
+        local barName = backdrop._barName
+        if barName and backdrop._updateVisibility then
+            backdrop._barConfig = self:GetBarConfig(barName)
+            backdrop._updateVisibility()
+        end
+    end
+end
+
 -- Get text visibility settings for a bar, respects GlobalOverride
 function ACB:GetTextVisibility(barKey)
     local barDB = self.db.Bars and self.db.Bars[barKey]
@@ -551,7 +569,10 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
     button:SetPoint("CENTER", backdrop, "CENTER", 0, 0)
 
     -- Setup empty backdrop visibility tracking
-    -- Always set up tracking so it can be toggled on/off without reload
+    -- Cache the bar config reference - only changes on settings update
+    backdrop._barConfig = barConfig
+    backdrop._button = button
+
     local function UpdateBackdropVisibility()
         -- Always show while dragging
         if ACB.isDraggingSpell then
@@ -559,8 +580,9 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
             return
         end
 
-        local currentConfig = self:GetBarConfig(barName)
-        local shouldHideEmpty = currentConfig and currentConfig.HideEmptyBackdrops == true
+        -- Use cached config instead of calling GetBarConfig every time
+        local cachedConfig = backdrop._barConfig
+        local shouldHideEmpty = cachedConfig and cachedConfig.HideEmptyBackdrops == true
 
         if shouldHideEmpty then
             if ButtonHasContent(barName, button) then
@@ -581,10 +603,10 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
         hooksecurefunc(button, "UpdateAction", UpdateBackdropVisibility)
     end
 
-    -- Register for action bar updates
+    -- Register for action bar updates (individual handlers to avoid taint)
     backdrop:RegisterEvent("ACTIONBAR_SLOT_CHANGED")
     backdrop:RegisterEvent("ACTIONBAR_UPDATE_STATE")
-    backdrop:SetScript("OnEvent", function(self, event, slot)
+    backdrop:SetScript("OnEvent", function(_, event, slot)
         if event == "ACTIONBAR_SLOT_CHANGED" then
             if slot == button.action then
                 UpdateBackdropVisibility()
@@ -597,6 +619,9 @@ function ACB:CreateButtonBackdrop(button, barName, index, buttonSize)
     -- Initial update
     UpdateBackdropVisibility()
     backdrop._updateVisibility = UpdateBackdropVisibility
+
+    -- Register for config refresh
+    ACB:RegisterBackdrop(backdrop)
 
     -- Hide profession texture if enabled (uses per-bar setting)
     local textVis = self:GetTextVisibility(barName)
@@ -1781,6 +1806,7 @@ function ACB:ApplySettings()
 
         self:UpdateSettings("all")
         self:UpdateAllBackdropColors()
+        self:RefreshBackdropConfigs()
     end)
 end
 
