@@ -18,7 +18,6 @@ local tostring = tostring
 local C_Timer = C_Timer
 local C_CVar = C_CVar
 
-MVAR._suppressCVarUpdate = false
 MVAR.DEFS = {
     {
         key = "nameplateUseClassColorForFriendlyPlayerUnitNames",
@@ -50,17 +49,6 @@ MVAR.DEFS = {
         max = 2.6,
         step = 0.1,
         default = 1.9,
-    },
-    {
-        key = "SpellQueueWindow",
-        label = "Spell Queue Window",
-        description = "Adjust how far ahead of the end of a cast spell you can queue another spell.",
-        type = "number",
-        min = 1,
-        max = 400,
-        step = 1,
-        default = 400,
-        category = "spellqueue",
     },
     {
         key = "addonPvPMatchRestrictionsForced",
@@ -112,15 +100,30 @@ MVAR.DEFS = {
     },
 }
 
-function MVAR:UpdateDB()
-    self.db = NRSKNUI.db.profile.Miscellaneous.MiscVars
-end
-
-function MVAR:OnInitialize()
-    self:UpdateDB()
-    self:SyncFromCVars()
-    self:SetEnabledState(false)
-end
+MVAR.SQW_DEFS = {
+    {
+        key = "SpellQueueWindowMelee",
+        label = "Melee SQW",
+        description = "Spell Queue Window value for melee specializations.",
+        type = "number",
+        min = 1,
+        max = 400,
+        step = 1,
+        default = 400,
+        position = "MELEE",
+    },
+    {
+        key = "SpellQueueWindowRanged",
+        label = "Ranged SQW",
+        description = "Spell Queue Window value for ranged specializations.",
+        type = "number",
+        min = 1,
+        max = 400,
+        step = 1,
+        default = 400,
+        position = "RANGED",
+    },
+}
 
 local function ToCVarValue(value, cvarType)
     if cvarType == "boolean" then
@@ -140,44 +143,78 @@ local function FromCVarValue(value, cvarType)
     return value
 end
 
-function MVAR:ApplySettings()
-    if not self.db.Enabled then return end
-
+function MVAR:GetCVar(key)
     for _, def in ipairs(self.DEFS) do
-        local key = def.key
-        local dbValue = self.db[key]
-        local currentCVar = C_CVar.GetCVar(key)
-        local currentValue = FromCVarValue(currentCVar, def.type)
+        if def.key == key then
+            local current = C_CVar.GetCVar(key)
+            return FromCVarValue(current, def.type)
+        end
+    end
+    return nil
+end
 
-        if dbValue == nil then
-            self.db[key] = currentValue
-        else
-            if dbValue ~= currentValue then C_CVar.SetCVar(key, ToCVarValue(dbValue, def.type)) end
+function MVAR:SetCVar(key, value)
+    for _, def in ipairs(self.DEFS) do
+        if def.key == key then
+            C_CVar.SetCVar(key, ToCVarValue(value, def.type))
+            return
         end
     end
 end
 
-function MVAR:SyncFromCVars()
-    for _, def in ipairs(self.DEFS) do
-        local key = def.key
-        local current = C_CVar.GetCVar(key)
-        self.db[key] = FromCVarValue(current, def.type)
+function MVAR:UpdateDB()
+    self.db = NRSKNUI.db.profile.Miscellaneous.MiscVars
+end
+
+function MVAR:OnInitialize()
+    self:UpdateDB()
+    self:SetEnabledState(false)
+end
+
+function MVAR:GetSQW(key)
+    if self.db[key .. "Managed"] and self.db[key] then
+        return self.db[key]
+    end
+    return tonumber(C_CVar.GetCVar("SpellQueueWindow")) or 400
+end
+
+function MVAR:IsSQWManaged(key)
+    return self.db[key .. "Managed"] == true
+end
+
+function MVAR:ApplySQW()
+    local position = NRSKNUI.MySpec and NRSKNUI.MySpec.position
+    if not position then return end
+
+    local sqwKey = position == "MELEE" and "SpellQueueWindowMelee" or "SpellQueueWindowRanged"
+
+    if not self.db[sqwKey .. "Managed"] then return end
+
+    local sqwValue = self.db[sqwKey]
+    if sqwValue then
+        local currentSQW = tonumber(C_CVar.GetCVar("SpellQueueWindow")) or 400
+        if sqwValue ~= currentSQW then
+            C_CVar.SetCVar("SpellQueueWindow", tostring(sqwValue))
+        end
     end
 end
 
-function MVAR:CVAR_UPDATE(_, cvarName)
-    for _, def in ipairs(self.DEFS) do
-        if def.key == cvarName then
-            local current = C_CVar.GetCVar(cvarName)
-            self.db[cvarName] = FromCVarValue(current, def.type)
-        end
-    end
+function MVAR:SetSQW(key, value)
+    self.db[key] = value
+    self.db[key .. "Managed"] = true
 
-    if NRSKNUI.GUIFrame and not self._suppressCVarUpdate then NRSKNUI.GUIFrame:RefreshContent() end
+    local position = NRSKNUI.MySpec and NRSKNUI.MySpec.position
+    local activeKey = position == "MELEE" and "SpellQueueWindowMelee" or "SpellQueueWindowRanged"
+    if key == activeKey then
+        C_CVar.SetCVar("SpellQueueWindow", tostring(value))
+    end
+end
+
+function MVAR:PLAYER_SPECIALIZATION_CHANGED()
+    C_Timer.After(0.1, function() self:ApplySQW() end)
 end
 
 function MVAR:OnEnable()
-    if not self.db.Enabled then return end
-    self:RegisterEvent("CVAR_UPDATE")
-    C_Timer.After(1, function() self:ApplySettings() end)
+    self:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+    C_Timer.After(1, function() self:ApplySQW() end)
 end
