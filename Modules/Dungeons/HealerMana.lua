@@ -31,6 +31,7 @@ local select = select
 local GetNumGroupMembers = GetNumGroupMembers
 local format = string.format
 local C_Timer_After = C_Timer.After
+local IsInInstance = IsInInstance
 
 HM.healerFrames = {}
 HM.currentHealers = {}
@@ -93,12 +94,14 @@ function HM:CreateHealerFrame(index)
     frame.name = NRSKNUI:CreateText(frame, "OVERLAY")
     frame.name:SetPoint("BOTTOMLEFT", frame.iconFrame, "RIGHT", 4, self.db.NameYOffset)
     frame.name:SetJustifyH("LEFT")
-    NRSKNUI:SetTextFont(frame.name, NRSKNUI:GetEffectiveFont(self.db), self.db.NameFontSize, self.db.FontOutline, self.db.FontShadow)
+    NRSKNUI:SetTextFont(frame.name, NRSKNUI:GetEffectiveFont(self.db), self.db.NameFontSize, self.db.FontOutline,
+        self.db.FontShadow)
 
     frame.mana = NRSKNUI:CreateText(frame, "OVERLAY")
     frame.mana:SetPoint("TOPLEFT", frame.iconFrame, "RIGHT", 4, self.db.ManaYOffset)
     frame.mana:SetJustifyH("LEFT")
-    NRSKNUI:SetTextFont(frame.mana, NRSKNUI:GetEffectiveFont(self.db), self.db.ManaFontSize, self.db.FontOutline, self.db.FontShadow)
+    NRSKNUI:SetTextFont(frame.mana, NRSKNUI:GetEffectiveFont(self.db), self.db.ManaFontSize, self.db.FontOutline,
+        self.db.FontShadow)
 
     frame:Hide()
     return frame
@@ -268,6 +271,9 @@ end
 function HM:OnSpecChanged(_, unit)
     if not unit then return end
 
+    local _, instanceType = IsInInstance()
+    if instanceType == "arena" or instanceType == "pvp" then return end
+
     local guid = UnitGUID(unit)
     if guid then
         self.specCache[guid] = nil
@@ -286,6 +292,12 @@ end
 function HM:FindHealers()
     if not self.db or not self.db.Enabled then return end
     if self.isPreview then return end
+
+    local _, instanceType = IsInInstance()
+    if instanceType == "arena" or instanceType == "pvp" then
+        self:HideAllFrames()
+        return
+    end
 
     local inRaid = IsInRaid()
     local inGroup = IsInGroup()
