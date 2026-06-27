@@ -22,6 +22,7 @@ local ShowUIPanel = ShowUIPanel
 local _G = _G
 local mailBtn = MiniMapMailIcon
 local qBtn = QueueStatusButton
+local missionBtn = ExpansionLandingPageMinimapButton
 
 local hooked = {
     border = false,
@@ -114,6 +115,7 @@ function MAP:StripBlizzMap()
     MinimapCluster.Tracking:SetParent(Minimap)
     MinimapCluster.IndicatorFrame.MailFrame:SetParent(Minimap)
     MinimapCluster.InstanceDifficulty:SetParent(Minimap)
+    missionBtn:SetParent(Minimap)
 
     Minimap:SetMaskTexture("Interface\\BUTTONS\\WHITE8X8")
     MinimapCompassTexture:SetTexture(nil)
@@ -134,9 +136,10 @@ end
 function MAP:UpdateAddonCompartment()
     if not AddonCompartmentFrame then return end
 
-    if self.db.HideAddOnComp then
-        AddonCompartmentFrame:ClearAllPoints()
-        AddonCompartmentFrame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", 9999, 9999)
+    local db = self.db.AddOnComp
+
+    if not db.Enabled then
+        Minimap.SetParent(AddonCompartmentFrame, NRSKNUI.HiddenFrame)
         return
     end
 
@@ -150,7 +153,6 @@ function MAP:UpdateAddonCompartment()
         end
     end
 
-    local compDB = self.db.AddOnComp
     local bg = NRSKNUI:CreateStandardBackdrop(AddonCompartmentFrame, "NRSKNUI_AddonCompBG", Minimap:GetFrameLevel() + 1)
     bg:SetAllPoints()
 
@@ -169,11 +171,11 @@ function MAP:UpdateAddonCompartment()
     AddonCompartmentFrame:SetParent(Minimap)
     AddonCompartmentFrame:SetScale(1 / self.db.Scale)
     AddonCompartmentFrame:ClearAllPoints()
-    AddonCompartmentFrame:SetSize(compDB.Size, compDB.Size)
-    AddonCompartmentFrame:SetPoint(compDB.Anchor, Minimap, compDB.Anchor, compDB.X, compDB.Y)
+    AddonCompartmentFrame:SetSize(db.Size, db.Size)
+    AddonCompartmentFrame:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
     AddonCompartmentFrame:SetFrameLevel(Minimap:GetFrameLevel() + 2)
 
-    local textSize = math.floor(compDB.Size * 0.6)
+    local textSize = math.floor(db.Size * 0.6)
     local fontFace = NRSKNUI:GetFontPath(NRSKNUI:GetEffectiveFont(self.db))
 
     AddonCompartmentFrame.Text:SetPoint("CENTER", AddonCompartmentFrame, "CENTER", 1, 0)
@@ -228,19 +230,79 @@ end
 function MAP:UpdateMailBtn()
     if not mailBtn then return end
     local mailFrame = MinimapCluster.IndicatorFrame.MailFrame
+    local db = self.db.Mail
+
+    if not db.Enabled then
+        Minimap.SetParent(mailFrame, NRSKNUI.HiddenFrame)
+        return
+    end
+
+    Minimap.SetParent(mailFrame, Minimap)
     mailBtn:ClearAllPoints()
     mailBtn:SetPoint("CENTER", mailFrame, "CENTER", 0, 0)
-    mailFrame:SetScale(self.db.Mail.Scale)
+    mailFrame:SetScale(db.Scale)
     mailFrame:ClearAllPoints()
-    mailFrame:SetPoint(self.db.Mail.Anchor, Minimap, self.db.Mail.Anchor, self.db.Mail.X, self.db.Mail.Y)
+    mailFrame:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
+end
+
+local landingPageHooked = false
+
+function MAP:UpdateLandingPageBtn()
+    if not missionBtn then return end
+
+    local lpDB = self.db.LandingPage
+    local size = lpDB.Size
+
+    if not lpDB.Enabled then
+        Minimap.SetParent(missionBtn, NRSKNUI.HiddenFrame)
+        return
+    end
+
+    Minimap.SetParent(missionBtn, Minimap)
+    missionBtn:Show()
+
+    Minimap.SetScale(missionBtn, 1 / self.db.Scale)
+    Minimap.SetSize(missionBtn, size, size)
+    Minimap.ClearAllPoints(missionBtn)
+    Minimap.SetPoint(missionBtn, lpDB.Anchor, Minimap, lpDB.Anchor, lpDB.X, lpDB.Y)
+
+    if not landingPageHooked then
+        local function ForcePosition()
+            if not self.db.LandingPage.Enabled then return end
+            local db = self.db.LandingPage
+            Minimap.ClearAllPoints(missionBtn)
+            Minimap.SetPoint(missionBtn, db.Anchor, Minimap, db.Anchor, db.X, db.Y)
+        end
+
+        hooksecurefunc(missionBtn, "SetSize", function()
+            if not self.db.LandingPage.Enabled then return end
+            Minimap.SetSize(missionBtn, self.db.LandingPage.Size, self.db.LandingPage.Size)
+        end)
+
+        if missionBtn.UpdateIconForGarrison then
+            hooksecurefunc(missionBtn, "UpdateIconForGarrison", ForcePosition)
+        end
+        if missionBtn.SetLandingPageIconOffset then
+            hooksecurefunc(missionBtn, "SetLandingPageIconOffset", ForcePosition)
+        end
+
+        landingPageHooked = true
+    end
 end
 
 function MAP:UpdateInstanceBtn()
-    local instanceBtnDB = self.db.InstanceDifficulty
+    local db = self.db.InstanceDifficulty
     local instanceFrame = MinimapCluster.InstanceDifficulty
-    instanceFrame:SetScale(instanceBtnDB.Scale)
+
+    if not db.Enabled then
+        Minimap.SetParent(instanceFrame, NRSKNUI.HiddenFrame)
+        return
+    end
+
+    Minimap.SetParent(instanceFrame, Minimap)
+    instanceFrame:SetScale(db.Scale)
     instanceFrame:ClearAllPoints()
-    instanceFrame:SetPoint(instanceBtnDB.Anchor, Minimap, instanceBtnDB.Anchor, instanceBtnDB.X, instanceBtnDB.Y)
+    instanceFrame:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
     for _, child in ipairs({ instanceFrame.ChallengeMode, instanceFrame.Default, instanceFrame.Guild }) do
         child:ClearAllPoints()
         child:SetPoint("CENTER", instanceFrame, "CENTER", 0, 0)
@@ -250,11 +312,17 @@ end
 function MAP:UpdateQueueBtn()
     if not qBtn then return end
 
-    local queueBtnDB = self.db.QueueStatus
-    qBtn:SetParent(Minimap)
+    local db = self.db.QueueStatus
+
+    if not db.Enabled then
+        Minimap.SetParent(qBtn, NRSKNUI.HiddenFrame)
+        return
+    end
+
+    Minimap.SetParent(qBtn, Minimap)
     qBtn:ClearAllPoints()
-    qBtn:SetPoint(queueBtnDB.Anchor, Minimap, queueBtnDB.Anchor, queueBtnDB.X, queueBtnDB.Y)
-    qBtn:SetScale(queueBtnDB.Scale)
+    qBtn:SetPoint(db.Anchor, Minimap, db.Anchor, db.X, db.Y)
+    qBtn:SetScale(db.Scale)
     qBtn:SetFrameLevel(10)
 end
 
@@ -414,6 +482,7 @@ function MAP:ApplySettings(opts)
     self:UpdateMailBtn()
     self:UpdateInstanceBtn()
     self:UpdateQueueBtn()
+    self:UpdateLandingPageBtn()
     self:UpdateBugSackButton()
     self:UpdateAddonCompartment()
 end

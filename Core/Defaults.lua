@@ -1724,38 +1724,47 @@ local Defaults = {
                 },
 
                 -- MiniMap Elements
-                Mail = {                   -- Mail icon
-                    Scale = 1,             -- Scale of mail icon
-                    Anchor = "TOPRIGHT",   -- Anchor point
-                    X = -4,                -- X offset
-                    Y = -4,               -- Y offset
+                Mail = {
+                    Enabled = true,
+                    Scale = 1,
+                    Anchor = "TOPRIGHT",
+                    X = -4,
+                    Y = -4,
                 },
-                InstanceDifficulty = {     -- Instance difficulty
-                    Scale = 0.8,           -- Scale of difficulty icon
-                    Anchor = "TOPLEFT",    -- Anchor point
-                    X = 2,                 -- X offset
-                    Y = -2,                -- Y offset
+                InstanceDifficulty = {
+                    Enabled = true,
+                    Scale = 0.8,
+                    Anchor = "TOPLEFT",
+                    X = 2,
+                    Y = -2,
                 },
-                QueueStatus = {            -- Queue status button
-                    Scale = 0.7,           -- Scale of queue status button
-                    Anchor = "BOTTOMLEFT", -- Anchor point
-                    X = 2,                 -- X offset
-                    Y = 50,                -- Y offset
+                QueueStatus = {
+                    Enabled = true,
+                    Scale = 0.7,
+                    Anchor = "BOTTOMLEFT",
+                    X = 2,
+                    Y = 50,
                 },
-                BugSack = {                -- BugSack error counter button
-                    Enabled = true,        -- Enable BugSack button skinning
-                    Size = 16,             -- Size of button
-                    Anchor = "BOTTOMLEFT", -- Anchor point
-                    X = 2,                 -- X offset
-                    Y = 2,                 -- Y offset
+                LandingPage = {
+                    Enabled = true,
+                    Size = 36,
+                    Anchor = "BOTTOMRIGHT",
+                    X = -2,
+                    Y = 2,
                 },
-
-                HideAddOnComp = true, -- Hide the addon compartment button
-                AddOnComp = {         -- BugSack error counter button
-                    Size = 26,        -- Size of button
-                    Anchor = "RIGHT", -- Anchor point
-                    X = -1,           -- X offset
-                    Y = 0,            -- Y offset
+                AddOnComp = {
+                    Enabled = false,
+                    Size = 26,
+                    Anchor = "RIGHT",
+                    X = -1,
+                    Y = 0,
+                },
+                BugSack = {
+                    Enabled = true,
+                    Size = 16,
+                    Anchor = "BOTTOMLEFT",
+                    X = 2,
+                    Y = 2,
                 },
                 UseGlobalFont = true,
                 FontFace = "Expressway",
