@@ -187,6 +187,7 @@ local MAX_QUALITY_ICONS = 3
 
 local function CreateQualityIcon(parent, size)
     local container = CreateFrame("Frame", nil, parent)
+    NRSKNUI:ApplyPixelMixin(container)
     container:SetSize(size, size)
 
     local iconTexture = container:CreateTexture(nil, "ARTWORK")
@@ -214,9 +215,11 @@ end
 local function CreateTextLine()
     local db = MITEMS.db.Display
     local textFrame = CreateFrame("Frame", nil, containerFrame)
+    NRSKNUI:ApplyPixelMixin(textFrame)
     textFrame:Size(300, db.FontSize + 4)
 
     local text = NRSKNUI:CreateText(textFrame, "OVERLAY")
+    NRSKNUI:ApplyPixelMixin(text)
     text:Point("CENTER", textFrame, "CENTER", 0, 0)
     text:DisablePixelSnap()
     NRSKNUI:SetTextFont(text, NRSKNUI:GetEffectiveFont(db), db.FontSize, db.FontOutline)
@@ -310,6 +313,7 @@ local function CreateContainerFrame()
     if containerFrame then return end
     local db = MITEMS.db.Display
     containerFrame = CreateFrame("Frame", "NRSKNUI_MissingItemsContainer", UIParent)
+    NRSKNUI:ApplyPixelMixin(containerFrame)
     containerFrame:Size(300, 200)
     NRSKNUI:ApplyFramePosition(containerFrame, db.Position, db)
     containerFrame:Hide()
@@ -609,6 +613,7 @@ local function CreateAuctionatorButton()
     local bgColor = Theme.bgMedium
 
     local btn = CreateFrame("Button", "NRSKNUI_AuctionatorShopButton", UIParent, "BackdropTemplate")
+    NRSKNUI:ApplyPixelMixin(btn)
     btn:Size(140, 24)
     btn._bgColor = bgColor
 
@@ -621,6 +626,7 @@ local function CreateAuctionatorButton()
     btn:SetBackdropBorderColor(Theme.border[1], Theme.border[2], Theme.border[3], 1)
 
     btn.bg = btn:CreateTexture("NRSKNUI_AuctionatorShopButtonBG", "BACKGROUND")
+    NRSKNUI:ApplyPixelMixin(btn.bg)
     btn.bg:SetInside(btn)
     btn.bg:SetColorTexture(Theme.bgLight[1], Theme.bgLight[2], Theme.bgLight[3], 1)
 
@@ -656,6 +662,7 @@ local function CreateAuctionatorButton()
     end
 
     local textWidget = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    NRSKNUI:ApplyPixelMixin(textWidget)
     NRSKNUI:ApplyThemeFont(textWidget, "normal")
     textWidget:SetTextColor(Theme.accent[1], Theme.accent[2], Theme.accent[3], 1)
     textWidget:SetText("Import Low Stock")
