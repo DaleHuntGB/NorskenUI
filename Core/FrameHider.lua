@@ -12,6 +12,7 @@ local _G = _G
 -- hidden dummy frame we anchor stuff we want to hide to
 local hidden = CreateFrame('Frame')
 hidden:Hide()
+
 function NRSKNUI:Hide(object, ...)
     if type(object) == 'string' then
         object = _G[object]
@@ -49,3 +50,6 @@ function NRSKNUI:Hide(object, ...)
         object:SetParent(hidden)
     end
 end
+
+-- Expose frame so it can be accessed
+NRSKNUI.HiddenFrame = hidden
