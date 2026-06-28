@@ -48,7 +48,7 @@ function BOT:OnEnable()
     self:SkinObjectiveTracker()
 end
 
-local function ReskinQuestIcon(button)
+local function ReskinQuestIcon(button, skipBorder)
     if not button then return end
     if not button.SetNormalTexture then return end
     if button.styled then return end
@@ -60,7 +60,7 @@ local function ReskinQuestIcon(button)
     if highlight then highlight:SetColorTexture(1, 1, 1, 0.25) end
 
     local icon = button.icon or button.Icon
-    if icon then
+    if icon and not skipBorder then
         icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         NRSKNUI:AddBorders(button, { 0, 0, 0, 1 })
     end
@@ -70,7 +70,7 @@ end
 
 local function ReskinQuestIcons(_, block)
     ReskinQuestIcon(block.ItemButton)
-    ReskinQuestIcon(block.rightEdgeFrame)
+    ReskinQuestIcon(block.rightEdgeFrame, true)
 end
 
 local function ReskinHeader(header, color)
@@ -128,6 +128,27 @@ local function ReskinProgressBar(bar, color)
     bar.styled = true
 end
 
+local function ApplyLabelFont(label)
+    local fontDB = BOT.db.ObjectiveTracker
+    if not fontDB or not fontDB.FontStyling then return end
+
+    local fontName = NRSKNUI:GetEffectiveFont(BOT.db)
+    local fontPath = NRSKNUI:GetFontPath(fontName)
+    local outline = NRSKNUI:GetFontOutline(BOT.db.FontOutline) or ""
+
+    label:SetFont(fontPath, fontDB.QuestTextSize or 12, outline)
+
+    local shadowDb = BOT.db.FontShadow
+    if shadowDb and shadowDb.Enabled then
+        local c = shadowDb.Color or { 0, 0, 0, 1 }
+        label:SetShadowColor(c[1] or 0, c[2] or 0, c[3] or 0, c[4] or 1)
+        label:SetShadowOffset(shadowDb.OffsetX or 1, shadowDb.OffsetY or -1)
+    else
+        label:SetShadowColor(0, 0, 0, 0)
+        label:SetShadowOffset(0, 0)
+    end
+end
+
 local function ProgressBarHook(tracker, key)
     local progressBar = tracker.usedProgressBars and tracker.usedProgressBars[key]
     local bar = progressBar and progressBar.Bar
@@ -155,6 +176,7 @@ local function ProgressBarHook(tracker, key)
         if label then
             label:ClearAllPoints()
             label:SetPoint("CENTER", bar, "CENTER", 0, 1)
+            ApplyLabelFont(label)
         end
     end
 end
