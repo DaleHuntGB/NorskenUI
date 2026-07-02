@@ -259,8 +259,6 @@ function MAP:UpdateLandingPageBtn()
     end
 
     Minimap.SetParent(missionBtn, Minimap)
-    missionBtn:Show()
-
     Minimap.SetScale(missionBtn, 1 / self.db.Scale)
     Minimap.SetSize(missionBtn, size, size)
     Minimap.ClearAllPoints(missionBtn)
@@ -285,6 +283,17 @@ function MAP:UpdateLandingPageBtn()
         if missionBtn.SetLandingPageIconOffset then
             hooksecurefunc(missionBtn, "SetLandingPageIconOffset", ForcePosition)
         end
+
+        -- Other pepega addons sometimes reparent this button out from us, pull it
+        -- back to whichever parent our setting dictates (Minimap when enabled,
+        -- HiddenFrame when disabled). Calling via Minimap.SetParent uses the
+        -- un-hooked method, so this doesn't recurse.
+        hooksecurefunc(missionBtn, "SetParent", function(_, parent)
+            local target = self.db.LandingPage.Enabled and Minimap or NRSKNUI.HiddenFrame
+            if parent == target then return end
+            Minimap.SetParent(missionBtn, target)
+            if self.db.LandingPage.Enabled then ForcePosition() end
+        end)
 
         landingPageHooked = true
     end
