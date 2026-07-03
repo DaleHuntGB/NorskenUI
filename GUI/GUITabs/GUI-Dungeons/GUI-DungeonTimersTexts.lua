@@ -70,7 +70,7 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
     row1:AddWidget(textGrowthDropdown, (1 / 3))
 
     local textSpacingSlider = GUIFrame:CreateSlider(row1, "Spacing", {
-        min = 0,
+        min = -10,
         max = 20,
         step = 1,
         value = db.TextGroup.Spacing or 2,

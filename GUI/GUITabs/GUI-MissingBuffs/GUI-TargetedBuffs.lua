@@ -192,7 +192,7 @@ GUIFrame:RegisterPanel("targetedBuffs", function(container)
         row2a:AddWidget(iconSizeSlider, 0.5)
 
         local iconSpacingSlider = GUIFrame:CreateSlider(row2a, "Icon Spacing", {
-            min = 0,
+            min = -10,
             max = 32,
             step = 1,
             value = db.TargetedBuffDisplay.IconSpacing or 1,

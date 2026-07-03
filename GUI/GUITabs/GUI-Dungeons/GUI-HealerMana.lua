@@ -73,7 +73,7 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
 
     local row1c = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
     local spacingSlider = GUIFrame:CreateSlider(row1c, "Frame Spacing", {
-        min = 0,
+        min = -10,
         max = 20,
         step = 1,
         value = db.FrameSpacing,

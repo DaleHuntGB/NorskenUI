@@ -280,7 +280,7 @@ GUIFrame:RegisterPanel("missingItems", function(container)
 
         local row2a = GUIFrame:CreateRow(card1.content, Theme.rowHeightLast)
         local lineSpacingSlider = GUIFrame:CreateSlider(row2a, "Line Spacing", {
-            min = 0,
+            min = -10,
             max = 20,
             step = 1,
             value = db.Display.LineSpacing or 4,

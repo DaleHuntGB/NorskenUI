@@ -149,7 +149,7 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
     manager:Register(heightSlider, "all")
 
     local spacingSlider = GUIFrame:CreateSlider(row2b, "Spacing", {
-        min = 0,
+        min = -10,
         max = 10,
         step = 1,
         value = db.Frame.Spacing,

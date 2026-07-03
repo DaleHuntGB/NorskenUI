@@ -103,7 +103,7 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
 
     local row2b = GUIFrame:CreateRow(card2.content, Theme.rowHeight)
     local spacingSlider = GUIFrame:CreateSlider(row2b, "Row Spacing", {
-        min = 0,
+        min = -10,
         max = 10,
         step = 1,
         value = db.Spacing,

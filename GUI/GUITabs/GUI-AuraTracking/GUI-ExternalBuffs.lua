@@ -115,7 +115,7 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     manager:Register(iconSizeSlider, "all")
 
     local iconSpacingSlider = GUIFrame:CreateSlider(row2a, "Icon Spacing", {
-        min = 0,
+        min = -10,
         max = 10,
         step = 1,
         value = db.IconSpacing,

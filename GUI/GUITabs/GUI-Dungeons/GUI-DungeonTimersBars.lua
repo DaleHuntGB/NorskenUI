@@ -96,7 +96,7 @@ GUIFrame:RegisterContent("DT_Bars", function(scrollChild, yOffset)
     manager:Register(barGrowthDropdown, "all")
 
     local barSpacingSlider = GUIFrame:CreateSlider(barRow1, "Spacing", {
-        min = 0,
+        min = -10,
         max = 20,
         step = 1,
         value = db.BarGroup.Spacing or 2,

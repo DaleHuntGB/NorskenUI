@@ -68,7 +68,7 @@ GUIFrame:RegisterContent("CustomSkin_DebuffsDefault", function(scrollChild, yOff
     manager:Register(iconSizeSlider, "all")
 
     local iconSpacingSlider = GUIFrame:CreateSlider(row2a, "Icon Spacing", {
-        min = 0,
+        min = -10,
         max = 10,
         step = 1,
         value = db.IconSpacing,

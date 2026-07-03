@@ -633,7 +633,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
         manager:Register(buttonSizeSlider, "main", "bar")
 
         local spacingSlider = GUIFrame:CreateSlider(row1a, "Spacing", {
-            min = 0,
+            min = -10,
             max = 20,
             step = 1,
             value = barDB.Spacing,
