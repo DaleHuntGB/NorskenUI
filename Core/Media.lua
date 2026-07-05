@@ -10,6 +10,8 @@ local UIFrameFade, UIFrameFadeIn, UIFrameFadeOut = UIFrameFade, UIFrameFadeIn, U
 local issecretvalue = issecretvalue
 local InCombatLockdown = InCombatLockdown
 local CreateFrame = CreateFrame
+local PlaySoundFile = PlaySoundFile
+local C_UIFileAsset = C_UIFileAsset
 
 NRSKNUI.PATH = ([[Interface\AddOns\%s\Media\]]):format(addonName)
 
@@ -20,12 +22,10 @@ local ADDON_FONT_PATH = NRSKNUI.PATH .. [[Fonts\Expressway.TTF]]
 local QUAZII_FONT_PATH = NRSKNUI.PATH .. [[Fonts\Quazii.TTF]]
 local ADDON_STATUSBAR_PATH = NRSKNUI.PATH .. [[Statusbars\NorskenUI.blp]]
 
-NRSKNUI.BLIZZARD_FONT = FALLBACK_FONT
 NRSKNUI.FONT = ADDON_FONT_PATH
-NRSKNUI.SB = ADDON_STATUSBAR_PATH
 NRSKNUI.Media = {
-    Font = FALLBACK_FONT,
-    Statusbar = "Interface\\TargetingFrame\\UI-StatusBar",
+    Font = ADDON_FONT_PATH,
+    Statusbar = ADDON_STATUSBAR_PATH,
 }
 
 NRSKNUI.LSM = LibStub("LibSharedMedia-3.0")
@@ -48,7 +48,6 @@ function NRSKNUI:ResolveMedia()
         self.Media.Statusbar = ADDON_STATUSBAR_PATH
     end
     self.FONT = self.Media.Font
-    self.SB = self.Media.Statusbar
 end
 
 local preloadFrame = CreateFrame("Frame")
@@ -85,24 +84,13 @@ do
     loginFrame:SetScript("OnEvent", function(self)
         self:UnregisterAllEvents()
         NRSKNUI:ResolveMedia()
-        PreloadAllFonts()
         NRSKNUI:ValidateProfileFonts()
     end)
 end
 
-local fontProbe = preloadText
-
----@param fontPath string
----@return boolean
-function NRSKNUI:IsFontValid(fontPath)
-    if not fontPath or fontPath == "" then return false end
-    local ok, result = pcall(fontProbe.SetFont, fontProbe, fontPath, 12, "")
-    return ok and result
-end
-
 local function IsFontKey(key)
     if type(key) ~= "string" then return false end
-    return key == "Font" or key:match("FontFace$")
+    return key == "Font" or key:lower():match("fontface$") ~= nil
 end
 
 local function ValidateFontsRecursive(tbl, defaults)
@@ -139,7 +127,7 @@ end
 function NRSKNUI:GetMediaPath(mediaType, name, fallback)
     if NRSKNUI.LSM and name then
         local path = NRSKNUI.LSM:Fetch(mediaType, name)
-        if path then return path end
+        if path and C_UIFileAsset.IsKnownFile(path) then return path end
     end
     return fallback
 end
@@ -147,7 +135,7 @@ end
 ---@param fontName string
 ---@return string
 function NRSKNUI:GetFontPath(fontName)
-    if fontName == "Expressway" then return NRSKNUI.FONT end
+    if fontName == "Expressway" then return ADDON_FONT_PATH end
     return self:GetMediaPath("font", fontName, FALLBACK_FONT)
 end
 
@@ -157,33 +145,18 @@ function NRSKNUI:GetStatusbarPath(barName)
     return self:GetMediaPath("statusbar", barName, "Interface\\TargetingFrame\\UI-StatusBar")
 end
 
-do
-    local soundCache, cacheBuilt = {}, false
-    local PlaySoundFile = PlaySoundFile
+---@param path string|number
+---@return boolean
+function NRSKNUI:IsSoundValid(path)
+    if not path or path == "" or path == "None" then return false end
+    return C_UIFileAsset.IsKnownFile(path)
+end
 
-    local function BuildSoundCache()
-        if cacheBuilt or not NRSKNUI.LSM then return end
-        local sounds = NRSKNUI.LSM:HashTable("sound")
-        if sounds then for _, path in pairs(sounds) do soundCache[path] = true end end
-        cacheBuilt = true
-    end
-
-    ---@param path string|number
-    ---@return boolean
-    function NRSKNUI:IsSoundValid(path)
-        if not path or path == "" or path == "None" then return false end
-        if type(path) == "number" then return true end
-        if path:lower():find("^sound[\\/]+") then return true end
-        BuildSoundCache()
-        return soundCache[path] or false
-    end
-
-    ---@param path string|number
-    ---@param channel string?
-    function NRSKNUI:PlaySound(path, channel)
-        if not self:IsSoundValid(path) then return end
-        PlaySoundFile(path, channel or "Master")
-    end
+---@param path string|number
+---@param channel string?
+function NRSKNUI:PlaySound(path, channel)
+    if not self:IsSoundValid(path) then return end
+    PlaySoundFile(path, channel or "Master")
 end
 
 ---@param outline string?
@@ -237,15 +210,12 @@ function NRSKNUI:GetEffectiveStatusBar(moduleDB)
     return moduleDB and (moduleDB.StatusBarTexture or moduleDB.statusBar) or "NorskenUI"
 end
 
-NRSKNUI.fontRegistry = {}
-
 ---@param parent Frame
 ---@param layer DrawLayer?
 ---@return FontString
 function NRSKNUI:CreateText(parent, layer)
     local fs = parent:CreateFontString(nil, layer or "OVERLAY")
     fs:SetFont(FALLBACK_FONT, FALLBACK_SIZE, "")
-    self.fontRegistry[fs] = {}
     return fs
 end
 
@@ -299,35 +269,7 @@ function NRSKNUI:SetTextFont(fontString, fontName, fontSize, fontOutline, shadow
         end
     end
 
-    self.fontRegistry[fontString] = {
-        fontName = fontName,
-        fontSize = fontSize,
-        fontOutline = fontOutline,
-        shadowSettings = shadowSettings,
-    }
-
     return true
-end
-
-function NRSKNUI:RefreshAllFonts()
-    for fs, data in pairs(self.fontRegistry) do
-        if fs and fs.SetFont then
-            self:SetTextFont(fs, data.fontName, data.fontSize, data.fontOutline, data.shadowSettings)
-        else
-            self.fontRegistry[fs] = nil
-        end
-    end
-end
-
----@deprecated Use SetTextFont instead
----@param fontString FontString
----@param fontName string
----@param fontSize number
----@param fontOutline string
----@param shadowSettings table?
----@return boolean
-function NRSKNUI:ApplyFontToText(fontString, fontName, fontSize, fontOutline, shadowSettings)
-    return self:SetTextFont(fontString, fontName, fontSize, fontOutline, shadowSettings)
 end
 
 local SoftOutline = {}
@@ -465,6 +407,17 @@ function SoftOutline:_SyncJustify()
     end)
 end
 
+function SoftOutline:_SyncAll()
+    local font, size = self.main:GetFont()
+    if font and font ~= "" and size and size > 0 then
+        self:SetFont(font, size)
+    end
+    self:SetText(self.main:GetText() or "")
+    self:_SyncJustify()
+    self:_SyncWrapSettings()
+    if self.hasExplicitWidth then self:_SyncWidth() end
+end
+
 function SoftOutline:SetText(text)
     local cleanText = StripEscapeCodes(text)
     self:_ForEach(function(shadow) shadow:SetText(cleanText) end)
@@ -524,15 +477,8 @@ function SoftOutline:SetShown(shown)
         return
     end
 
-    local font, size = self.main:GetFont()
-    if font and font ~= "" and size and size > 0 then
-        self:SetFont(font, size)
-    end
-    self:SetText(self.main:GetText() or "")
+    self:_SyncAll()
     self:_ApplyColor()
-    self:_SyncJustify()
-    self:_SyncWrapSettings()
-    if self.hasExplicitWidth then self:_SyncWidth() end
 
     self:_ForEach(function(shadow) shadow:SetShown(true) end)
 end
@@ -543,14 +489,7 @@ function SoftOutline:SetShownFromBoolean(condition, trueVal, falseVal)
     local showFalse = falseVal == true
 
     if showTrue and self:_IsTextVisible() then
-        local font, size = self.main:GetFont()
-        if font and font ~= "" and size and size > 0 then
-            self:SetFont(font, size)
-        end
-        self:SetText(self.main:GetText() or "")
-        self:_SyncJustify()
-        self:_SyncWrapSettings()
-        if self.hasExplicitWidth then self:_SyncWidth() end
+        self:_SyncAll()
     end
 
     local trueAlpha = showTrue and 1 or 0
@@ -660,23 +599,6 @@ function SoftOutline:_HookMain()
 
     hooksecurefunc(main, "SetAlpha", function(_, a) handleAlphaChange(a) end)
     hooksecurefunc(main, "SetTextColor", function(_, _, _, _, a) handleAlphaChange(a) end)
-
-    local parent = main:GetParent()
-    if parent and not parent._nrsknSoftOutlineHooked then
-        parent._nrsknSoftOutlineHooked = true
-
-        hooksecurefunc(parent, "Hide", function()
-            local outline = getOutline()
-            if outline then outline:_ForEach(function(shadow) shadow:Hide() end) end
-        end)
-
-        hooksecurefunc(parent, "Show", function()
-            local outline = getOutline()
-            if outline and outline.isShown and outline:_IsTextVisible() then
-                outline:_ForEach(function(shadow) shadow:Show() end)
-            end
-        end)
-    end
 end
 
 local function GetFontWithFallback(fontString, options)
@@ -723,7 +645,7 @@ function NRSKNUI:CreateSoftOutline(mainText, options)
     local justifyH, justifyV = mainText:GetJustifyH(), mainText:GetJustifyV()
 
     for i = 1, #SHADOW_OFFSETS do
-        local shadow = parent:CreateFontString(nil, "ARTWORK", nil, 7)
+        local shadow = parent:CreateFontString(nil, "ARTWORK", nil)
         shadow:SetFont(font, size, "")
         shadow:SetText(text)
         shadow:SetJustifyH(justifyH)
