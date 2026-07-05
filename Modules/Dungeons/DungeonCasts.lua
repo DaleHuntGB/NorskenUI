@@ -2,13 +2,8 @@
 ---@diagnostic disable: undefined-field
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("DungeonCasts: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class DungeonCasts: AceModule, AceEvent-3.0
-local DC = NorskenUI:NewModule("DungeonCasts", "AceEvent-3.0")
+local DC = NRSKNUI:NewModule("DungeonCasts", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo

@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Battlenet: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Battlenet: AceModule, AceEvent-3.0
-local BNET = NorskenUI:NewModule("Battlenet", "AceEvent-3.0")
+local BNET = NRSKNUI:NewModule("Battlenet", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local ipairs = ipairs

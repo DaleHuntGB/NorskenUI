@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Automation: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Automation: AceModule, AceEvent-3.0, AceHook-3.0
-local AUTO = NorskenUI:NewModule("Automation", "AceEvent-3.0", "AceHook-3.0")
+local AUTO = NRSKNUI:NewModule("Automation", "AceEvent-3.0", "AceHook-3.0")
 
 local pcall = pcall
 local hooksecurefunc = hooksecurefunc

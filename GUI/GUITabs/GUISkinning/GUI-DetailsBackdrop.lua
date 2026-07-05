@@ -16,7 +16,7 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
         GUIFrame.pendingContext = nil
     end
 
-    local DBG = NorskenUI:GetModule("DetailsBackdrop", true)
+    local DBG = NRSKNUI:GetModule("DetailsBackdrop", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     -- Santize older profiles old string format to new numeric format so that dropdown shows correct value.
@@ -55,9 +55,9 @@ GUIFrame:RegisterContent("DetailsBackdrop", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("DetailsBackdrop")
+                NRSKNUI:EnableModule("DetailsBackdrop")
             else
-                NorskenUI:DisableModule("DetailsBackdrop")
+                NRSKNUI:DisableModule("DetailsBackdrop")
             end
             UpdateAllWidgetStates()
         end,

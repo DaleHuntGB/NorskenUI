@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("Durability", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type Durability?
-    local DUR = NorskenUI and NorskenUI:GetModule("Durability", true)
+    local DUR = NRSKNUI:GetModule("Durability", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local textWidgets = {}
@@ -60,7 +60,7 @@ GUIFrame:RegisterContent("Durability", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if DUR then
-                if checked then NorskenUI:EnableModule("Durability") else NorskenUI:DisableModule("Durability") end
+                if checked then NRSKNUI:EnableModule("Durability") else NRSKNUI:DisableModule("Durability") end
             end
             UpdateAllWidgetStates()
         end,

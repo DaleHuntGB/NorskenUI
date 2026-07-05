@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("InstanceReset", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type HealerMana?
-    local IR = NorskenUI and NorskenUI:GetModule("InstanceReset", true)
+    local IR = NRSKNUI:GetModule("InstanceReset", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
 
@@ -36,7 +36,7 @@ GUIFrame:RegisterContent("InstanceReset", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if IR then
-                if checked then NorskenUI:EnableModule("InstanceReset") else NorskenUI:DisableModule("InstanceReset") end
+                if checked then NRSKNUI:EnableModule("InstanceReset") else NRSKNUI:DisableModule("InstanceReset") end
             end
             UpdateAllWidgetStates()
         end,

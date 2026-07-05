@@ -68,8 +68,8 @@ local currentPreviewDungeon = nil
 local previewActive = false
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("DungeonTimers", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("DungeonTimers", true)
     end
     return nil
 end

@@ -1,16 +1,11 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
 -- Safety check
-if not NorskenUI then
-    error("IncarnStacks: Addon object not initialized. Check file load order!")
-    return
-end
-
 -- Create module
 ---@class IncarnStacks: AceModule, AceEvent-3.0
-local INCARN = NorskenUI:NewModule("IncarnStacks", "AceEvent-3.0")
+local INCARN = NRSKNUI:NewModule("IncarnStacks", "AceEvent-3.0")
 
 -- Libraries
 local LCG = LibStub("LibCustomGlow-1.0", true)

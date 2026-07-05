@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("BenchAlert: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class PotionReady: AceModule, AceEvent-3.0
-local POT = NorskenUI:NewModule("PotionReady", "AceEvent-3.0")
+local POT = NRSKNUI:NewModule("PotionReady", "AceEvent-3.0")
 
 local unpack = unpack
 local select = select

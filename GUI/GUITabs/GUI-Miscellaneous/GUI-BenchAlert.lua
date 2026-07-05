@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("BenchAlert", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type BenchAlert?
-    local BA = NorskenUI and NorskenUI:GetModule("BenchAlert", true)
+    local BA = NRSKNUI:GetModule("BenchAlert", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if BA then BA:ApplySettings() end end
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("BenchAlert", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if BA then
-                if checked then NorskenUI:EnableModule("BenchAlert") else NorskenUI:DisableModule("BenchAlert") end
+                if checked then NRSKNUI:EnableModule("BenchAlert") else NRSKNUI:DisableModule("BenchAlert") end
             end
             UpdateAllWidgetStates()
         end,

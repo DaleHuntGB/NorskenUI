@@ -1,4 +1,4 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
@@ -13,8 +13,8 @@ local pairs, ipairs = pairs, ipairs
 
 -- Get IncarnStacks module
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("IncarnStacks", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("IncarnStacks", true)
     end
     return nil
 end
@@ -58,9 +58,9 @@ GUIFrame:RegisterContent("IncarnStacks", function(scrollChild, yOffset)
         if not INCARN then return end
         db.Enabled = enabled
         if enabled then
-            NorskenUI:EnableModule("IncarnStacks")
+            NRSKNUI:EnableModule("IncarnStacks")
         else
-            NorskenUI:DisableModule("IncarnStacks")
+            NRSKNUI:DisableModule("IncarnStacks")
         end
     end
 

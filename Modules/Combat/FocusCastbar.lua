@@ -2,13 +2,8 @@
 ---@diagnostic disable: undefined-field
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("FocusCastbar: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class FocusCastbar: AceModule, AceEvent-3.0
-local FCB = NorskenUI:NewModule("FocusCastbar", "AceEvent-3.0")
+local FCB = NRSKNUI:NewModule("FocusCastbar", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UnitCastingInfo, UnitChannelInfo = UnitCastingInfo, UnitChannelInfo

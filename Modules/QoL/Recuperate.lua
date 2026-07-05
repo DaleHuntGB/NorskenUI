@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Recuperate: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Recuperate: AceModule, AceEvent-3.0
-local REC = NorskenUI:NewModule("Recuperate", "AceEvent-3.0")
+local REC = NRSKNUI:NewModule("Recuperate", "AceEvent-3.0")
 
 local UnitHealthPercent = UnitHealthPercent
 local UnitIsDeadOrGhost = UnitIsDeadOrGhost

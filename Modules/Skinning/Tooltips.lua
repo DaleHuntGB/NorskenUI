@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Tooltips: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Tooltips: AceModule, AceEvent-3.0
-local TT = NorskenUI:NewModule("Tooltips", "AceEvent-3.0")
+local TT = NRSKNUI:NewModule("Tooltips", "AceEvent-3.0")
 
 local hooksecurefunc = hooksecurefunc
 local CreateFrame = CreateFrame

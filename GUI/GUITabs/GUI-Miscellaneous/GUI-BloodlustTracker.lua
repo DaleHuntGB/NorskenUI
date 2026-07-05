@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("BloodlustTracker", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type BloodlustTracker?
-    local BLT = NorskenUI:GetModule("BloodlustTracker", true)
+    local BLT = NRSKNUI:GetModule("BloodlustTracker", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if BLT then BLT:ApplySettings() end end
@@ -23,9 +23,9 @@ GUIFrame:RegisterContent("BloodlustTracker", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("BloodlustTracker")
+                NRSKNUI:EnableModule("BloodlustTracker")
             else
-                NorskenUI:DisableModule("BloodlustTracker")
+                NRSKNUI:DisableModule("BloodlustTracker")
             end
             UpdateAllWidgetStates()
         end,

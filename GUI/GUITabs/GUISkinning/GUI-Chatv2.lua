@@ -45,7 +45,7 @@ local TAB_SELECTOR_STYLES = {
 }
 
 local function ApplySettings()
-    local mod = NorskenUI:GetModule("Chatv2", true)
+    local mod = NRSKNUI:GetModule("Chatv2", true)
     if mod and mod.ApplySettings then mod:ApplySettings() end
 end
 
@@ -61,10 +61,10 @@ local function RenderGeneralTab(scrollChild, db, manager)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("Chatv2")
+                NRSKNUI:EnableModule("Chatv2")
                 manager:UpdateAll(db.Enabled)
             else
-                NorskenUI:DisableModule("Chatv2")
+                NRSKNUI:DisableModule("Chatv2")
                 manager:UpdateAll(db.Enabled)
                 NRSKNUI:CreatePrompt({
                     title = "Chat Module Disabled",
@@ -528,7 +528,7 @@ local function RenderSoundsTab(scrollChild, db, manager)
         value = ws.Enabled == true,
         callback = function(checked)
             ws.Enabled = checked
-            local mod = NorskenUI:GetModule("Chatv2", true)
+            local mod = NRSKNUI:GetModule("Chatv2", true)
             if mod then
                 if checked then
                     mod:RegisterWhisperSounds()

@@ -109,7 +109,7 @@ end
 
 GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
     ---@type CursorCircle?
-    local CC = NorskenUI and NorskenUI:GetModule("CursorCircle", true)
+    local CC = NRSKNUI:GetModule("CursorCircle", true)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Miscellaneous.CursorCircle
     if not db or not CC then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
@@ -200,7 +200,7 @@ GUIFrame:RegisterContent("cursorCircle", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CC then
-                if checked then NorskenUI:EnableModule("CursorCircle") else NorskenUI:DisableModule("CursorCircle") end
+                if checked then NRSKNUI:EnableModule("CursorCircle") else NRSKNUI:DisableModule("CursorCircle") end
             end
             UpdateAllWidgetStates()
         end,

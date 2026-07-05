@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("CopyAnything", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CopyAnything?
-    local CopyAnything = NorskenUI and NorskenUI:GetModule("CopyAnything", true)
+    local CopyAnything = NRSKNUI:GetModule("CopyAnything", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
@@ -22,7 +22,7 @@ GUIFrame:RegisterContent("CopyAnything", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CopyAnything then
-                if checked then NorskenUI:EnableModule("CopyAnything") else NorskenUI:DisableModule("CopyAnything") end
+                if checked then NRSKNUI:EnableModule("CopyAnything") else NRSKNUI:DisableModule("CopyAnything") end
             end
             UpdateAllWidgetStates()
         end,

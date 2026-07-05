@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("StanceTexts: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class StanceTexts: AceModule, AceEvent-3.0
-local STANCETEXTS = NorskenUI:NewModule("StanceTexts", "AceEvent-3.0")
+local STANCETEXTS = NRSKNUI:NewModule("StanceTexts", "AceEvent-3.0")
 
 local ipairs = ipairs
 local tostring = tostring

@@ -1,10 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then return end
-
 ---@class DungeonTimers
-local DT = NorskenUI:GetModule("DungeonTimers")
+local DT = NRSKNUI:GetModule("DungeonTimers")
 if not DT then return end
 
 local AS = LibStub("AceSerializer-3.0")

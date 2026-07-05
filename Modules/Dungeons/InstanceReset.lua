@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("InstanceReset: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class InstanceReset: AceModule, AceHook-3.0
-local IR = NorskenUI:NewModule("InstanceReset", "AceHook-3.0")
+local IR = NRSKNUI:NewModule("InstanceReset", "AceHook-3.0")
 
 local IsInGroup = IsInGroup
 local IsInRaid = IsInRaid

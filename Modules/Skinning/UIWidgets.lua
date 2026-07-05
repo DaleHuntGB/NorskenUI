@@ -1,16 +1,11 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
 -- Check for addon object
-if not NorskenUI then
-    error("UIWidgets: Addon object not initialized. Check file load order!")
-    return
-end
-
 -- Create module
 ---@class UIWidgets: AceModule, AceEvent-3.0
-local UIW = NorskenUI:NewModule("UIWidgets", "AceEvent-3.0")
+local UIW = NRSKNUI:NewModule("UIWidgets", "AceEvent-3.0")
 
 -- Localization
 local hooksecurefunc = hooksecurefunc

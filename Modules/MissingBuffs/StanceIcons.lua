@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("StanceIcons: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class StanceIcons: AceModule, AceEvent-3.0
-local STANCEICONS = NorskenUI:NewModule("StanceIcons", "AceEvent-3.0")
+local STANCEICONS = NRSKNUI:NewModule("StanceIcons", "AceEvent-3.0")
 
 local ipairs = ipairs
 local tonumber = tonumber

@@ -15,7 +15,7 @@ local function StartPreview()
     if not GUIFrame or not GUIFrame:IsShown() then return end
 
     previewActive = true
-    local mod = NorskenUI and NorskenUI:GetModule("DungeonCasts", true)
+    local mod = NRSKNUI:GetModule("DungeonCasts", true)
     if mod and mod.ShowPreview then
         mod:ShowPreview()
     end
@@ -25,7 +25,7 @@ local function StopPreview()
     if not previewActive then return end
 
     previewActive = false
-    local mod = NorskenUI and NorskenUI:GetModule("DungeonCasts", true)
+    local mod = NRSKNUI:GetModule("DungeonCasts", true)
     if mod and mod.HidePreview then
         mod:HidePreview()
     end
@@ -42,7 +42,7 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type DungeonCasts?
-    local DC = NorskenUI and NorskenUI:GetModule("DungeonCasts", true)
+    local DC = NRSKNUI:GetModule("DungeonCasts", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local targetSubWidgets = {}
@@ -88,10 +88,10 @@ GUIFrame:RegisterContent("DungeonCasts", function(scrollChild, yOffset)
             db.Enabled = checked
             if DC then
                 if checked then
-                    NorskenUI:EnableModule("DungeonCasts")
+                    NRSKNUI:EnableModule("DungeonCasts")
                     StartPreview()
                 else
-                    NorskenUI:DisableModule("DungeonCasts")
+                    NRSKNUI:DisableModule("DungeonCasts")
                     StopPreview()
                 end
             end

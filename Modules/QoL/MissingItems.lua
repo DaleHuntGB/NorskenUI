@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("MissingItems: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class MissingItems: AceModule, AceEvent-3.0
-local MITEMS = NorskenUI:NewModule("MissingItems", "AceEvent-3.0")
+local MITEMS = NRSKNUI:NewModule("MissingItems", "AceEvent-3.0")
 
 local AS = LibStub("AceSerializer-3.0")
 local LD = LibStub("LibDeflate")

@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("MicroMenu: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class MicroMenu: AceModule, AceEvent-3.0
-local MM = NorskenUI:NewModule("MicroMenu", "AceEvent-3.0")
+local MM = NRSKNUI:NewModule("MicroMenu", "AceEvent-3.0")
 
 local UIFrameFadeOut = UIFrameFadeOut
 local UIFrameFadeIn = UIFrameFadeIn

@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("TotemTracker: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class TotemTracker: AceModule, AceEvent-3.0
-local TT = NorskenUI:NewModule("TotemTracker", "AceEvent-3.0")
+local TT = NRSKNUI:NewModule("TotemTracker", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local ipairs = ipairs

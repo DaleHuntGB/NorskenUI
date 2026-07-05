@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("AuctionHouseFilter: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class AuctionHouseFilter: AceModule, AceEvent-3.0
-local AHF = NorskenUI:NewModule("AuctionHouseFilter", "AceEvent-3.0")
+local AHF = NRSKNUI:NewModule("AuctionHouseFilter", "AceEvent-3.0")
 
 local C_Timer = C_Timer
 local C_AddOns = C_AddOns

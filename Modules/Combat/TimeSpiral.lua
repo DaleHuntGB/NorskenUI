@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("TimeSpiral: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class TimeSpiral: AceModule, AceEvent-3.0
-local TSP = NorskenUI:NewModule("TimeSpiral", "AceEvent-3.0")
+local TSP = NRSKNUI:NewModule("TimeSpiral", "AceEvent-3.0")
 
 local LCG = LibStub("LibCustomGlow-1.0", true)
 

@@ -13,7 +13,7 @@ GUIFrame:RegisterContent("TotemTracker", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type TotemTracker?
-    local TT = NorskenUI and NorskenUI:GetModule("TotemTracker", true)
+    local TT = NRSKNUI:GetModule("TotemTracker", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("swipeOn", function() return db.Swipe end)
@@ -31,9 +31,9 @@ GUIFrame:RegisterContent("TotemTracker", function(scrollChild, yOffset)
             db.Enabled = checked
             if TT then
                 if checked then
-                    NorskenUI:EnableModule("TotemTracker")
+                    NRSKNUI:EnableModule("TotemTracker")
                 else
-                    NorskenUI:DisableModule("TotemTracker")
+                    NRSKNUI:DisableModule("TotemTracker")
                 end
             end
             UpdateAllWidgetStates()

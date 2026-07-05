@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("WayFinder", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type WayFinder?
-    local WF = NorskenUI and NorskenUI:GetModule("WayFinder", true)
+    local WF = NRSKNUI:GetModule("WayFinder", true)
 
     local card1 = GUIFrame:CreateCard(scrollChild, "Waypoint Finder", yOffset)
 
@@ -18,7 +18,7 @@ GUIFrame:RegisterContent("WayFinder", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if WF then
-                if checked then NorskenUI:EnableModule("WayFinder") else NorskenUI:DisableModule("WayFinder") end
+                if checked then NRSKNUI:EnableModule("WayFinder") else NRSKNUI:DisableModule("WayFinder") end
             end
         end,
         msgPopup = true,

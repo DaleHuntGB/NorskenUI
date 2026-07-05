@@ -2,13 +2,8 @@
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
-if not NorskenUI then
-    error("Minimap: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Minimap: AceModule, AceEvent-3.0
-local MAP = NorskenUI:NewModule("Minimap", "AceEvent-3.0")
+local MAP = NRSKNUI:NewModule("Minimap", "AceEvent-3.0")
 
 local hooksecurefunc = hooksecurefunc
 local ipairs = ipairs

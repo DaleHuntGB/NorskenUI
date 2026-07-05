@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type PetTexts?
-    local PET = NorskenUI and NorskenUI:GetModule("PetTexts", true)
+    local PET = NRSKNUI:GetModule("PetTexts", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
 
@@ -37,7 +37,7 @@ GUIFrame:RegisterContent("PetTexts", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if PET then
-                if checked then NorskenUI:EnableModule("PetTexts") else NorskenUI:DisableModule("PetTexts") end
+                if checked then NRSKNUI:EnableModule("PetTexts") else NRSKNUI:DisableModule("PetTexts") end
             end
             UpdateAllWidgetStates()
             if checked and PET then PET:ShowPreview() end

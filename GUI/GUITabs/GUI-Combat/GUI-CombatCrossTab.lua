@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("combatCross", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CombatCross?
-    local CC = NorskenUI and NorskenUI:GetModule("CombatCross", true)
+    local CC = NRSKNUI:GetModule("CombatCross", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local colorModeWidgets = {}
@@ -53,7 +53,7 @@ GUIFrame:RegisterContent("combatCross", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CC then
-                if checked then NorskenUI:EnableModule("CombatCross") else NorskenUI:DisableModule("CombatCross") end
+                if checked then NRSKNUI:EnableModule("CombatCross") else NRSKNUI:DisableModule("CombatCross") end
             end
             UpdateAllWidgetStates()
         end,

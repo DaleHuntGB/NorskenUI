@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CursorCircle: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CursorCircle: AceModule, AceEvent-3.0
-local CC = NorskenUI:NewModule("CursorCircle", "AceEvent-3.0")
+local CC = NRSKNUI:NewModule("CursorCircle", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local GetCursorPosition = GetCursorPosition

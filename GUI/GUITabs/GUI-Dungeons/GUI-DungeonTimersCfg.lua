@@ -65,7 +65,7 @@ GUIFrame:RegisterContent("DT_General", function(scrollChild, yOffset)
     local db = GetSettingsDB()
     if not db then return yOffset end
 
-    local DT = NorskenUI:GetModule("DungeonTimers", true)
+    local DT = NRSKNUI:GetModule("DungeonTimers", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local activeCards = {}
 
@@ -73,9 +73,9 @@ GUIFrame:RegisterContent("DT_General", function(scrollChild, yOffset)
         if not DT then return end
         db.Enabled = enabled
         if enabled then
-            NorskenUI:EnableModule("DungeonTimers")
+            NRSKNUI:EnableModule("DungeonTimers")
         else
-            NorskenUI:DisableModule("DungeonTimers")
+            NRSKNUI:DisableModule("DungeonTimers")
         end
         manager:UpdateAll(enabled)
     end

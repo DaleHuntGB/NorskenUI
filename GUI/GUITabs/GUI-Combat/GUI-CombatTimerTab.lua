@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("combatTimer", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CombatTimer?
-    local CT = NorskenUI and NorskenUI:GetModule("CombatTimer", true)
+    local CT = NRSKNUI:GetModule("CombatTimer", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local combatOnlyWidgets = {}
@@ -53,7 +53,7 @@ GUIFrame:RegisterContent("combatTimer", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CT then
-                if checked then NorskenUI:EnableModule("CombatTimer") else NorskenUI:DisableModule("CombatTimer") end
+                if checked then NRSKNUI:EnableModule("CombatTimer") else NRSKNUI:DisableModule("CombatTimer") end
             end
             UpdateAllWidgetStates()
         end,

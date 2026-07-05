@@ -4,9 +4,9 @@
 ---@field GetSessionId fun(self: BugGrabber): number
 BugGrabber = BugGrabber
 
----@class NorskenUI : AceAddon-3.0, AceEvent-3.0, AceHook-3.0
----@type NorskenUI
-NorskenUI = {}
+-- The addon table (NRSKNUI) is the AceAddon object; this global is the same table
+---@type NRSKNUI
+NorskenUI = NorskenUI
 
 ---@class ElvUI_SpellBookTooltip: GameTooltip
 ElvUI_SpellBookTooltip = ElvUI_SpellBookTooltip

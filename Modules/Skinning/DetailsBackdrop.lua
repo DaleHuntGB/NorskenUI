@@ -3,13 +3,8 @@ local NRSKNUI = select(2, ...)
 
 -- Credit to unhalted for the idea of this module, not a copy of his code but liked his cook
 
-if not NorskenUI then
-    error("DetailsBackdrop: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class DetailsBackdrop: AceModule, AceEvent-3.0
-local DBG = NorskenUI:NewModule("DetailsBackdrop", "AceEvent-3.0")
+local DBG = NRSKNUI:NewModule("DetailsBackdrop", "AceEvent-3.0")
 
 local unpack = unpack
 local _G = _G

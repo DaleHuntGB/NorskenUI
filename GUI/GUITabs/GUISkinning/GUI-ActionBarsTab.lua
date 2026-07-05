@@ -72,17 +72,17 @@ local function GetCurrentBarDB()
 end
 
 local function ApplyFonts()
-    local ACB = NorskenUI:GetModule("ActionBars", true)
+    local ACB = NRSKNUI:GetModule("ActionBars", true)
     if ACB then ACB:UpdateSettings("fonts") end
 end
 
 local function ApplyProfTextures()
-    local ACB = NorskenUI:GetModule("ActionBars", true)
+    local ACB = NRSKNUI:GetModule("ActionBars", true)
     if ACB then ACB:UpdateSettings("profTextures") end
 end
 
 local function ApplyBarSettings()
-    local ACB = NorskenUI:GetModule("ActionBars", true)
+    local ACB = NRSKNUI:GetModule("ActionBars", true)
     local curEdit = GetCurrentBarKey()
     if ACB and curEdit then
         ACB:UpdateSettings("layout", curEdit)
@@ -94,7 +94,7 @@ local function ApplyBarSettings()
 end
 
 local function ApplyAllBars()
-    local ACB = NorskenUI:GetModule("ActionBars", true)
+    local ACB = NRSKNUI:GetModule("ActionBars", true)
     if ACB then ACB:UpdateSettings("all") end
 end
 
@@ -259,9 +259,9 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
             callback = function(checked)
                 db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("ActionBars")
+                    NRSKNUI:EnableModule("ActionBars")
                 else
-                    NorskenUI:DisableModule("ActionBars")
+                    NRSKNUI:DisableModule("ActionBars")
                 end
                 manager:UpdateAll(checked)
                 NRSKNUI:CreateReloadPrompt("Enabling/Disabling Action Bars requires a reload to take full effect.")
@@ -333,7 +333,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
             color = db.RangeOverlayColor,
             callback = function(r, g, b, a)
                 db.RangeOverlayColor = { r, g, b, a }
-                local ACB = NorskenUI:GetModule("ActionBars", true)
+                local ACB = NRSKNUI:GetModule("ActionBars", true)
                 if ACB then ACB:UpdateSettings("rangeOverlay") end
             end
         })
@@ -483,7 +483,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
             value = db.MouseoverOverride == true,
             callback = function(checked)
                 db.MouseoverOverride = checked
-                local ACB = NorskenUI:GetModule("ActionBars", true)
+                local ACB = NRSKNUI:GetModule("ActionBars", true)
                 if ACB then ACB:UpdateBonusBarOverride() end
             end
         })
@@ -561,7 +561,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
                     callback = function(checked)
                         if db.Bars[bar1.key] then
                             db.Bars[bar1.key].Enabled = checked
-                            local ACB = NorskenUI:GetModule("ActionBars", true)
+                            local ACB = NRSKNUI:GetModule("ActionBars", true)
                             if ACB then ACB:UpdateSettings("enabled", bar1.key) end
                             if checked then
                                 NRSKNUI:CreateReloadPrompt("Enabling bars requires a reload to take full effect.")
@@ -583,7 +583,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
                     callback = function(checked)
                         if db.Bars[bar2.key] then
                             db.Bars[bar2.key].Enabled = checked
-                            local ACB = NorskenUI:GetModule("ActionBars", true)
+                            local ACB = NRSKNUI:GetModule("ActionBars", true)
                             if ACB then ACB:UpdateSettings("enabled", bar2.key) end
                             if checked then
                                 NRSKNUI:CreateReloadPrompt("Enabling bars requires a reload to take full effect.")
@@ -721,7 +721,7 @@ GUIFrame:RegisterPanel("ActionBars", function(container)
                 callback = function(key)
                     local bdb = GetCurrentBarDB()
                     if bdb then bdb.FlyoutDirection = key end
-                    local ACB = NorskenUI:GetModule("ActionBars", true)
+                    local ACB = NRSKNUI:GetModule("ActionBars", true)
                     if ACB then ACB:UpdateSettings("flyout", curEdit) end
                 end
             })

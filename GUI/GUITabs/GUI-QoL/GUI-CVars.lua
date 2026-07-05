@@ -193,7 +193,7 @@ GUIFrame:RegisterPanel("MiscVars", function(container)
     if not db then return nil end
 
     ---@type MiscVars?
-    local MVAR = NorskenUI and NorskenUI:GetModule("MiscVars", true)
+    local MVAR = NRSKNUI:GetModule("MiscVars", true)
     if not MVAR then return nil end
 
     local manager = GUIFrame:CreateWidgetStateManager()

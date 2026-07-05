@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("MissingBuffs: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class MissingBuffs: AceModule, AceEvent-3.0
-local MBUFFS = NorskenUI:NewModule("MissingBuffs", "AceEvent-3.0")
+local MBUFFS = NRSKNUI:NewModule("MissingBuffs", "AceEvent-3.0")
 
 local LibSpec = LibStub("LibSpecialization")
 local LCG = LibStub("LibCustomGlow-1.0", true)

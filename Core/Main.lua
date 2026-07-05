@@ -1,8 +1,7 @@
----@class NRSKNUI
+---@class NRSKNUI : AceAddon-3.0, AceEvent-3.0, AceHook-3.0
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
-local IsInInstance = IsInInstance
 local LibStub = LibStub
 local string_gsub = string.gsub
 local ReloadUI = ReloadUI
@@ -12,18 +11,12 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LibStub("LibDBIcon-1.0")
 local LDS = LibStub("LibDualSpec-1.0")
 
-local DEFAULT_PROFILE = "Default"
-
--- Create the main addon object
----@class NorskenUI : AceAddon-3.0, AceEvent-3.0, AceHook-3.0
-local NorskenUI = aceAddon:NewAddon("NorskenUI", "AceEvent-3.0", "AceHook-3.0")
-_G.NorskenUI = NorskenUI
-
--- Encounter state
-NRSKNUI.encounterActive = false
+-- Reg addon
+aceAddon:NewAddon(NRSKNUI, "NorskenUI", "AceEvent-3.0", "AceHook-3.0")
+_G.NorskenUI = NRSKNUI
 
 -- OnInitialize: Called when the addon is initialized
-function NorskenUI:OnInitialize()
+function NRSKNUI:OnInitialize()
     local defaults = NRSKNUI:GetDefaultDB()
     if not defaults then
         defaults = { profile = {} }
@@ -52,7 +45,7 @@ function NorskenUI:OnInitialize()
     end
 
     if NRSKNUI.db.global and NRSKNUI.db.global.UseGlobalProfile then
-        local profileName = NRSKNUI.db.global.GlobalProfile or DEFAULT_PROFILE
+        local profileName = NRSKNUI.db.global.GlobalProfile or "Default"
         NRSKNUI.db:SetProfile(profileName)
     end
 
@@ -112,23 +105,9 @@ function NRSKNUI:SetupMinimapIcon()
     LDBIcon:Register("NorskenUI", MyLDB, NRSKNUI.db.profile.Minimap)
 end
 
-local function OnEncounterEnd()
-    local _, instanceType = IsInInstance()
-    if instanceType == "raid" and NRSKNUI.encounterActive then
-        NRSKNUI.encounterActive = false
-    end
-end
-
-local function OnEncounterStart()
-    local _, instanceType = IsInInstance()
-    if instanceType == "raid" then
-        NRSKNUI.encounterActive = true
-    end
-end
-
 local function OnPlayerEnteringWorld()
     -- Automatically refresh all AceAddon modules
-    for _, module in NorskenUI:IterateModules() do
+    for _, module in NRSKNUI:IterateModules() do
         if module:IsEnabled() and module.ApplySettings then
             module:ApplySettings()
         end
@@ -173,7 +152,7 @@ local function SetupSlashCommands()
 end
 
 -- OnEnable: Called when the addon is enabled
-function NorskenUI:OnEnable()
+function NRSKNUI:OnEnable()
     -- Method to fix old frame sizing data that messes up sidebar width
     local currentVersion = NRSKNUI:GetDefaultDB().global.GUIState.GUIFrameLayoutVersion or 1
     local rawState = _G.NorskenUIDB and _G.NorskenUIDB.global and _G.NorskenUIDB.global.GUIState

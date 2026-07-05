@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("DebuffTrackingDefault: Addon object not initialized!")
-    return
-end
-
 ---@class DebuffTrackingDefault: AceModule, AceEvent-3.0
-local DEBUFFS = NorskenUI:NewModule("DebuffTrackingDefault", "AceEvent-3.0")
+local DEBUFFS = NRSKNUI:NewModule("DebuffTrackingDefault", "AceEvent-3.0")
 
 DEBUFFS.buttons = {}
 DEBUFFS.buttonPool = {}

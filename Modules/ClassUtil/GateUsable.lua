@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Gateway: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Gateway: AceModule, AceEvent-3.0
-local GATE = NorskenUI:NewModule("Gateway", "AceEvent-3.0")
+local GATE = NRSKNUI:NewModule("Gateway", "AceEvent-3.0")
 
 local C_Item = C_Item
 local C_Timer = C_Timer

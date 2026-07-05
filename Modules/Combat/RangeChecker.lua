@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("RangeChecker: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class RangeChecker: AceModule, AceEvent-3.0
-local RANGE = NorskenUI:NewModule("RangeChecker", "AceEvent-3.0")
+local RANGE = NRSKNUI:NewModule("RangeChecker", "AceEvent-3.0")
 local LRC = LibStub("LibRangeCheck-3.0", true)
 
 local CreateFrame = CreateFrame

@@ -12,7 +12,7 @@ GUIFrame:RegisterContent("SpellAlert", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type SpellAlert?
-    local SA = NorskenUI and NorskenUI:GetModule("SpellAlert", true)
+    local SA = NRSKNUI:GetModule("SpellAlert", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if SA then SA:ApplySettings() end end
@@ -91,7 +91,7 @@ GUIFrame:RegisterContent("SpellAlert", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if SA then
-                if checked then NorskenUI:EnableModule("SpellAlert") else NorskenUI:DisableModule("SpellAlert") end
+                if checked then NRSKNUI:EnableModule("SpellAlert") else NRSKNUI:DisableModule("SpellAlert") end
             end
             UpdateAllWidgetStates()
         end,

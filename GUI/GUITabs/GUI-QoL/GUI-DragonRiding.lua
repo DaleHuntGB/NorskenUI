@@ -12,7 +12,7 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Miscellaneous.DragonRiding
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local DR = NorskenUI and NorskenUI:GetModule("DragonRiding", true)
+    local DR = NRSKNUI:GetModule("DragonRiding", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local speedTextSubWidgets = {}
@@ -49,7 +49,7 @@ GUIFrame:RegisterContent("DragonRiding", function(scrollChild, yOffset)
             db.Enabled = checked
             if DR then
                 DR.db.Enabled = checked
-                if checked then NorskenUI:EnableModule("DragonRiding") else NorskenUI:DisableModule("DragonRiding") end
+                if checked then NRSKNUI:EnableModule("DragonRiding") else NRSKNUI:DisableModule("DragonRiding") end
             end
             UpdateAllWidgetStates()
         end,

@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type Misc?
-    local MISC = NorskenUI and NorskenUI:GetModule("Misc", true)
+    local MISC = NRSKNUI:GetModule("Misc", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function UpdateAllWidgetStates()
@@ -27,7 +27,7 @@ GUIFrame:RegisterContent("whisperSounds", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if MISC then
-                if checked then NorskenUI:EnableModule("Misc") else NorskenUI:DisableModule("Misc") end
+                if checked then NRSKNUI:EnableModule("Misc") else NRSKNUI:DisableModule("Misc") end
             end
             UpdateAllWidgetStates()
         end,

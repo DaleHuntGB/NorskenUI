@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("BurningRush: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BurningRush: AceModule, AceEvent-3.0
-local BURN = NorskenUI:NewModule("BurningRush", "AceEvent-3.0")
+local BURN = NRSKNUI:NewModule("BurningRush", "AceEvent-3.0")
 
 local LCG = LibStub("LibCustomGlow-1.0", true)
 

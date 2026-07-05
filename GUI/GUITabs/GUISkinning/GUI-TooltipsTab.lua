@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("tooltips", function(scrollChild, yOffset)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     ---@type Tooltips?
-    local TT = NorskenUI:GetModule("Tooltips", true)
+    local TT = NRSKNUI:GetModule("Tooltips", true)
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
 
     -- Card: Tooltip Skinning
@@ -23,9 +23,9 @@ GUIFrame:RegisterContent("tooltips", function(scrollChild, yOffset)
             db.Enabled = checked
             if TT then
                 if checked then
-                    NorskenUI:EnableModule("Tooltips")
+                    NRSKNUI:EnableModule("Tooltips")
                 else
-                    NorskenUI:DisableModule("Tooltips")
+                    NRSKNUI:DisableModule("Tooltips")
                     NRSKNUI:CreateReloadPrompt("Enabling Blizzard UI elements requires a reload to take full effect.")
                 end
             end

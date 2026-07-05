@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("WayFinder: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class WayFinder: AceModule, AceEvent-3.0
-local WF = NorskenUI:NewModule("WayFinder", "AceEvent-3.0")
+local WF = NRSKNUI:NewModule("WayFinder", "AceEvent-3.0")
 
 function WF:UpdateDB()
     self.db = NRSKNUI.db.profile.Miscellaneous.WayFinder

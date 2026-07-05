@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Durability: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Durability: AceModule, AceEvent-3.0
-local DUR = NorskenUI:NewModule("Durability", "AceEvent-3.0")
+local DUR = NRSKNUI:NewModule("Durability", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local wipe = wipe

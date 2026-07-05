@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("Battlenet", function(scrollChild, yOffset)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     ---@type Battlenet?
-    local BNET = NorskenUI:GetModule("Battlenet", true)
+    local BNET = NRSKNUI:GetModule("Battlenet", true)
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
     local function ApplySettings() if BNET then BNET:ApplySettings() end end
 
@@ -24,9 +24,9 @@ GUIFrame:RegisterContent("Battlenet", function(scrollChild, yOffset)
             db.Enabled = checked
             if BNET then
                 if checked then
-                    NorskenUI:EnableModule("Battlenet")
+                    NRSKNUI:EnableModule("Battlenet")
                 else
-                    NorskenUI:DisableModule("Battlenet")
+                    NRSKNUI:DisableModule("Battlenet")
                 end
             end
             UpdateAllWidgetStates()

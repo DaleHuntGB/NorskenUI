@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("Recuperate", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type Recuperate?
-    local REC = NorskenUI and NorskenUI:GetModule("Recuperate", true)
+    local REC = NRSKNUI:GetModule("Recuperate", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings()
@@ -28,7 +28,7 @@ GUIFrame:RegisterContent("Recuperate", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if REC then
-                if checked then NorskenUI:EnableModule("Recuperate") else NorskenUI:DisableModule("Recuperate") end
+                if checked then NRSKNUI:EnableModule("Recuperate") else NRSKNUI:DisableModule("Recuperate") end
             end
             UpdateAllWidgetStates()
         end,

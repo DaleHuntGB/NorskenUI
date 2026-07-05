@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("BuffTracking: Addon object not initialized!")
-    return
-end
-
 ---@class BuffTracking: AceModule, AceEvent-3.0
-local BUFFS = NorskenUI:NewModule("BuffTracking", "AceEvent-3.0")
+local BUFFS = NRSKNUI:NewModule("BuffTracking", "AceEvent-3.0")
 
 BUFFS.buttons = {}
 

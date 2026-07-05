@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("CharacterPanel", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CharacterPanel?
-    local CharacterPanel = NorskenUI and NorskenUI:GetModule("CharacterPanel", true)
+    local CharacterPanel = NRSKNUI:GetModule("CharacterPanel", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("gemUtil", function() return db.GemSocketHelper.Enabled end)
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("CharacterPanel", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CharacterPanel then
-                if checked then NorskenUI:EnableModule("CharacterPanel") else NorskenUI:DisableModule("CharacterPanel") end
+                if checked then NRSKNUI:EnableModule("CharacterPanel") else NRSKNUI:DisableModule("CharacterPanel") end
             end
             UpdateAllWidgetStates()
         end,

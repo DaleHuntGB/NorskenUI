@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("HuntersMark: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class HuntersMark: AceModule, AceEvent-3.0
-local HUNTMARK = NorskenUI:NewModule("HuntersMark", "AceEvent-3.0")
+local HUNTMARK = NRSKNUI:NewModule("HuntersMark", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UnitExists = UnitExists

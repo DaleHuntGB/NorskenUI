@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type HuntersMark?
-    local HUNTMARK = NorskenUI and NorskenUI:GetModule("HuntersMark", true)
+    local HUNTMARK = NRSKNUI:GetModule("HuntersMark", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings()
@@ -28,7 +28,7 @@ GUIFrame:RegisterContent("HuntersMark", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if HUNTMARK then
-                if checked then NorskenUI:EnableModule("HuntersMark") else NorskenUI:DisableModule("HuntersMark") end
+                if checked then NRSKNUI:EnableModule("HuntersMark") else NRSKNUI:DisableModule("HuntersMark") end
             end
             UpdateAllWidgetStates()
         end,

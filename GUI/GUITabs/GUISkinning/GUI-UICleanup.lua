@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("UICleanup", function(scrollChild, yOffset)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     ---@type UICleanup?
-    local UIC = NorskenUI:GetModule("UICleanup", true)
+    local UIC = NRSKNUI:GetModule("UICleanup", true)
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
 
     -- Card 1: UICleanup Toggle
@@ -23,9 +23,9 @@ GUIFrame:RegisterContent("UICleanup", function(scrollChild, yOffset)
             db.HideBlizzardClutter = checked
             if UIC then
                 if checked then
-                    NorskenUI:EnableModule("UICleanup")
+                    NRSKNUI:EnableModule("UICleanup")
                 else
-                    NorskenUI:DisableModule("UICleanup")
+                    NRSKNUI:DisableModule("UICleanup")
                 end
             end
             UpdateAllWidgetStates()

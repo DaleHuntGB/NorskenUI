@@ -9,7 +9,7 @@ GUIFrame:RegisterContent("CustomSkin_Buffs", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type BuffTracking?
-    local BUFFS = NorskenUI and NorskenUI:GetModule("BuffTracking", true)
+    local BUFFS = NRSKNUI:GetModule("BuffTracking", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("swipeOn", function() return db.Swipe end)
@@ -33,9 +33,9 @@ GUIFrame:RegisterContent("CustomSkin_Buffs", function(scrollChild, yOffset)
             if BUFFS then
                 BUFFS.db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("BuffTracking")
+                    NRSKNUI:EnableModule("BuffTracking")
                 else
-                    NorskenUI:DisableModule("BuffTracking")
+                    NRSKNUI:DisableModule("BuffTracking")
                 end
             end
             UpdateAllWidgetStates()

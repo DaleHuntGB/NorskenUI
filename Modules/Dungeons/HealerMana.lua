@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("HealerMana: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class HealerMana: AceModule, AceEvent-3.0, AceTimer-3.0
-local HM = NorskenUI:NewModule("HealerMana", "AceEvent-3.0", "AceTimer-3.0")
+local HM = NRSKNUI:NewModule("HealerMana", "AceEvent-3.0", "AceTimer-3.0")
 
 local CreateFrame = CreateFrame
 local UnitExists = UnitExists

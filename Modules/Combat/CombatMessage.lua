@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CombatMessage: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CombatMessage: AceModule, AceEvent-3.0
-local CM = NorskenUI:NewModule("CombatMessage", "AceEvent-3.0")
+local CM = NRSKNUI:NewModule("CombatMessage", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UnitExists, UnitIsDead, UnitIsDeadOrGhost = UnitExists, UnitIsDead, UnitIsDeadOrGhost

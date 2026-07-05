@@ -36,8 +36,8 @@ local SIDEBAR_ITEMS = {
 }
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("StanceIcons", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("StanceIcons", true)
     end
     return nil
 end
@@ -223,7 +223,7 @@ GUIFrame:RegisterPanel("stanceIcons", function(container)
                 db.StanceDisplay.Enabled = checked
                 local mod = GetModule()
                 if mod then
-                    if checked then NorskenUI:EnableModule("StanceIcons") else NorskenUI:DisableModule("StanceIcons") end
+                    if checked then NRSKNUI:EnableModule("StanceIcons") else NRSKNUI:DisableModule("StanceIcons") end
                 end
             end,
             msgPopup = true,

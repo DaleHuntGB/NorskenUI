@@ -12,7 +12,7 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Miscellaneous.FocusCastbar
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local FCB = NorskenUI and NorskenUI:GetModule("FocusCastbar", true)
+    local FCB = NRSKNUI:GetModule("FocusCastbar", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local holdTimerSubWidgets = {}
@@ -89,7 +89,7 @@ GUIFrame:RegisterContent("FocusCastbar", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if FCB then
-                if checked then NorskenUI:EnableModule("FocusCastbar") else NorskenUI:DisableModule("FocusCastbar") end
+                if checked then NRSKNUI:EnableModule("FocusCastbar") else NRSKNUI:DisableModule("FocusCastbar") end
             end
             UpdateAllWidgetStates()
         end,

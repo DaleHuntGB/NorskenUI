@@ -16,7 +16,7 @@ GUIFrame:RegisterContent("CustomSkin_Debuffs", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type DebuffTracking?
-    local DEBUFFS = NorskenUI and NorskenUI:GetModule("DebuffTracking", true)
+    local DEBUFFS = NRSKNUI:GetModule("DebuffTracking", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("borderColor", function() return db.BorderColorMode == "custom" end)
@@ -42,9 +42,9 @@ GUIFrame:RegisterContent("CustomSkin_Debuffs", function(scrollChild, yOffset)
             if DEBUFFS then
                 DEBUFFS.db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("DebuffTracking")
+                    NRSKNUI:EnableModule("DebuffTracking")
                 else
-                    NorskenUI:DisableModule("DebuffTracking")
+                    NRSKNUI:DisableModule("DebuffTracking")
                 end
             end
             UpdateAllWidgetStates()

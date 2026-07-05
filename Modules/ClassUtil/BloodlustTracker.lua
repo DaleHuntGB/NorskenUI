@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("BloodlustTracker: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BloodlustTracker: AceModule, AceEvent-3.0
-local BLT = NorskenUI:NewModule("BloodlustTracker", "AceEvent-3.0")
+local BLT = NRSKNUI:NewModule("BloodlustTracker", "AceEvent-3.0")
 
 local GetTime = GetTime
 local issecretvalue = issecretvalue

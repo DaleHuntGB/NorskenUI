@@ -1,4 +1,4 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@diagnostic disable: undefined-field
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)

@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CombatCross: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CombatCross: AceModule, AceEvent-3.0
-local CC = NorskenUI:NewModule("CombatCross", "AceEvent-3.0")
+local CC = NRSKNUI:NewModule("CombatCross", "AceEvent-3.0")
 
 local select = select
 local CreateFrame = CreateFrame

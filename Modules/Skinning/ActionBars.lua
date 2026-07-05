@@ -1,16 +1,11 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
 -- Check for addon object
-if not NorskenUI then
-    error("ActionBars: Addon object not initialized. Check file load order!")
-    return
-end
-
 -- Create module
 ---@class ActionBars: AceModule, AceEvent-3.0
-local ACB = NorskenUI:NewModule("ActionBars", "AceEvent-3.0")
+local ACB = NRSKNUI:NewModule("ActionBars", "AceEvent-3.0")
 
 -- Localization
 local CreateFrame = CreateFrame

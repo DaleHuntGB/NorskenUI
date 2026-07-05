@@ -1,16 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
----@type NorskenUI
-local NorskenUI = _G.NorskenUI
-
-if not NorskenUI then
-    error("MiscVars: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class MiscVars: AceModule, AceEvent-3.0
-local MVAR = NorskenUI:NewModule("MiscVars", "AceEvent-3.0")
+local MVAR = NRSKNUI:NewModule("MiscVars", "AceEvent-3.0")
 
 local ipairs = ipairs
 local tonumber = tonumber

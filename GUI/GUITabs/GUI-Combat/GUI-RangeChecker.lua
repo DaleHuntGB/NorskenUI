@@ -12,7 +12,7 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type RangeChecker?
-    local RANGE = NorskenUI and NorskenUI:GetModule("RangeChecker", true)
+    local RANGE = NRSKNUI:GetModule("RangeChecker", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
 
@@ -36,7 +36,7 @@ GUIFrame:RegisterContent("RangeChecker", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if RANGE then
-                if checked then NorskenUI:EnableModule("RangeChecker") else NorskenUI:DisableModule("RangeChecker") end
+                if checked then NRSKNUI:EnableModule("RangeChecker") else NRSKNUI:DisableModule("RangeChecker") end
             end
             UpdateAllWidgetStates()
         end,

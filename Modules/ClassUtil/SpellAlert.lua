@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("SpellAlert: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class SpellAlert: AceModule, AceEvent-3.0
-local SA = NorskenUI:NewModule("SpellAlert", "AceEvent-3.0")
+local SA = NRSKNUI:NewModule("SpellAlert", "AceEvent-3.0")
 
 local LS = LibStub("LibSpecialization", true)
 

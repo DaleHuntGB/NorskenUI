@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Blizzard Raidmanager: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BlizzardRM: AceModule, AceEvent-3.0
-local BRMG = NorskenUI:NewModule("BlizzardRM", "AceEvent-3.0")
+local BRMG = NRSKNUI:NewModule("BlizzardRM", "AceEvent-3.0")
 
 local hooksecurefunc = hooksecurefunc
 local InCombatLockdown = InCombatLockdown

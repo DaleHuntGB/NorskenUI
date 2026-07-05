@@ -37,8 +37,8 @@ local SIDEBAR_ITEMS = {
 }
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("MissingBuffs", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("MissingBuffs", true)
     end
     return nil
 end

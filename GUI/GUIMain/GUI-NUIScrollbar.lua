@@ -1,4 +1,4 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 

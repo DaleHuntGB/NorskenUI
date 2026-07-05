@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("RerollKeystone", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type RerollKeystone?
-    local RK = NorskenUI and NorskenUI:GetModule("RerollKeystone", true)
+    local RK = NRSKNUI:GetModule("RerollKeystone", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if RK then RK:ApplySettings() end end
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("RerollKeystone", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if RK then
-                if checked then NorskenUI:EnableModule("RerollKeystone") else NorskenUI:DisableModule("RerollKeystone") end
+                if checked then NRSKNUI:EnableModule("RerollKeystone") else NRSKNUI:DisableModule("RerollKeystone") end
             end
             UpdateAllWidgetStates()
         end,

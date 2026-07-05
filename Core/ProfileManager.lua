@@ -256,7 +256,7 @@ function ProfileManager:ResetModuleSettings(dbPath, moduleName)
     profileSection[finalKey] = DeepCopy(defaultSection[finalKey])
 
     if moduleName then
-        local module = NorskenUI:GetModule(moduleName, true)
+        local module = NRSKNUI:GetModule(moduleName, true)
         if module then
             if module.UpdateDB then module:UpdateDB() end
             if module:IsEnabled() and module.ApplySettings then module:ApplySettings() end
@@ -425,9 +425,6 @@ end
 
 --- Refresh all enabled modules to apply new settings
 function ProfileManager:RefreshAllModules()
-    local NorskenUI = _G.NorskenUI
-    if not NorskenUI then return end
-
     -- Stop previews before refreshing anything
     if NRSKNUI.PreviewManager then NRSKNUI.PreviewManager:StopAllPreviews() end
 
@@ -435,7 +432,7 @@ function ProfileManager:RefreshAllModules()
     if NRSKNUI.RefreshTheme then NRSKNUI:RefreshTheme() end
 
     -- Refresh module DB's and apply settings
-    for _, module in NorskenUI:IterateModules() do
+    for _, module in NRSKNUI:IterateModules() do
         if module.UpdateDB then module:UpdateDB() end
         if module:IsEnabled() and module.ApplySettings then module:ApplySettings() end
     end

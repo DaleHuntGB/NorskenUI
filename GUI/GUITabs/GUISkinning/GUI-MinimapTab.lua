@@ -19,7 +19,7 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Skinning.Minimap
     if not db or NRSKNUI:ShouldNotLoadModule() then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local MAP = NorskenUI:GetModule("Minimap", true)
+    local MAP = NRSKNUI:GetModule("Minimap", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("bugWidgets", function() return db.BugSack.Enabled end)
@@ -37,9 +37,9 @@ GUIFrame:RegisterContent("Minimap", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("Minimap")
+                NRSKNUI:EnableModule("Minimap")
             else
-                NorskenUI:DisableModule("Minimap")
+                NRSKNUI:DisableModule("Minimap")
             end
             UpdateAllWidgetStates()
             NRSKNUI:CreateReloadPrompt("Enabling/Disabling this UI element requires a reload to take full effect.")

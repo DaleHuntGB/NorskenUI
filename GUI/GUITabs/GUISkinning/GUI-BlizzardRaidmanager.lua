@@ -7,7 +7,7 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
     local db = NRSKNUI.db and NRSKNUI.db.profile.BlizzardRM
     if not db or NRSKNUI:ShouldNotLoadModule() then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local BRMG = NorskenUI:GetModule("BlizzardRM", true)
+    local BRMG = NRSKNUI:GetModule("BlizzardRM", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if BRMG then BRMG:ApplySettings() end end
@@ -24,9 +24,9 @@ GUIFrame:RegisterContent("BlizzardRM", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("BlizzardRM")
+                NRSKNUI:EnableModule("BlizzardRM")
             else
-                NorskenUI:DisableModule("BlizzardRM")
+                NRSKNUI:DisableModule("BlizzardRM")
             end
             UpdateAllWidgetStates()
         end,

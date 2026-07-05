@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("ReckonTracker", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type ReckonTracker?
-    local RECKON = NorskenUI and NorskenUI:GetModule("ReckonTracker", true)
+    local RECKON = NRSKNUI:GetModule("ReckonTracker", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if RECKON then RECKON:ApplySettings() end end
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("ReckonTracker", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if RECKON then
-                if checked then NorskenUI:EnableModule("ReckonTracker") else NorskenUI:DisableModule("ReckonTracker") end
+                if checked then NRSKNUI:EnableModule("ReckonTracker") else NRSKNUI:DisableModule("ReckonTracker") end
             end
             UpdateAllWidgetStates()
         end,

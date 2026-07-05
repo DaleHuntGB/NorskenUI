@@ -9,7 +9,7 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type HealerMana?
-    local HM = NorskenUI and NorskenUI:GetModule("HealerMana", true)
+    local HM = NRSKNUI:GetModule("HealerMana", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
@@ -27,10 +27,10 @@ GUIFrame:RegisterContent("HealerMana", function(scrollChild, yOffset)
             db.Enabled = checked
             if HM then
                 if checked then
-                    NorskenUI:EnableModule("HealerMana")
+                    NRSKNUI:EnableModule("HealerMana")
                     HM:ShowPreview()
                 else
-                    NorskenUI:DisableModule("HealerMana")
+                    NRSKNUI:DisableModule("HealerMana")
                     HM:HidePreview()
                 end
             end

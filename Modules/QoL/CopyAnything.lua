@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CopyAnything: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CopyAnything: AceModule, AceEvent-3.0
-local CopyAnything = NorskenUI:NewModule("CopyAnything", "AceEvent-3.0")
+local CopyAnything = NRSKNUI:NewModule("CopyAnything", "AceEvent-3.0")
 
 local IsControlKeyDown = IsControlKeyDown
 local IsShiftKeyDown = IsShiftKeyDown

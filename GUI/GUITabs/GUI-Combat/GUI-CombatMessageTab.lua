@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CombatMessage?
-    local CM = NorskenUI and NorskenUI:GetModule("CombatMessage", true)
+    local CM = NRSKNUI:GetModule("CombatMessage", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local enterSubWidgets = {}
@@ -74,7 +74,7 @@ GUIFrame:RegisterContent("combatMessage", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CM then
-                if checked then NorskenUI:EnableModule("CombatMessage") else NorskenUI:DisableModule("CombatMessage") end
+                if checked then NRSKNUI:EnableModule("CombatMessage") else NRSKNUI:DisableModule("CombatMessage") end
             end
             UpdateAllWidgetStates()
         end,

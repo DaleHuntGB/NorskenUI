@@ -21,7 +21,7 @@ GUIFrame:RegisterContent("GlobalPage", function(scrollChild, yOffset)
     manager:SetCondition("globBarON", function() return barDB.Enabled end)
 
     local function ApplyToAllModules()
-        for _, module in NorskenUI:IterateModules() do
+        for _, module in NRSKNUI:IterateModules() do
             if module:IsEnabled() and module.ApplySettings then
                 module:ApplySettings()
             end

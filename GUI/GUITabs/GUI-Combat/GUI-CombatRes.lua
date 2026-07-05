@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("battleRes", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type CombatRes?
-    local CR = NorskenUI and NorskenUI:GetModule("CombatRes", true)
+    local CR = NRSKNUI:GetModule("CombatRes", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local backdropSubWidgets = {}
@@ -45,7 +45,7 @@ GUIFrame:RegisterContent("battleRes", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if CR then
-                if checked then NorskenUI:EnableModule("CombatRes") else NorskenUI:DisableModule("CombatRes") end
+                if checked then NRSKNUI:EnableModule("CombatRes") else NRSKNUI:DisableModule("CombatRes") end
             end
             UpdateAllWidgetStates()
         end,

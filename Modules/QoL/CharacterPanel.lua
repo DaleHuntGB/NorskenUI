@@ -2,13 +2,8 @@
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
-if not NorskenUI then
-    error("CharacterPanel: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CharacterPanel: AceModule, AceEvent-3.0, AceHook-3.0
-local CHAR = NorskenUI:NewModule("CharacterPanel", "AceEvent-3.0", "AceHook-3.0")
+local CHAR = NRSKNUI:NewModule("CharacterPanel", "AceEvent-3.0", "AceHook-3.0")
 
 local GetAverageItemLevel = GetAverageItemLevel
 local GetInventoryItemLink = GetInventoryItemLink

@@ -19,8 +19,8 @@ local selectedItem = "General"
 local specFilterExpandedClasses = {}
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("MissingItems", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("MissingItems", true)
     end
     return nil
 end
@@ -262,9 +262,9 @@ GUIFrame:RegisterPanel("missingItems", function(container)
                 local mod = GetModule()
                 if mod then
                     if checked then
-                        NorskenUI:EnableModule("MissingItems")
+                        NRSKNUI:EnableModule("MissingItems")
                     else
-                        NorskenUI:DisableModule("MissingItems")
+                        NRSKNUI:DisableModule("MissingItems")
                     end
                 end
                 UpdateAllWidgetStates()

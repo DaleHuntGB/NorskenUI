@@ -1,10 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then return end
-
 ---@class DragonRiding: AceModule, AceEvent-3.0
-local DR = NorskenUI:NewModule("DragonRiding", "AceEvent-3.0")
+local DR = NRSKNUI:NewModule("DragonRiding", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local ipairs = ipairs

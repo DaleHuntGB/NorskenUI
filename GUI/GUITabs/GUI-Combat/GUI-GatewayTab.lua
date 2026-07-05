@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("gateway", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type Gateway?
-    local GATE = NorskenUI and NorskenUI:GetModule("Gateway", true)
+    local GATE = NRSKNUI:GetModule("Gateway", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
 
@@ -37,7 +37,7 @@ GUIFrame:RegisterContent("gateway", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if GATE then
-                if checked then NorskenUI:EnableModule("Gateway") else NorskenUI:DisableModule("Gateway") end
+                if checked then NRSKNUI:EnableModule("Gateway") else NRSKNUI:DisableModule("Gateway") end
             end
             UpdateAllWidgetStates()
         end,

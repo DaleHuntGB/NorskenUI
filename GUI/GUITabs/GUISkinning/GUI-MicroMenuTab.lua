@@ -7,7 +7,7 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Skinning.MicroMenu
     if not db or NRSKNUI:ShouldNotLoadModule() then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
-    local MM = NorskenUI:GetModule("MicroMenu", true)
+    local MM = NRSKNUI:GetModule("MicroMenu", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("backdrop", function() return db.ShowBackdrop end)
@@ -25,9 +25,9 @@ GUIFrame:RegisterContent("MicroMenu", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("MicroMenu")
+                NRSKNUI:EnableModule("MicroMenu")
             else
-                NorskenUI:DisableModule("MicroMenu")
+                NRSKNUI:DisableModule("MicroMenu")
             end
             UpdateAllWidgetStates()
             NRSKNUI:CreateReloadPrompt("Enabling/Disabling this UI element requires a reload to take full effect.")

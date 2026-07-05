@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("PotionReady", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type PotionReady?
-    local POT = NorskenUI and NorskenUI:GetModule("PotionReady", true)
+    local POT = NRSKNUI:GetModule("PotionReady", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if POT then POT:ApplySettings() end end
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("PotionReady", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if POT then
-                if checked then NorskenUI:EnableModule("PotionReady") else NorskenUI:DisableModule("PotionReady") end
+                if checked then NRSKNUI:EnableModule("PotionReady") else NRSKNUI:DisableModule("PotionReady") end
             end
             UpdateAllWidgetStates()
         end,

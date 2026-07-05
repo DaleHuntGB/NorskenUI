@@ -51,8 +51,8 @@ local SIDEBAR_ITEMS = {
 }
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("MissingBuffs", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("MissingBuffs", true)
     end
     return nil
 end
@@ -214,7 +214,7 @@ GUIFrame:RegisterPanel("missingBuffs", function(container)
                 db.Enabled = checked
                 local mod = GetModule()
                 if mod then
-                    if checked then NorskenUI:EnableModule("MissingBuffs") else NorskenUI:DisableModule("MissingBuffs") end
+                    if checked then NRSKNUI:EnableModule("MissingBuffs") else NRSKNUI:DisableModule("MissingBuffs") end
                 end
             end,
             msgPopup = true,

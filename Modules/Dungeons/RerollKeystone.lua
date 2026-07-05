@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("RerollKeystone: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class RerollKeystone: AceModule, AceEvent-3.0
-local RK = NorskenUI:NewModule("RerollKeystone", "AceEvent-3.0")
+local RK = NRSKNUI:NewModule("RerollKeystone", "AceEvent-3.0")
 
 local GetTime = GetTime
 local GetRealZoneText = GetRealZoneText

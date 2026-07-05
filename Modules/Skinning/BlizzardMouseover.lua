@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Blizzard Mouseover: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BlizzardMouseover: AceModule, AceEvent-3.0
-local BMO = NorskenUI:NewModule("BlizzardMouseover", "AceEvent-3.0")
+local BMO = NRSKNUI:NewModule("BlizzardMouseover", "AceEvent-3.0")
 
 local UIFrameFadeOut = UIFrameFadeOut
 local UIFrameFadeIn = UIFrameFadeIn

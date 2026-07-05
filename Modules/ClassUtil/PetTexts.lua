@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("PetTexts: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class PetTexts: AceModule, AceEvent-3.0
-local PET = NorskenUI:NewModule("PetTexts", "AceEvent-3.0")
+local PET = NRSKNUI:NewModule("PetTexts", "AceEvent-3.0")
 
 local UnitClass = UnitClass
 local IsMounted = IsMounted

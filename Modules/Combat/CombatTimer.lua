@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CombatTimer: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class CombatTimer: AceModule, AceEvent-3.0
-local CT = NorskenUI:NewModule("CombatTimer", "AceEvent-3.0")
+local CT = NRSKNUI:NewModule("CombatTimer", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local GetTime = GetTime

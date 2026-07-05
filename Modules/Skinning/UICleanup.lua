@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("UICleanup: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class UICleanup: AceModule, AceEvent-3.0
-local UIC = NorskenUI:NewModule("UICleanup", "AceEvent-3.0")
+local UIC = NRSKNUI:NewModule("UICleanup", "AceEvent-3.0")
 
 local ipairs = ipairs
 local ObjectiveTrackerFrame = ObjectiveTrackerFrame

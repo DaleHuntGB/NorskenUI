@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type AuctionHouseFilter?
-    local AHF = NorskenUI and NorskenUI:GetModule("AuctionHouseFilter", true)
+    local AHF = NRSKNUI:GetModule("AuctionHouseFilter", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local auctionatorLoaded = C_AddOns.IsAddOnLoaded("Auctionator")
 
@@ -27,9 +27,9 @@ GUIFrame:RegisterContent("AuctionHouseFilter", function(scrollChild, yOffset)
             db.Enabled = checked
             if AHF then
                 if checked then
-                    NorskenUI:EnableModule("AuctionHouseFilter")
+                    NRSKNUI:EnableModule("AuctionHouseFilter")
                 else
-                    NorskenUI:DisableModule(
+                    NRSKNUI:DisableModule(
                         "AuctionHouseFilter")
                 end
             end

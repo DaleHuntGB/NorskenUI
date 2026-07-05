@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
     if not db or NRSKNUI:ShouldNotLoadModule() then GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type BlizzardMouseover?
-    local BMO = NorskenUI:GetModule("BlizzardMouseover", true)
+    local BMO = NRSKNUI:GetModule("BlizzardMouseover", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local function UpdateAllWidgetStates() manager:UpdateAll(db.Enabled) end
 
@@ -23,9 +23,9 @@ GUIFrame:RegisterContent("BlizzardMouseover", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("BlizzardMouseover")
+                NRSKNUI:EnableModule("BlizzardMouseover")
             else
-                NorskenUI:DisableModule("BlizzardMouseover")
+                NRSKNUI:DisableModule("BlizzardMouseover")
             end
             UpdateAllWidgetStates()
         end,

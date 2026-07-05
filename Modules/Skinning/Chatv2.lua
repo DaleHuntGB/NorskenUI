@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("Chatv2: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class Chatv2: AceModule, AceEvent-3.0, AceHook-3.0
-local CHAT = NorskenUI:NewModule("Chatv2", "AceEvent-3.0", "AceHook-3.0")
+local CHAT = NRSKNUI:NewModule("Chatv2", "AceEvent-3.0", "AceHook-3.0")
 
 local LSM = NRSKNUI.LSM
 local Theme = NRSKNUI.Theme

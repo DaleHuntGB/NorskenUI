@@ -2,13 +2,8 @@
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
-if not NorskenUI then
-    error("BlizzObjectiveTracker: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BlizzObjectiveTracker: AceModule, AceEvent-3.0
-local BOT = NorskenUI:NewModule("BlizzObjectiveTracker", "AceEvent-3.0")
+local BOT = NRSKNUI:NewModule("BlizzObjectiveTracker", "AceEvent-3.0")
 
 local hooksecurefunc = hooksecurefunc
 local pairs = pairs

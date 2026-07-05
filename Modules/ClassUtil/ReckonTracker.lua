@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("ReckonTracker: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class ReckonTracker: AceModule, AceEvent-3.0
-local RECKON = NorskenUI:NewModule("ReckonTracker", "AceEvent-3.0")
+local RECKON = NRSKNUI:NewModule("ReckonTracker", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UIParent = UIParent

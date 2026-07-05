@@ -107,13 +107,13 @@ GUIFrame:RegisterPanel("BlizzardElementsTab", function(container)
             callback = function(checked)
                 db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("BlizzObjectiveTracker")
+                    NRSKNUI:EnableModule("BlizzObjectiveTracker")
                 else
-                    NorskenUI:DisableModule("BlizzObjectiveTracker")
+                    NRSKNUI:DisableModule("BlizzObjectiveTracker")
                     NRSKNUI:CreateReloadPrompt(
                         "Restoring default Blizzard elements requires a reload to take full effect.")
                 end
-                local mod = NorskenUI:GetModule("BlizzObjectiveTracker", true)
+                local mod = NRSKNUI:GetModule("BlizzObjectiveTracker", true)
                 if mod and mod.ApplySettings then mod:ApplySettings() end
                 UpdateAllWidgetStates()
             end,
@@ -126,7 +126,7 @@ GUIFrame:RegisterPanel("BlizzardElementsTab", function(container)
         yOffset = card1:GetNextOffset()
     elseif selectedItem == "ObjectiveTracker" then
         local objDb = db.ObjectiveTracker
-        local objMod = NorskenUI:GetModule("BlizzObjectiveTracker", true)
+        local objMod = NRSKNUI:GetModule("BlizzObjectiveTracker", true)
         manager:SetCondition("objEnabled", function() return objDb.Enabled end)
         manager:SetCondition("fontEnabled", function() return objDb.FontStyling end)
 

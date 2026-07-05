@@ -26,8 +26,8 @@ local SIDEBAR_ITEMS = {
 }
 
 local function GetModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("StanceTexts", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("StanceTexts", true)
     end
     return nil
 end
@@ -212,7 +212,7 @@ GUIFrame:RegisterPanel("stanceTexts", function(container)
                 db.StanceText.Enabled = checked
                 local mod = GetModule()
                 if mod then
-                    if checked then NorskenUI:EnableModule("StanceTexts") else NorskenUI:DisableModule("StanceTexts") end
+                    if checked then NRSKNUI:EnableModule("StanceTexts") else NRSKNUI:DisableModule("StanceTexts") end
                 end
             end,
             msgPopup = true,

@@ -9,7 +9,7 @@ GUIFrame:RegisterContent("CustomSkin_DebuffsDefault", function(scrollChild, yOff
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type DebuffTrackingDefault?
-    local DEBUFFS = NorskenUI and NorskenUI:GetModule("DebuffTrackingDefault", true)
+    local DEBUFFS = NRSKNUI:GetModule("DebuffTrackingDefault", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     manager:SetCondition("swipeOn", function() return db.Swipe end)
@@ -33,9 +33,9 @@ GUIFrame:RegisterContent("CustomSkin_DebuffsDefault", function(scrollChild, yOff
             if DEBUFFS then
                 DEBUFFS.db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("DebuffTrackingDefault")
+                    NRSKNUI:EnableModule("DebuffTrackingDefault")
                 else
-                    NorskenUI:DisableModule("DebuffTrackingDefault")
+                    NRSKNUI:DisableModule("DebuffTrackingDefault")
                 end
             end
             UpdateAllWidgetStates()

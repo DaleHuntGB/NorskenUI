@@ -19,7 +19,7 @@ GUIFrame:RegisterContent("DT_Texts", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type DungeonTimers?
-    local DT = NorskenUI and NorskenUI:GetModule("DungeonTimers", true)
+    local DT = NRSKNUI:GetModule("DungeonTimers", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings()
@@ -114,7 +114,7 @@ NRSKNUI.GUI = NRSKNUI.GUI or {}
 NRSKNUI.GUI.DungeonTimers = NRSKNUI.GUI.DungeonTimers or {}
 
 NRSKNUI.GUI.DungeonTimers.HideTextPreviews = function()
-    local DT = NorskenUI and NorskenUI:GetModule("DungeonTimers", true)
+    local DT = NRSKNUI:GetModule("DungeonTimers", true)
     if DT and DT.HideSettingsTextPreviews then DT:HideSettingsTextPreviews() end
 end
 

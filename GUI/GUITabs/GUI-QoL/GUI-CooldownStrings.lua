@@ -47,7 +47,7 @@ GUIFrame:RegisterPanel("CooldownStrings", function(container)
     if not db then return end
     if not db.Profiles then db.Profiles = {} end
 
-    local mod = NorskenUI and NorskenUI:GetModule("CooldownStrings", true)
+    local mod = NRSKNUI:GetModule("CooldownStrings", true)
 
     local allSpecList = BuildSpecList()
     local allWidgets = {}
@@ -56,9 +56,9 @@ GUIFrame:RegisterPanel("CooldownStrings", function(container)
         if not mod then return end
         mod.db.Enabled = enabled
         if enabled then
-            NorskenUI:EnableModule("CooldownStrings")
+            NRSKNUI:EnableModule("CooldownStrings")
         else
-            NorskenUI:DisableModule("CooldownStrings")
+            NRSKNUI:DisableModule("CooldownStrings")
         end
     end
 

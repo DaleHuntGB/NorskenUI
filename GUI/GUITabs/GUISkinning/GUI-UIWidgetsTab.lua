@@ -1,4 +1,4 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 local GUIFrame = NRSKNUI.GUIFrame
@@ -14,8 +14,8 @@ local table_sort = table.sort
 
 -- Helper to get UIWidgets module
 local function GetUIWidgetsModule()
-    if NorskenUI then
-        return NorskenUI:GetModule("UIWidgets", true)
+    if NRSKNUI then
+        return NRSKNUI:GetModule("UIWidgets", true)
     end
     return nil
 end
@@ -107,10 +107,10 @@ GUIFrame:RegisterContent("UIWidgets", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if checked then
-                NorskenUI:EnableModule("UIWidgets")
+                NRSKNUI:EnableModule("UIWidgets")
                 ApplySettings()
             else
-                NorskenUI:DisableModule("UIWidgets")
+                NRSKNUI:DisableModule("UIWidgets")
             end
             UpdateAllWidgetStates()
         end,

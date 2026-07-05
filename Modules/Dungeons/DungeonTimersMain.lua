@@ -1,14 +1,9 @@
--- NorskenUI namespace
+-- NRSKNUI namespace
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("DungeonTimers: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class DungeonTimers: AceModule, AceEvent-3.0, AceTimer-3.0
-local DT = NorskenUI:NewModule("DungeonTimers", "AceEvent-3.0", "AceTimer-3.0")
+local DT = NRSKNUI:NewModule("DungeonTimers", "AceEvent-3.0", "AceTimer-3.0")
 
 local CreateFrame = CreateFrame
 local GetTime = GetTime
@@ -998,13 +993,13 @@ function DT:ApplySettings()
     self:UpdateDB()
     if self.db and self.db.Enabled then
         if not self:IsEnabled() then
-            NorskenUI:EnableModule("DungeonTimers")
+            NRSKNUI:EnableModule("DungeonTimers")
         else
             self:RegisterBigWigsCallbacks()
         end
     else
         if self:IsEnabled() then
-            NorskenUI:DisableModule("DungeonTimers")
+            NRSKNUI:DisableModule("DungeonTimers")
         end
     end
 end

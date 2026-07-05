@@ -64,14 +64,14 @@ end
 function PreviewManager:StartAllPreviews()
     if self._startingPreviews then return end
     self._startingPreviews = true
-    for _, module in NorskenUI:IterateModules() do
+    for _, module in NRSKNUI:IterateModules() do
         if module.ShowPreview and module.db and module.db.Enabled then module:ShowPreview() end
     end
     self._startingPreviews = false
 end
 
 function PreviewManager:StopAllPreviews()
-    for _, module in NorskenUI:IterateModules() do
+    for _, module in NRSKNUI:IterateModules() do
         if module.HidePreview then module:HidePreview() end
     end
 end

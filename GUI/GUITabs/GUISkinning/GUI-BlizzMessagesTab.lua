@@ -24,7 +24,7 @@ GUIFrame:RegisterPanel("messages", function(container)
     local db = NRSKNUI.db and NRSKNUI.db.profile.Skinning.BlizzardMessages
     if not db then return nil end
 
-    local mod = NorskenUI:GetModule("BlizzardMessages", true)
+    local mod = NRSKNUI:GetModule("BlizzardMessages", true)
 
     local function ApplySettings()
         if mod and mod.ApplySettings then mod:ApplySettings() end
@@ -128,9 +128,9 @@ GUIFrame:RegisterPanel("messages", function(container)
                 db.Enabled = checked
                 if mod then
                     if checked then
-                        NorskenUI:EnableModule("BlizzardMessages")
+                        NRSKNUI:EnableModule("BlizzardMessages")
                     else
-                        NorskenUI:DisableModule("BlizzardMessages")
+                        NRSKNUI:DisableModule("BlizzardMessages")
                         NRSKNUI:CreateReloadPrompt(
                             "Restoring default Blizzard text elements requires a reload to take full effect.")
                     end

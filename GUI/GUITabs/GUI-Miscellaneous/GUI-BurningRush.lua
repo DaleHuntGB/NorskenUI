@@ -8,7 +8,7 @@ GUIFrame:RegisterContent("BurningRush", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type BurningRush?
-    local BURN = NorskenUI and NorskenUI:GetModule("BurningRush", true)
+    local BURN = NRSKNUI:GetModule("BurningRush", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings() if BURN then BURN:ApplySettings() end end
@@ -23,7 +23,7 @@ GUIFrame:RegisterContent("BurningRush", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if BURN then
-                if checked then NorskenUI:EnableModule("BurningRush") else NorskenUI:DisableModule("BurningRush") end
+                if checked then NRSKNUI:EnableModule("BurningRush") else NRSKNUI:DisableModule("BurningRush") end
             end
             UpdateAllWidgetStates()
         end,

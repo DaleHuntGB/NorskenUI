@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type XPBar?
-    local XPBar = NorskenUI and NorskenUI:GetModule("XPBar", true)
+    local XPBar = NRSKNUI:GetModule("XPBar", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings()
@@ -35,7 +35,7 @@ GUIFrame:RegisterContent("XPBar", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if XPBar then
-                if checked then NorskenUI:EnableModule("XPBar") else NorskenUI:DisableModule("XPBar") end
+                if checked then NRSKNUI:EnableModule("XPBar") else NRSKNUI:DisableModule("XPBar") end
             end
             UpdateAllWidgetStates()
         end,

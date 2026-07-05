@@ -13,7 +13,7 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type ExternalBuffTracking?
-    local EXTERNALS = NorskenUI and NorskenUI:GetModule("ExternalBuffTracking", true)
+    local EXTERNALS = NRSKNUI:GetModule("ExternalBuffTracking", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local allCards = {}
@@ -59,10 +59,10 @@ GUIFrame:RegisterContent("CustomSkin_Externals", function(scrollChild, yOffset)
             if EXTERNALS then
                 EXTERNALS.db.Enabled = checked
                 if checked then
-                    NorskenUI:EnableModule("ExternalBuffTracking")
+                    NRSKNUI:EnableModule("ExternalBuffTracking")
                     EXTERNALS:ShowPreview()
                 else
-                    NorskenUI:DisableModule("ExternalBuffTracking")
+                    NRSKNUI:DisableModule("ExternalBuffTracking")
                     EXTERNALS:HidePreview()
                 end
             end

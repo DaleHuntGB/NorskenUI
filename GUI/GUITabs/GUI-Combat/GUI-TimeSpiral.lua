@@ -11,7 +11,7 @@ GUIFrame:RegisterContent("TimeSpiral", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type TimeSpiral?
-    local TSP = NorskenUI and NorskenUI:GetModule("TimeSpiral", true)
+    local TSP = NRSKNUI:GetModule("TimeSpiral", true)
     local manager = GUIFrame:CreateWidgetStateManager()
     local postUpdateCallbacks = {}
     local textSubWidgets = {}
@@ -64,7 +64,7 @@ GUIFrame:RegisterContent("TimeSpiral", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if TSP then
-                if checked then NorskenUI:EnableModule("TimeSpiral") else NorskenUI:DisableModule("TimeSpiral") end
+                if checked then NRSKNUI:EnableModule("TimeSpiral") else NRSKNUI:DisableModule("TimeSpiral") end
             end
             UpdateAllWidgetStates()
         end,

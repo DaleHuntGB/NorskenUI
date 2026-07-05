@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("BenchAlert: Addon object not initialized. Check file load order!")
-    return
-end
-
 ---@class BenchAlert: AceModule, AceEvent-3.0
-local BA = NorskenUI:NewModule("BenchAlert", "AceEvent-3.0")
+local BA = NRSKNUI:NewModule("BenchAlert", "AceEvent-3.0")
 
 local IsInRaid = IsInRaid
 local IsInInstance = IsInInstance

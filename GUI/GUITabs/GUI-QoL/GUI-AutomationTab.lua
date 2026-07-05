@@ -10,7 +10,7 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
     if not db then return GUIFrame:ShowDBError(scrollChild, yOffset) end
 
     ---@type Automation?
-    local AUTO = NorskenUI and NorskenUI:GetModule("Automation", true)
+    local AUTO = NRSKNUI:GetModule("Automation", true)
     local manager = GUIFrame:CreateWidgetStateManager()
 
     local function ApplySettings()
@@ -37,7 +37,7 @@ GUIFrame:RegisterContent("Automation", function(scrollChild, yOffset)
         callback = function(checked)
             db.Enabled = checked
             if AUTO then
-                if checked then NorskenUI:EnableModule("Automation") else NorskenUI:DisableModule("Automation") end
+                if checked then NRSKNUI:EnableModule("Automation") else NRSKNUI:DisableModule("Automation") end
             end
             UpdateAllWidgetStates()
         end,

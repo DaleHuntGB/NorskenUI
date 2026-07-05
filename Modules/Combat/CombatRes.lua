@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("CombatRes: Addon object not initialized!")
-    return
-end
-
 ---@class CombatRes: AceModule, AceEvent-3.0
-local CR = NorskenUI:NewModule("CombatRes", "AceEvent-3.0")
+local CR = NRSKNUI:NewModule("CombatRes", "AceEvent-3.0")
 
 local CreateFrame = CreateFrame
 local UIParent = UIParent

@@ -1,13 +1,8 @@
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
 
-if not NorskenUI then
-    error("ExternalBuffTracking: Addon object not initialized!")
-    return
-end
-
 ---@class ExternalBuffTracking: AceModule, AceEvent-3.0
-local EXTERNALS = NorskenUI:NewModule("ExternalBuffTracking", "AceEvent-3.0")
+local EXTERNALS = NRSKNUI:NewModule("ExternalBuffTracking", "AceEvent-3.0")
 
 local LCG = LibStub("LibCustomGlow-1.0", true)
 
