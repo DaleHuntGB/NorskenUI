@@ -1,0 +1,8 @@
+{
+    "library": ["Libs"],
+    "flavors": ["retail"],
+    "globals": {
+        "read": ["NorskenUIDB"],
+        "write": ["NorskenUI"]
+    }
+}

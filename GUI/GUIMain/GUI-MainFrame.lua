@@ -1,9 +1,28 @@
 -- NRSKNUI namespace
----@diagnostic disable: undefined-field
 ---@class NRSKNUI
 local NRSKNUI = select(2, ...)
+
 NRSKNUI.GUIFrame = NRSKNUI.GUIFrame or {}
+---@class GUIFrame
+---@field mainFrame (Frame & BackdropTemplate)|nil Main options window, created by CreateMainFrame
+---@field sidebar (Frame & BackdropTemplate)|nil Sidebar panel, created in GUI-Sidebar.lua
+---@field contentArea Frame|nil Scrollable content area
+---@field footer (Frame & BackdropTemplate)|nil Footer bar
+---@field sessionState { scrollPositions: table<string, number>, selectedTab: string, selectedSidebarItem: string|nil, sidebarExpanded: table<string, boolean>|nil }
+---@field selectedTab string
+---@field selectedSidebarItem string|nil
+---@field sidebarExpanded table<string, boolean>
+---@field reopenAfterCombat boolean|nil Reopen the GUI when combat ends
+---@field sidebarRefreshPending boolean|nil
+---@field currentBuildingPageId string|nil
+---@field _isShowing boolean|nil Guards against re-entrant Show calls
+---@field shortcutBtn Button|nil Header shortcut menu toggle
+---@field shortcutContent (Frame & BackdropTemplate)|nil Shortcut dropdown frame
+---@field shortcutItemButtons (Button & BackdropTemplate)[]|nil
+---@field shortcutScrollbarThumb Texture|nil
+---@field shortcutScrollbarBorder (Frame & BackdropTemplate)|nil
 local GUIFrame = NRSKNUI.GUIFrame
+
 local Theme = NRSKNUI.Theme
 local addonVersion = NRSKNUI.Version
 
@@ -1167,6 +1186,7 @@ function GUIFrame:Hide()
     end
 end
 
+---Toggles the visibility of the GUI frame.
 function GUIFrame:Toggle()
     if self.mainFrame and self.mainFrame:IsShown() then
         self:Hide()

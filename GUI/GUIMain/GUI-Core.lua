@@ -3,6 +3,9 @@ local NRSKNUI = select(2, ...)
 NRSKNUI.GUIFrame = NRSKNUI.GUIFrame or {}
 NRSKNUI.GUI = NRSKNUI.GUI or {}
 ---@class GUIFrame
+---@field ContentBuilders table<string, fun(scrollChild: Frame, yOffset: number): number>
+---@field PanelBuilders table<string, function>
+---@field contentCleanupCallbacks table<string, function>
 local GUIFrame = NRSKNUI.GUIFrame
 local Theme = NRSKNUI.Theme
 

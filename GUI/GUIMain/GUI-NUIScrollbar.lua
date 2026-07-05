@@ -22,7 +22,7 @@ local BORDER_ONLY_BACKDROP = {
 
 ---@class NUIScrollbarMixin : Slider, BackdropTemplate
 ---@field thumb Texture
----@field thumbBorder Frame
+---@field thumbBorder Frame & BackdropTemplate
 ---@field onValueChanged? fun(self: Slider, value: number)
 ---@field _scrollFrame ScrollFrame
 local NUIScrollbarMixin = {}

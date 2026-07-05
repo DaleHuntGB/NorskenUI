@@ -546,6 +546,7 @@ end
 -- Preview stuff
 
 local PREVIEW_ICONS = { 136139, 136188, 132090, 135849, 132095, 136197, }
+---@type NRSKNUI.DispelType[]
 local PREVIEW_DISPEL_TYPES = { 0, 1, 2, 3, 4, 11 } -- None, Magic, Curse, Disease, Poison, Bleed
 
 function DEBUFFS:ShowPreview()

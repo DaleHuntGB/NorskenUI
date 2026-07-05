@@ -1,4 +1,5 @@
 ---@class NRSKNUI : AceAddon-3.0, AceEvent-3.0, AceHook-3.0
+---@field db NRSKNUI.AceDB
 local NRSKNUI = select(2, ...)
 local Theme = NRSKNUI.Theme
 
@@ -15,13 +16,34 @@ local LDS = LibStub("LibDualSpec-1.0")
 aceAddon:NewAddon(NRSKNUI, "NorskenUI", "AceEvent-3.0", "AceHook-3.0")
 _G.NorskenUI = NRSKNUI
 
+---AceDB-3.0 database object (fields created dynamically by AceDB, so declared here for the language server).
+---@class NRSKNUI.AceDB
+---@field profile table Active profile settings
+---@field global table Account-wide settings
+---@field char table Character-specific settings
+---@field profiles table<string, table> All stored profiles
+---@field defaults table|nil Registered defaults
+---@field RegisterCallback fun(target: table, eventName: string, callback: function|string) CallbackHandler registration (dot-call)
+---@field UnregisterCallback fun(target: table, eventName: string)
+---@field CheckDualSpecState fun(db: NRSKNUI.AceDB)|nil Added by LibDualSpec-1.0
+---@field SetProfile fun(self: NRSKNUI.AceDB, name: string)
+---@field GetCurrentProfile fun(self: NRSKNUI.AceDB): string
+---@field GetProfiles fun(self: NRSKNUI.AceDB, tbl?: table): string[], number
+---@field CopyProfile fun(self: NRSKNUI.AceDB, name: string, silent?: boolean)
+---@field DeleteProfile fun(self: NRSKNUI.AceDB, name: string, silent?: boolean)
+---@field ResetProfile fun(self: NRSKNUI.AceDB, noChildren?: boolean, noCallbacks?: boolean)
+---@field ResetDB fun(self: NRSKNUI.AceDB, defaultProfile?: string): NRSKNUI.AceDB
+---@field RegisterDefaults fun(self: NRSKNUI.AceDB, defaults: table)
+---@field RegisterNamespace fun(self: NRSKNUI.AceDB, name: string, defaults?: table): NRSKNUI.AceDB
+---@field GetNamespace fun(self: NRSKNUI.AceDB, name: string, silent?: boolean): NRSKNUI.AceDB|nil
+
 -- OnInitialize: Called when the addon is initialized
 function NRSKNUI:OnInitialize()
     local defaults = NRSKNUI:GetDefaultDB()
     if not defaults then
         defaults = { profile = {} }
     end
-    NRSKNUI.db = LibStub("AceDB-3.0"):New("NorskenUIDB", defaults, true)
+    NRSKNUI.db = LibStub("AceDB-3.0"):New("NorskenUIDB", defaults, true) --[[@as NRSKNUI.AceDB]]
     if LDS then
         LDS:EnhanceDatabase(NRSKNUI.db, "NorskenUI")
         -- Hook CheckDualSpecState to skip spec-based switching when global profile is active
@@ -155,7 +177,7 @@ end
 function NRSKNUI:OnEnable()
     -- Method to fix old frame sizing data that messes up sidebar width
     local currentVersion = NRSKNUI:GetDefaultDB().global.GUIState.GUIFrameLayoutVersion or 1
-    local rawState = _G.NorskenUIDB and _G.NorskenUIDB.global and _G.NorskenUIDB.global.GUIState
+    local rawState = _G.NorskenUIDB.global.GUIState
     if (rawState and rawState.GUIFrameLayoutVersion or 0) < currentVersion then
         local frame = NRSKNUI.db.global.GUIState.frame
         if frame then frame.width, frame.height = nil, nil end
@@ -173,7 +195,5 @@ function NRSKNUI:OnEnable()
     end
 
     -- Event Registration
-    self:RegisterEvent("ENCOUNTER_END", OnEncounterEnd)
-    self:RegisterEvent("ENCOUNTER_START", OnEncounterStart)
     self:RegisterEvent("PLAYER_ENTERING_WORLD", OnPlayerEnteringWorld)
 end

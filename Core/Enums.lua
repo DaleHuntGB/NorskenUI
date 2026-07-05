@@ -2,7 +2,9 @@
 local NRSKNUI = select(2, ...)
 
 NRSKNUI.Enum = {}
-NRSKNUI.Enum.DispelType = {
+
+---@enum NRSKNUI.DispelType
+local DispelType = {
     -- Source: https://wago.tools/db2/SpellDispelType
     None = 0,
     Magic = 1,
@@ -12,3 +14,4 @@ NRSKNUI.Enum.DispelType = {
     Enrage = 9,
     Bleed = 11,
 }
+NRSKNUI.Enum.DispelType = DispelType
