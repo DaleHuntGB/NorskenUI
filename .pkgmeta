@@ -53,3 +53,4 @@ ignore:
     - .gitignore
     - .gitattributes
     - .Annotations/
+    - .wowluarc.json
