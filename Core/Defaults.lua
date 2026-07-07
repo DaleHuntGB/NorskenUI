@@ -1899,25 +1899,49 @@ local Defaults = {
             -- Tooltip Skinning
             Tooltips = {
                 Enabled = true,
-                ShowStatusBar = true,
+                -- General Settings
+                HideThreatLine = true,
+                ShowItemQualityBorder = true,
+                -- Hide in combat settings
                 HideInCombat = true,
-                StyleLevelLine = true,
-                StyleGuildText = true,
-                ShowGuildRank = true,
+                Mod = "SHIFT", -- "SHIFT", "CTRL" or "ALT"
+                HideInCombatTypes = {
+                    Units = true,
+                    Items = true,
+                    Spells = true,
+                    Auras = true,
+                },
+                -- Statusbar Settings
+                ShowStatusBar = true,
+                StatusBarTexture = "NorskenUI",
+                UseGlobalBar = true,
+                -- Coloring
+                BackgroundColor = { 0, 0, 0, 0.8 },
+                BorderColor = { 0, 0, 0, 1 },
+                MinionColor = { 0.5, 0.5, 0.5 },
+                NameRealmColor = { 0.5, 0.5, 0.5 },
+                GuildNameColor = { 0.25, 1.0, 0.25 }, -- Standard guild green
+                GuildRankColor = { 0.25, 1.0, 0.25 }, -- Standard guild green
                 -- General font settings
                 UseGlobalFont = true,
                 FontFace = "Expressway",
                 FontOutline = "OUTLINE",
+                FontShadow = {
+                    Enabled = false,
+                    Color = { 0, 0, 0, 0 },
+                    OffsetX = 0,
+                    OffsetY = 0,
+                },
                 -- Font size settings
-                HeaderTextSize = 15,
-                TextSize = 12,
-                TextSmallSize = 12,
+                HeaderTextSize = 16,
+                TextSize = 14,
+                TextSmallSize = 14,
                 -- Pos settings
                 Position = {
                     AnchorFrom = "BOTTOMRIGHT",
                     AnchorTo = "BOTTOMRIGHT",
-                    XOffset = -2,
-                    YOffset = 243,
+                    XOffset = 0,
+                    YOffset = 239,
                 },
             },
 
