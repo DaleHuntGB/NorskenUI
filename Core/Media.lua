@@ -3,6 +3,7 @@ local addonName = select(1, ...)
 local NRSKNUI = select(2, ...)
 
 local ipairs, pairs, type = ipairs, pairs, type
+local select = select
 local pcall = pcall
 local setmetatable = setmetatable
 local hooksecurefunc = hooksecurefunc
@@ -263,13 +264,45 @@ function NRSKNUI:SetTextFont(fontString, fontName, fontSize, fontOutline, shadow
             fontString.softOutline:SetShown(false)
         end
         if shadowSettings.Enabled then
-            local c = shadowSettings.Color or {0, 0, 0, 1}
+            local c = shadowSettings.Color or { 0, 0, 0, 1 }
             fontString:SetShadowColor(c[1], c[2], c[3], c[4] or 0.9)
             fontString:SetShadowOffset(shadowSettings.OffsetX or 1, shadowSettings.OffsetY or -1)
         end
     end
 
     return true
+end
+
+---Iterates over a frame's child frames and styles each FontString region with the configured font, outline, and a caller-defined size.
+---@param frame Frame
+---@param db table
+---@param getSize fun(fontString: FontString, parent: Frame): number?
+function NRSKNUI:StyleChildFontStrings(frame, db, getSize)
+    if type(frame) == 'string' then
+        frame = _G[frame]
+    end
+
+    local font = self:GetFontPath(self:GetEffectiveFont(db))
+    local outline = self:GetFontOutline(db.FontOutline)
+    local fontShadowColor = db.FontShadow.Color
+    local fontShadowOffsetX = db.FontShadow.OffsetX
+    local fontShadowOffsetY = db.FontShadow.OffsetY
+
+    for i = 1, frame:GetNumChildren() do
+        local child = select(i, frame:GetChildren())
+
+        for j = 1, child:GetNumRegions() do
+            local region = select(j, child:GetRegions())
+
+            if region:IsObjectType("FontString") then
+                local size = getSize and getSize(region, child) or db.FontSize
+
+                region:SetFont(font, size, outline)
+                region:SetShadowOffset(fontShadowOffsetX, fontShadowOffsetY)
+                region:SetShadowColor(fontShadowColor[1], fontShadowColor[2], fontShadowColor[3], fontShadowColor[4])
+            end
+        end
+    end
 end
 
 local SoftOutline = {}
