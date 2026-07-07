@@ -58,8 +58,18 @@ GUIFrame:RegisterContent('tooltips', function(scrollChild, yOffset)
         end,
         tooltip = 'Hides the current threat line on tooltips for units that you are in combat with.',
     })
-    rowGeneral1:AddWidget(HideThreatLineCheck, 1)
+    rowGeneral1:AddWidget(HideThreatLineCheck, 0.5)
     manager:Register(HideThreatLineCheck, 'all')
+
+    local ShowMountInfoCheck = GUIFrame:CreateCheckbox(rowGeneral1, 'Show Mount', {
+        value = db.ShowMountInfo,
+        callback = function(checked)
+            db.ShowMountInfo = checked
+        end,
+        tooltip = 'Shows the mount a player is currently riding on their tooltip when holding shift.',
+    })
+    rowGeneral1:AddWidget(ShowMountInfoCheck, 0.5)
+    manager:Register(ShowMountInfoCheck, 'all')
     cardGeneral:AddRow(rowGeneral1, Theme.rowHeightLast, 0)
 
     yOffset = cardGeneral:GetNextOffset()

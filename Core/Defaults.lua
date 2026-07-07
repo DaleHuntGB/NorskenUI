@@ -1902,6 +1902,7 @@ local Defaults = {
                 -- General Settings
                 HideThreatLine = true,
                 ShowItemQualityBorder = true,
+                ShowMountInfo = true,
                 -- Hide in combat settings
                 HideInCombat = true,
                 Mod = "SHIFT", -- "SHIFT", "CTRL" or "ALT"

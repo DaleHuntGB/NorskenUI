@@ -32,8 +32,12 @@ local _G = _G
 local WHITE_FONT_COLOR = WHITE_FONT_COLOR
 local FACTION_ALLIANCE = FACTION_ALLIANCE
 local FACTION_HORDE = FACTION_HORDE
+local MOUNT = MOUNT
 
 local GetClassColor = C_ClassColor and C_ClassColor.GetClassColor
+local GetAuraDataByIndex = C_UnitAuras and C_UnitAuras.GetAuraDataByIndex
+local GetMountFromSpell = C_MountJournal and C_MountJournal.GetMountFromSpell
+local GetMountInfoByID = C_MountJournal and C_MountJournal.GetMountInfoByID
 local GetDisplayedItem = TooltipUtil and TooltipUtil.GetDisplayedItem
 local GetItemQualityByID = C_Item and C_Item.GetItemQualityByID
 local GetColorDataForItemQuality = ColorManager and ColorManager.GetColorDataForItemQuality
@@ -194,6 +198,7 @@ local function UpdateBorderColor(tooltip)
 end
 
 ---@param tooltip Tooltip
+---@return table colorRGBA
 local function GetUnitColor(tooltip)
     local tooltipData = tooltip.processingInfo and tooltip.processingInfo.tooltipData
     local unitGUID = tooltipData and tooltipData.guid
@@ -340,7 +345,8 @@ end
 
 ---@param tooltip Tooltip
 ---@param startLine number First line to consider, skips past the guild line
----@return FontString?
+---@return FontString? levelLine
+---@return FontString? specLine
 local function GetLevelLine(tooltip, startLine)
     for i = startLine, tooltip:NumLines() do
         local line = _G['GameTooltipTextLeft' .. i]
@@ -349,7 +355,7 @@ local function GetLevelLine(tooltip, startLine)
         if not issecretvalue(text) and text and text ~= '' then
             local lowerText = text:lower()
             if lowerText:find(levelLineMatch1, 1, true) or lowerText:find(levelLineMatch2, 1, true) then
-                return line
+                return line, _G['GameTooltipTextLeft' .. (i + 1)]
             end
         end
     end
@@ -386,10 +392,16 @@ local function StyleLevelLine(tooltip, data)
     local guildName = GetGuildInfo(unit)
     local startLine = (not issecretvalue(guildName) and guildName) and 3 or 2
 
-    local line = GetLevelLine(tooltip, startLine)
+    local line, specLine = GetLevelLine(tooltip, startLine)
     if not line then return end
 
     line:SetText(('|cFF%s%d|r %s'):format(GetLevelColorHex(level), level, race))
+
+    -- The line after the level line is the spec/class line, unless the player has no spec, then it is the faction line.
+    local specText = specLine and specLine:GetText()
+    if not issecretvalue(specText) and specText and not factionLineColors[specText] then
+        specLine:SetTextColor(GetUnitColor(tooltip):GetRGB())
+    end
 end
 
 ---@param tooltip Tooltip
@@ -430,6 +442,31 @@ local function StyleGuildLine(data)
         line:SetText(guildRankFormat:format(coloredGuildName, coloredRankname))
     else
         line:SetText(guildNameFormat:format(coloredGuildName))
+    end
+end
+
+-- Add line to tooltip with a player units mount info.
+---@param tooltip Tooltip
+---@param data TooltipData
+local function AddMountLine(tooltip, data)
+    if not TT.db.ShowMountInfo or not GetMountFromSpell or InCombatLockdown() then return end
+    if NRSKNUI:IsRestricted() then return end
+
+    local unit = GetPlayerUnit(data)
+    if not unit then return end
+
+    for i = 1, 40 do
+        local aura = GetAuraDataByIndex(unit, i, 'HELPFUL')
+        if not aura then return end
+        if issecretvalue(aura.spellId) then return end
+
+        -- GetMountFromSpell returns a sentinel instead of nil for non-mounts, so validate through the journal.
+        local mountID = aura.spellId and GetMountFromSpell(aura.spellId)
+        local mountName = mountID and GetMountInfoByID(mountID)
+        if mountName and IsShiftKeyDown() then
+            tooltip:AddDoubleLine(MOUNT .. ':', mountName, nil, nil, nil, WHITE_FONT_COLOR:GetRGB())
+            return
+        end
     end
 end
 
@@ -478,6 +515,7 @@ local function TooltipProcessor()
         StyleFactionLine(tooltip)
         -- Style the guild name line for players
         StyleGuildLine(data)
+        AddMountLine(tooltip, data)
     end)
 
     -- Color unit name, style realm name: 'Norsken (TarrenMill)' and apply statusbar coloring.
