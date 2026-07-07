@@ -34,6 +34,19 @@ function PublicBackdropMixin:SetBorderColor(r, g, b, a)
 	end
 end
 
+---Helper that can be used by ApplySettings function to update coloring with db values.
+---@param db table
+function PublicBackdropMixin:UpdateBackdropFromDB(db)
+	if self.backdropBackground then
+		self.backdropBackground:SetColorTexture(db.BackgroundColor[1], db.BackgroundColor[2], db.BackgroundColor[3], db.BackgroundColor[4])
+	end
+	if self.BackDropBorders then
+		for _, edge in pairs(self.BackDropBorders) do
+			edge:SetColorTexture(db.BorderColor[1], db.BorderColor[2], db.BorderColor[3], db.BorderColor[4])
+		end
+	end
+end
+
 local CreateTextureMixin = CreateFrame("Frame").CreateTexture
 
 ---@param frame Frame
@@ -45,8 +58,8 @@ function NRSKNUI:CreateBackdrop(frame)
 
 	local BG = CreateTextureMixin(frame, nil, "BACKGROUND")
 	--BG:SetAllPoints(frame)
-	BG:SetPoint("TOPLEFT", frame, "TOPLEFT",1, -1)
-	BG:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT",-1, 1)
+	BG:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
+	BG:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
 	frame.backdropBackground = BG
 	NRSKNUI:PixelPerfect(BG)
 
