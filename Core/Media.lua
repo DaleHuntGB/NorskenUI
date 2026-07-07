@@ -212,6 +212,14 @@ function NRSKNUI:GetEffectiveStatusBar(moduleDB)
     return moduleDB and (moduleDB.StatusBarTexture or moduleDB.statusBar) or "NorskenUI"
 end
 
+function NRSKNUI:GetBarTexture(moduleDB)
+    return self:GetStatusbarPath(self:GetEffectiveStatusBar(moduleDB))
+end
+
+function NRSKNUI:GetFontName(moduleDB)
+    return self:GetFontPath(self:GetEffectiveFont(moduleDB))
+end
+
 ---@param parent Frame
 ---@param layer DrawLayer?
 ---@return FontString
@@ -283,7 +291,7 @@ function NRSKNUI:StyleChildFontStrings(frame, db, getSize)
         frame = _G[frame]
     end
 
-    local font = self:GetFontPath(self:GetEffectiveFont(db))
+    local font = self:GetFontName(db)
     local outline = self:GetFontOutline(db.FontOutline)
     local fontShadowColor = db.FontShadow.Color
     local fontShadowOffsetX = db.FontShadow.OffsetX
@@ -312,7 +320,7 @@ end
 ---@param global boolean
 function NRSKNUI:StyleFontstringTable(fontTable, db, global)
     local outline = self:GetFontOutline(db.FontOutline)
-    local font = self:GetFontPath(self:GetEffectiveFont(db))
+    local font = self:GetFontName(db)
     local shadow = db.FontShadow
 
     for fontStringName, sizeKey in next, fontTable do
